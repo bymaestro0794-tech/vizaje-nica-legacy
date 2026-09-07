@@ -1,0 +1,4 @@
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/vizajeni/public_html
+    - /bin/cp * $DEPLOYPATH
