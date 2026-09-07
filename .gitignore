@@ -25,7 +25,6 @@ application/logs/log-*.php
 public/
 
 # Server/hosting-specific
-.cpanel.yml
 .ftpquota
 error_log
 
