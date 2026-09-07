@@ -9,4 +9,6 @@ deployment:
     - cd /home/vizajeni/repositories/vizaje-nica-legacy && tar -cf -
       --exclude=".git" --exclude=".env"
       --exclude="application/config/database.php" --exclude="application/logs"
-      --exclude="public/uploads" . | (cd "$DEPLOYPATH" && tar -xf -)
+      --exclude="public/uploads" . | (cd "$DEPLOYPATH" && tar -xf -
+      --no-same-permissions --no-same-owner) && find "$DEPLOYPATH" -type d -exec
+      chmod 755 {} + && find "$DEPLOYPATH" -type f -exec chmod 644 {} +
