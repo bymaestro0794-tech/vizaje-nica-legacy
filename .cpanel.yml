@@ -6,7 +6,7 @@ deployment:
       /opt/cpanel/ea-php74/root/usr/bin/php
       /opt/cpanel/ea-wappspector/composer.phar install --no-dev
       --optimize-autoloader --no-interaction
-    - /bin/rsync -a --exclude=".git/" --exclude=".env"
-      --exclude="application/config/database.php" --exclude="application/logs/"
-      --exclude="public/uploads/"
-      /home/vizajeni/repositories/vizaje-nica-legacy/ $DEPLOYPATH
+    - cd /home/vizajeni/repositories/vizaje-nica-legacy && tar -cf -
+      --exclude=".git" --exclude=".env"
+      --exclude="application/config/database.php" --exclude="application/logs"
+      --exclude="public/uploads" . | (cd "$DEPLOYPATH" && tar -xf -)
