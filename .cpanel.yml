@@ -1,4 +1,9 @@
 ---
 deployment:
   tasks:
-    - /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction 2>/dev/null || true
+    - export DEPLOYPATH=/home/vizajeni/public_html/
+    - /usr/local/bin/composer install --no-dev --optimize-autoloader
+      --no-interaction
+    - /bin/rsync -a --exclude=".git/" --exclude=".env"
+      --exclude="application/config/database.php" --exclude="application/logs/"
+      --exclude="public/uploads/" ./ $DEPLOYPATH
