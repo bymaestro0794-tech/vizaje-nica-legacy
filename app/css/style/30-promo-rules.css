@@ -1,0 +1,190 @@
+/* ==========================================================================
+   PROMO RULES
+   ========================================================================== */
+
+.promo-rules-page {
+	background: #fff;
+	color: #111;
+}
+
+/* ==========================================================================
+   HERO
+   ========================================================================== */
+
+.promo-rules-hero {
+	position: relative;
+	width: 100%;
+	overflow: hidden;
+	background: #f1f1f1;
+}
+
+.promo-rules-hero picture {
+	display: block;
+	width: 100%;
+}
+
+.promo-rules-hero__image {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+/*
+ * H1 остаётся доступным поисковикам
+ * и screen readers, но визуальный H1
+ * уже находится внутри hero.
+ */
+.promo-rules-page__seo-title {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	border: 0;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}
+
+/* ==========================================================================
+   BREADCRUMBS
+   ========================================================================== */
+
+.promo-rules-breadcrumbs {
+	padding: 18px 0;
+	border-bottom: 1px solid #eeeeee;
+}
+
+.promo-rules-breadcrumbs__list {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 7px;
+
+	font-size: 12px;
+	line-height: 1.4;
+}
+
+.promo-rules-breadcrumbs__link {
+	color: #777;
+	transition: color 0.2s ease;
+}
+
+.promo-rules-breadcrumbs__link:hover {
+	color: #111;
+}
+
+.promo-rules-breadcrumbs__separator {
+	color: #bbb;
+}
+
+.promo-rules-breadcrumbs__current {
+	color: #111;
+}
+
+/* ==========================================================================
+   CONTENT
+   ========================================================================== */
+
+.promo-rules-content {
+	padding: 46px 24px 90px;
+}
+
+.promo-rules-content__inner {
+	width: 100%;
+	max-width: 720px;
+	margin: 0 auto;
+
+	font-size: 15px;
+	line-height: 1.65;
+	color: #181818;
+}
+
+.promo-rules-content__inner > *:first-child {
+	margin-top: 0;
+}
+
+.promo-rules-content__inner > *:last-child {
+	margin-bottom: 0;
+}
+
+.promo-rules-content__inner p {
+	margin: 0 0 20px;
+}
+
+.promo-rules-content__inner ul,
+.promo-rules-content__inner ol {
+	margin: 0 0 24px;
+	padding-left: 21px;
+}
+
+.promo-rules-content__inner li {
+	padding-left: 3px;
+}
+
+.promo-rules-content__inner li + li {
+	margin-top: 6px;
+}
+
+.promo-rules-content__inner a {
+	border-bottom: 1px solid currentColor;
+	color: inherit;
+}
+
+/* ==========================================================================
+   TABLET
+   ========================================================================== */
+
+@media (max-width: 991.98px) {
+	.promo-rules-content {
+		padding-top: 40px;
+		padding-bottom: 72px;
+	}
+}
+
+/* ==========================================================================
+   MOBILE
+   ========================================================================== */
+
+@media (max-width: 767.98px) {
+	.promo-rules-hero {
+		border-radius: 0;
+	}
+
+	.promo-rules-hero__image {
+		width: 100%;
+	}
+
+	.promo-rules-breadcrumbs {
+		padding: 14px 0;
+	}
+
+	.promo-rules-breadcrumbs__list {
+		font-size: 11px;
+	}
+
+	.promo-rules-content {
+		padding: 30px 18px 58px;
+	}
+
+	.promo-rules-content__inner {
+		max-width: none;
+
+		font-size: 14px;
+		line-height: 1.62;
+	}
+
+	.promo-rules-content__inner p {
+		margin-bottom: 18px;
+	}
+
+	.promo-rules-content__inner ul,
+	.promo-rules-content__inner ol {
+		margin-bottom: 22px;
+		padding-left: 19px;
+	}
+
+	.promo-rules-content__inner li + li {
+		margin-top: 7px;
+	}
+}

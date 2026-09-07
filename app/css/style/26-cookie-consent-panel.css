@@ -1,0 +1,346 @@
+/* ==========================================================
+   Vizaje-Nica Cookie Consent Panel
+   ========================================================== */
+
+html.cookie-panel-lock,
+html.cookie-panel-lock body {
+	overflow: hidden;
+}
+
+.cookie-panel {
+	position: fixed;
+	inset: 0;
+	z-index: 1000001;
+
+	visibility: hidden;
+	pointer-events: none;
+}
+
+.cookie-panel.is-open {
+	visibility: visible;
+	pointer-events: auto;
+}
+
+.cookie-panel__overlay {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	width: 100%;
+	height: 100%;
+	padding: 0;
+
+	border: 0;
+	border-radius: 0;
+	outline: none;
+
+	background: rgba(13, 13, 13, 0.54);
+
+	opacity: 0;
+	cursor: default;
+	transition: opacity 0.25s ease;
+
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+.cookie-panel.is-open .cookie-panel__overlay {
+	opacity: 1;
+}
+
+.cookie-panel__panel {
+	position: absolute;
+	top: 0;
+	right: 0;
+	z-index: 2;
+
+	display: flex;
+	width: min(480px, 100vw);
+	height: 100%;
+	height: 100dvh;
+	flex-direction: column;
+
+	overflow: hidden auto;
+
+	background: #ffffff;
+	color: #111111;
+
+	box-shadow: -24px 0 70px rgba(0, 0, 0, 0.12);
+
+	transform: translateX(100%);
+	transition: transform 0.32s ease;
+}
+
+.cookie-panel.is-open .cookie-panel__panel {
+	transform: translateX(0);
+}
+
+.cookie-panel__close {
+	position: absolute;
+	top: 28px;
+	right: 28px;
+	z-index: 20;
+
+	display: block;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+
+	border: 0;
+	outline: none;
+
+	background: transparent;
+	color: #111111;
+
+	cursor: pointer;
+	transition: opacity 0.18s ease;
+}
+
+.cookie-panel__close:hover {
+	opacity: 0.58;
+}
+
+.cookie-panel__close span {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+
+	display: block;
+	width: 20px;
+	height: 1px;
+
+	background: currentColor;
+	transform-origin: center;
+}
+
+.cookie-panel__close span:first-child {
+	transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.cookie-panel__close span:last-child {
+	transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.cookie-panel__content {
+	display: flex;
+	flex-direction: column;
+
+	padding: 92px 40px 40px;
+}
+
+.cookie-panel__title {
+	margin: 0;
+
+	color: #111111;
+	font-family: inherit;
+	font-size: 26px;
+	font-weight: 600;
+	line-height: 1.12;
+	letter-spacing: -0.03em;
+}
+
+.cookie-panel__description {
+	margin: 16px 0 0;
+
+	color: #666666;
+	font-size: 13px;
+	line-height: 1.55;
+}
+
+.cookie-panel__categories {
+	display: flex;
+	flex-direction: column;
+
+	margin-top: 30px;
+}
+
+.cookie-panel__category {
+	padding: 20px 0;
+	border-bottom: 1px solid #ececec;
+}
+
+.cookie-panel__category:first-child {
+	padding-top: 0;
+}
+
+.cookie-panel__category-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.cookie-panel__category-name {
+	color: #111111;
+	font-size: 14px;
+	font-weight: 500;
+	line-height: 1.3;
+}
+
+.cookie-panel__category-desc {
+	margin: 8px 0 0;
+
+	color: #777777;
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.cookie-panel__always-on {
+	flex: 0 0 auto;
+
+	color: #999999;
+	font-size: 11px;
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+/* ==========================================================
+   Toggle
+   ========================================================== */
+
+.cookie-panel__toggle {
+	position: relative;
+	flex: 0 0 auto;
+
+	display: block;
+	width: 40px;
+	height: 24px;
+
+	cursor: pointer;
+}
+
+.cookie-panel__toggle input {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+}
+
+.cookie-panel__toggle-track {
+	position: absolute;
+	inset: 0;
+
+	border-radius: 999px;
+	background: #dcdcdc;
+
+	transition: background-color 0.2s ease;
+}
+
+.cookie-panel__toggle-track::after {
+	content: '';
+
+	position: absolute;
+	top: 3px;
+	left: 3px;
+
+	width: 18px;
+	height: 18px;
+
+	border-radius: 50%;
+	background: #ffffff;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+
+	transition: transform 0.2s ease;
+}
+
+.cookie-panel__toggle input:checked + .cookie-panel__toggle-track {
+	background: #111111;
+}
+
+.cookie-panel__toggle input:checked + .cookie-panel__toggle-track::after {
+	transform: translateX(16px);
+}
+
+.cookie-panel__toggle input:focus-visible + .cookie-panel__toggle-track {
+	outline: 1px solid #111111;
+	outline-offset: 2px;
+}
+
+/* ==========================================================
+   Actions
+   ========================================================== */
+
+.cookie-panel__actions {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+
+	margin-top: 32px;
+}
+
+.cookie-panel__button {
+	display: flex;
+	width: 100%;
+	min-height: 48px;
+	align-items: center;
+	justify-content: center;
+
+	padding: 13px 18px;
+
+	font-family: inherit;
+	font-size: 12px;
+	font-weight: 500;
+	letter-spacing: 0.01em;
+	text-align: center;
+
+	cursor: pointer;
+	transition:
+		background-color 0.18s ease,
+		color 0.18s ease,
+		border-color 0.18s ease;
+}
+
+.cookie-panel__button--primary {
+	border: 1px solid #111111;
+	background: #111111;
+	color: #ffffff;
+}
+
+.cookie-panel__button--primary:hover {
+	border-color: #292929;
+	background: #292929;
+}
+
+.cookie-panel__button--secondary {
+	border: 1px solid #111111;
+	background: #ffffff;
+	color: #111111;
+}
+
+.cookie-panel__button--secondary:hover {
+	background: #f3f3f3;
+}
+
+/* ==========================================================
+   Tablet / Mobile
+   ========================================================== */
+
+@media (max-width: 767px) {
+	.cookie-panel__panel {
+		width: 100%;
+		max-width: none;
+		box-shadow: none;
+	}
+
+	.cookie-panel__content {
+		padding: 72px 20px calc(32px + env(safe-area-inset-bottom));
+	}
+
+	.cookie-panel__title {
+		font-size: 23px;
+	}
+}
+
+/* ==========================================================
+   Reduced motion
+   ========================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+	.cookie-panel__overlay,
+	.cookie-panel__panel,
+	.cookie-panel__toggle-track,
+	.cookie-panel__toggle-track::after {
+		transition: none;
+	}
+}

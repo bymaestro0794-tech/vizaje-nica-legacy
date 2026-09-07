@@ -1,0 +1,1304 @@
+.stock {
+	padding: 30px 0px 100px;
+}
+
+.stock__title {
+	font-weight: 700;
+	font-size: 32px;
+	line-height: 41px;
+	color: #000000;
+}
+
+.stock__content {
+	margin-top: 30px;
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	-ms-flex-wrap: wrap;
+	flex-wrap: wrap;
+	-webkit-column-gap: 50px;
+	-moz-column-gap: 50px;
+	column-gap: 50px;
+	row-gap: 30px;
+}
+
+.stock__item {
+	-webkit-box-flex: 0;
+	-ms-flex: 0 0 calc((100% - 50px * 2) / 3);
+	flex: 0 0 calc((100% - 50px * 2) / 3);
+}
+
+.stock__image {
+	width: 100%;
+	max-width: 100%;
+	position: relative;
+	padding-bottom: 59%;
+	display: block;
+	overflow: hidden;
+}
+
+.stock__image img {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	-o-object-fit: cover;
+	object-fit: cover;
+	-webkit-transition: all 0.3s ease 0s;
+	-o-transition: all 0.3s ease 0s;
+	transition: all 0.3s ease 0s;
+}
+
+.stock__body {
+	padding: 20px 0px 0px;
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	-webkit-box-orient: vertical;
+	-webkit-box-direction: normal;
+	-ms-flex-direction: column;
+	flex-direction: column;
+	row-gap: 10px;
+}
+
+.stock__name {
+	font-weight: 500;
+	font-size: 18px;
+	line-height: 1.3;
+	color: #000000;
+}
+
+.stock__date {
+	font-weight: 400;
+	font-size: 16px;
+	line-height: 1.3;
+	color: #9b9b9b;
+}
+
+/* =========================================================
+   Offers index
+   ========================================================= */
+
+.offers-page {
+	color: #111111;
+	background: #ffffff;
+}
+
+.stock--offers .stock__date {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.stock--offers .stock__date-label {
+	color: #777777;
+}
+
+.stock--offers .stock__date time {
+	color: #9a9a9a;
+}
+
+.stock--offers .stock__item {
+	position: relative;
+}
+
+.stock--offers .stock__image::after {
+	content: '';
+
+	position: absolute;
+	top: 14px;
+	left: 14px;
+	z-index: 3;
+
+	width: 7px;
+	height: 7px;
+
+	border-radius: 50%;
+
+	background: #ffffff;
+
+	box-shadow:
+		0 0 0 5px rgba(255, 255, 255, 0.25),
+		0 2px 8px rgba(0, 0, 0, 0.15);
+
+	opacity: 0;
+
+	transition: opacity 0.3s ease;
+}
+
+.stock--offers .stock__image:hover::after {
+	opacity: 1;
+}
+
+/* Акции обычно содержат баннерный текст,
+   поэтому не увеличиваем изображение слишком сильно. */
+
+.stock--offers .stock__image:hover img {
+	transform: scale(1.025);
+}
+
+/* =========================================================
+   Mobile
+   ========================================================= */
+
+@media (max-width: 767.98px) {
+	.stock--offers .stock__date {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 3px;
+	}
+
+	.stock--offers .stock__image::after {
+		display: none;
+	}
+}
+/* =========================================================
+   Offer item page
+   ========================================================= */
+
+.offer-item-page {
+	color: #111111;
+	background: #ffffff;
+}
+
+/* =========================================================
+   Offer hero
+   ========================================================= */
+
+.offer-hero {
+	padding: 20px 0 78px;
+}
+
+.offer-hero__container {
+	min-width: 0;
+}
+
+.offer-hero__header {
+	max-width: 940px;
+	margin: 0 auto 40px;
+	text-align: center;
+}
+
+.offer-hero__eyebrow {
+	margin: 0 0 13px;
+
+	font-weight: 500;
+	font-size: 12px;
+	line-height: 1.3;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+
+	color: #929292;
+}
+
+.offer-hero__title {
+	margin: 0;
+
+	font-weight: 500;
+	font-size: clamp(40px, 5vw, 68px);
+	line-height: 1.06;
+	letter-spacing: -0.045em;
+
+	text-wrap: balance;
+}
+
+/* =========================================================
+   Main offer banner
+   ========================================================= */
+
+.offer-hero__media {
+	position: relative;
+
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+
+	aspect-ratio: 1920 / 720;
+
+	overflow: hidden;
+
+	background: #f4f3f1;
+}
+
+.offer-hero__media picture {
+	position: absolute;
+	inset: 0;
+
+	display: block;
+
+	width: 100%;
+	height: 100%;
+}
+
+.offer-hero__image {
+	position: absolute;
+	inset: 0;
+
+	display: block;
+
+	width: 100%;
+	height: 100%;
+
+	object-fit: cover;
+	object-position: center;
+}
+
+/* =========================================================
+   Offer information
+   ========================================================= */
+
+.offer-hero__info {
+	display: grid;
+	grid-template-columns:
+		minmax(0, 0.72fr)
+		minmax(0, 1.28fr);
+	gap: 64px;
+
+	width: 100%;
+	max-width: 980px;
+	min-width: 0;
+	margin: 46px auto 0;
+}
+
+.offer-hero__meta,
+.offer-hero__description {
+	min-width: 0;
+}
+
+/* =========================================================
+   Offer meta
+   ========================================================= */
+
+.offer-hero__meta {
+	display: flex;
+	flex-direction: column;
+
+	border-top: 1px solid #e7e7e7;
+}
+
+.offer-hero__meta-item {
+	display: flex;
+	align-items: flex-start;
+	gap: 14px;
+
+	padding: 20px 0;
+
+	border-bottom: 1px solid #e7e7e7;
+}
+
+.offer-hero__meta-icon {
+	display: inline-flex;
+	flex: 0 0 40px;
+	align-items: center;
+	justify-content: center;
+
+	width: 40px;
+	height: 40px;
+
+	border: 1px solid #dedede;
+	border-radius: 50%;
+
+	color: #111111;
+}
+
+.offer-hero__meta-item > div {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+
+	min-width: 0;
+}
+
+.offer-hero__meta-label {
+	font-size: 11px;
+	line-height: 1.3;
+	letter-spacing: 0.07em;
+	text-transform: uppercase;
+
+	color: #999999;
+}
+
+.offer-hero__meta-value {
+	font-weight: 500;
+	font-size: 15px;
+	line-height: 1.4;
+
+	color: #111111;
+
+	overflow-wrap: anywhere;
+}
+
+/* =========================================================
+   Legacy editor content
+   ========================================================= */
+
+.offer-hero__description {
+	width: 100%;
+	max-width: 100%;
+
+	font-size: 17px;
+	line-height: 1.72;
+	color: #3e3e3e;
+
+	overflow-wrap: anywhere;
+}
+
+.offer-hero__description > * {
+	max-width: 100%;
+}
+
+.offer-hero__description > *:first-child {
+	margin-top: 0;
+}
+
+.offer-hero__description > *:last-child {
+	margin-bottom: 0;
+}
+
+.offer-hero__description p {
+	margin: 0 0 20px;
+}
+
+.offer-hero__description h2,
+.offer-hero__description h3,
+.offer-hero__description h4 {
+	margin: 38px 0 18px;
+
+	color: #111111;
+}
+
+.offer-hero__description h2 {
+	font-weight: 500;
+	font-size: 30px;
+	line-height: 1.2;
+}
+
+.offer-hero__description h3 {
+	font-weight: 600;
+	font-size: 24px;
+	line-height: 1.25;
+}
+
+.offer-hero__description h4 {
+	font-weight: 600;
+	font-size: 19px;
+	line-height: 1.3;
+}
+
+.offer-hero__description ul,
+.offer-hero__description ol {
+	margin: 20px 0;
+	padding-left: 22px;
+}
+
+.offer-hero__description li + li {
+	margin-top: 8px;
+}
+
+.offer-hero__description a {
+	border-bottom: 1px solid currentColor;
+	color: inherit;
+}
+
+/*
+ * Контент приходит из legacy-редактора и может содержать
+ * inline width/height/position. Поэтому здесь !important
+ * используется как защитный слой.
+ */
+
+.offer-hero__description picture,
+.offer-hero__description figure {
+	display: block;
+
+	width: 100% !important;
+	max-width: 100% !important;
+	height: auto !important;
+
+	margin: 28px 0;
+}
+
+.offer-hero__description img {
+	position: static !important;
+
+	display: block;
+
+	width: 100% !important;
+	max-width: 100% !important;
+	height: auto !important;
+
+	margin: 28px 0;
+
+	object-fit: contain;
+	object-position: center;
+}
+
+.offer-hero__description picture img,
+.offer-hero__description figure img {
+	margin: 0;
+}
+
+.offer-hero__description iframe,
+.offer-hero__description video {
+	display: block;
+
+	width: 100% !important;
+	max-width: 100% !important;
+
+	margin: 28px 0;
+
+	aspect-ratio: 16 / 9;
+
+	border: 0;
+}
+
+.offer-hero__description table {
+	display: block;
+
+	width: 100%;
+	max-width: 100%;
+
+	margin: 28px 0;
+
+	overflow-x: auto;
+
+	border-collapse: collapse;
+}
+
+.offer-hero__description th,
+.offer-hero__description td {
+	padding: 12px 14px;
+	border: 1px solid #e5e5e5;
+	text-align: left;
+}
+
+/* =========================================================
+   Offer products catalog
+   ========================================================= */
+
+.offer-catalog {
+	padding: 64px 0 100px;
+
+	border-top: 1px solid #e6e6e6;
+}
+
+.offer-catalog__header {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 32px;
+
+	margin-bottom: 42px;
+}
+
+.offer-catalog__eyebrow {
+	margin: 0 0 10px;
+
+	font-weight: 500;
+	font-size: 11px;
+	line-height: 1.3;
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+
+	color: #999999;
+}
+
+.offer-catalog__title {
+	margin: 0;
+
+	font-weight: 500;
+	font-size: clamp(36px, 4vw, 54px);
+	line-height: 1.05;
+	letter-spacing: -0.04em;
+}
+
+.offer-catalog__count {
+	flex: 0 0 auto;
+
+	margin: 0 0 5px;
+
+	font-size: 14px;
+	line-height: 1.4;
+
+	color: #999999;
+}
+
+.offer-catalog__empty {
+	width: 100%;
+	padding: 60px 24px;
+
+	border: 1px solid #e5e5e5;
+
+	font-size: 15px;
+	line-height: 1.5;
+	text-align: center;
+
+	color: #777777;
+}
+
+/* =========================================================
+   Existing catalog layout protection
+   ========================================================= */
+
+.offer-catalog .catalog__body,
+.offer-catalog .catalog__main,
+.offer-catalog .products_catalog,
+.offer-catalog .main-catalog__body {
+	min-width: 0;
+}
+
+/*
+ * Карточку товара не переопределяем.
+ * Страница акции должна использовать тот же компонент,
+ * который уже работает в обычном каталоге.
+ */
+
+/* =========================================================
+   Small desktop
+   ========================================================= */
+
+@media (max-width: 1100px) {
+	.offer-hero__info {
+		gap: 40px;
+	}
+
+	.offer-catalog__header {
+		margin-bottom: 32px;
+	}
+}
+
+/* =========================================================
+   Tablet
+   ========================================================= */
+
+@media (max-width: 991.98px) {
+	.offer-hero {
+		padding-bottom: 62px;
+	}
+
+	.offer-hero__header {
+		margin-bottom: 32px;
+	}
+
+	.offer-hero__info {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 34px;
+
+		max-width: 760px;
+		margin-top: 36px;
+	}
+
+	.offer-hero__meta {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.offer-hero__meta-item {
+		padding-right: 20px;
+	}
+
+	.offer-hero__meta-item + .offer-hero__meta-item {
+		padding-left: 20px;
+		border-left: 1px solid #e7e7e7;
+	}
+
+	.offer-catalog {
+		padding-top: 52px;
+	}
+}
+
+/* =========================================================
+   Mobile
+   ========================================================= */
+
+@media (max-width: 767.98px) {
+	.offer-hero {
+		padding: 12px 0 50px;
+	}
+
+	.offer-hero__header {
+		margin-bottom: 25px;
+		text-align: left;
+	}
+
+	.offer-hero__eyebrow {
+		margin-bottom: 10px;
+		font-size: 11px;
+	}
+
+	.offer-hero__title {
+		font-size: clamp(31px, 9.5vw, 42px);
+		line-height: 1.08;
+		letter-spacing: -0.04em;
+
+		text-wrap: initial;
+	}
+
+	/*
+	 * Отдельный mobile-баннер должен быть 420 × 480.
+	 * picture сам выберет mobile source.
+	 */
+
+	.offer-hero__image {
+		object-fit: cover;
+		object-position: center;
+	}
+
+	.offer-hero__info {
+		gap: 29px;
+
+		width: 100%;
+		margin-top: 28px;
+	}
+
+	.offer-hero__meta {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.offer-hero__meta-item {
+		padding: 16px 0;
+	}
+
+	.offer-hero__meta-item + .offer-hero__meta-item {
+		padding-left: 0;
+		border-left: 0;
+	}
+
+	.offer-hero__meta-icon {
+		flex-basis: 38px;
+
+		width: 38px;
+		height: 38px;
+	}
+
+	.offer-hero__meta-value {
+		font-size: 14px;
+	}
+
+	.offer-hero__description {
+		font-size: 15px;
+		line-height: 1.65;
+	}
+
+	.offer-hero__description p {
+		margin-bottom: 17px;
+	}
+
+	.offer-hero__description h2 {
+		font-size: 26px;
+	}
+
+	.offer-hero__description h3 {
+		font-size: 22px;
+	}
+
+	.offer-hero__description img,
+	.offer-hero__description picture,
+	.offer-hero__description figure {
+		margin-top: 24px;
+		margin-bottom: 24px;
+	}
+
+	.offer-catalog {
+		padding: 42px 0 70px;
+	}
+
+	.offer-catalog__header {
+		display: block;
+		margin-bottom: 26px;
+	}
+
+	.offer-catalog__title {
+		font-size: 35px;
+		line-height: 1.08;
+	}
+
+	.offer-catalog__count {
+		display: none;
+	}
+}
+
+/* =========================================================
+   Small mobile
+   ========================================================= */
+
+@media (max-width: 420px) {
+	.offer-hero__title {
+		font-size: 29px;
+	}
+
+	.offer-catalog__title {
+		font-size: 31px;
+	}
+}
+
+
+/* =========================================================
+   NICHE SALE
+   ========================================================= */
+
+.niche-sale {
+	--niche-black: #111;
+	--niche-border: #e5e5e5;
+	--niche-muted: #777;
+
+	position: relative;
+	z-index: auto;
+	width: 100%;
+	color: var(--niche-black);
+	background: #fff;
+}
+
+/* Hero */
+
+.niche-sale__hero {
+	position: relative;
+	width: 100%;
+	height: clamp(300px, 20vw, 380px);
+	overflow: hidden;
+	background: #eee;
+}
+
+.niche-sale__hero-picture,
+.niche-sale__hero-picture img {
+	position: absolute;
+	inset: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.niche-sale__hero-picture img {
+	object-fit: cover;
+	object-position: center;
+}
+
+.niche-sale__hero-overlay {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	background: linear-gradient(
+		180deg,
+		rgba(0, 0, 0, 0.02) 30%,
+		rgba(0, 0, 0, 0.38) 100%
+	);
+}
+
+.niche-sale__hero-container {
+	position: relative;
+	height: 100%;
+}
+
+.niche-sale__breadcrumbs {
+	position: absolute;
+	left: 0;
+	bottom: 30px;
+	z-index: 2;
+
+	display: flex;
+	align-items: center;
+	gap: 7px;
+
+	margin: 0;
+
+	color: #fff;
+	font-size: 12px;
+	line-height: 1.3;
+}
+
+.niche-sale__breadcrumbs a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.niche-sale__hero-content {
+	position: absolute;
+	right: 0;
+	bottom: 26px;
+	left: 0;
+	z-index: 2;
+
+	color: #fff;
+	text-align: center;
+}
+
+.niche-sale__hero-subtitle {
+	margin: 0 0 6px;
+	color: inherit;
+	font-size: 13px;
+	line-height: 1.25;
+}
+
+.niche-sale__hero-title {
+	margin: 0;
+	color: inherit;
+	font-size: clamp(34px, 3.5vw, 54px);
+	font-weight: 600;
+	line-height: 1;
+	letter-spacing: -0.04em;
+}
+
+/* Discount cards */
+
+.niche-sale__discount-cards {
+	border-bottom: 1px solid var(--niche-border);
+	background: #fff;
+}
+
+.niche-sale__discount-cards > ._container {
+	padding-top: 14px;
+	padding-bottom: 14px;
+}
+
+.niche-sale__discount-list {
+	display: flex;
+	justify-content: center;
+	gap: 8px;
+}
+
+.niche-sale__discount-card {
+	display: flex;
+	flex: 0 0 132px;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+
+	min-height: 52px;
+	padding: 7px 12px;
+
+	border: 1px solid #dcdcdc;
+	border-radius: 999px;
+
+	color: var(--niche-black);
+	text-align: center;
+	text-decoration: none;
+
+	transition:
+		color 0.2s ease,
+		background-color 0.2s ease,
+		border-color 0.2s ease;
+}
+
+.niche-sale__discount-card:hover,
+.niche-sale__discount-card.is-active {
+	border-color: var(--niche-black);
+	color: #fff;
+	background: var(--niche-black);
+}
+
+.niche-sale__discount-value {
+	font-size: 18px;
+	font-weight: 600;
+	line-height: 1;
+}
+
+.niche-sale__discount-caption {
+	margin-top: 3px;
+	font-size: 9px;
+	line-height: 1;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+/* Catalog */
+
+.niche-sale__catalog {
+	padding: 24px 0 70px;
+}
+
+.niche-sale__toolbar {
+	display: grid;
+	grid-template-columns: 1fr auto 1fr;
+	align-items: center;
+	min-height: 32px;
+}
+
+.niche-sale__toolbar-label {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+
+	margin: 0;
+
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.niche-sale__toolbar-label svg {
+	width: 18px;
+	height: 18px;
+}
+
+.niche-sale__products-count {
+	margin: 0;
+	font-size: 14px;
+	text-align: center;
+}
+
+.niche-sale__toolbar-spacer {
+	min-width: 1px;
+}
+
+.niche-sale__filter-row {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	margin-top: 10px;
+}
+
+.niche-sale__filter-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 9px;
+
+	min-height: 36px;
+	padding: 0 14px;
+
+	border: 1px solid #dcdcdc;
+	border-radius: 999px;
+
+	color: var(--niche-black);
+	background: #fff;
+
+	font: inherit;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+
+	cursor: pointer;
+	transition: border-color 0.2s ease;
+}
+
+.niche-sale__filter-button:hover,
+.niche-sale__filter-button[aria-expanded='true'] {
+	border-color: var(--niche-black);
+}
+
+.niche-sale__filter-value {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+
+	min-width: 20px;
+	height: 20px;
+
+	border-radius: 50%;
+
+	color: #fff;
+	background: var(--niche-black);
+
+	font-size: 10px;
+}
+
+.niche-sale__active-filters {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+
+	min-height: 29px;
+	margin-top: 7px;
+}
+
+.niche-sale__active-filter {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+
+	min-height: 29px;
+	padding: 0 11px;
+
+	border-radius: 999px;
+
+	color: #fff;
+	background: var(--niche-black);
+
+	font-size: 11px;
+	text-decoration: none;
+}
+
+.niche-sale__clear-filters {
+	color: #666;
+	font-size: 11px;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+/* Product grid */
+
+.niche-sale__results {
+	margin-top: 22px;
+}
+
+.niche-sale .products_catalog {
+	width: 100%;
+}
+
+.niche-sale .main-catalog__body {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 44px 20px;
+	width: 100%;
+}
+
+.niche-sale .main-catalog__body > * {
+	width: 100%;
+	min-width: 0;
+}
+
+.niche-sale .main-catalog__paggination {
+	margin-top: 52px;
+}
+
+/* Drawer */
+
+.niche-sale__drawer {
+	position: fixed;
+	inset: 0;
+	z-index: 2147483000;
+
+	visibility: hidden;
+	opacity: 0;
+
+	pointer-events: none;
+
+	transition:
+		visibility 0.25s ease,
+		opacity 0.25s ease;
+}
+
+.niche-sale__drawer.is-open {
+	visibility: visible;
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.niche-sale__drawer-overlay {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	background: rgba(0, 0, 0, 0.42);
+}
+
+.niche-sale__drawer-panel {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 1;
+
+	width: min(390px, 92vw);
+	height: 100%;
+	padding: 24px;
+
+	overflow-y: auto;
+
+	background: #fff;
+
+	transform: translateX(100%);
+	transition: transform 0.3s ease;
+}
+
+.niche-sale__drawer.is-open .niche-sale__drawer-panel {
+	transform: translateX(0);
+}
+
+body.niche-sale-drawer-open {
+	overflow: hidden;
+}
+
+.niche-sale__drawer-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+
+	padding-bottom: 20px;
+	border-bottom: 1px solid var(--niche-border);
+}
+
+.niche-sale__drawer-header h2 {
+	margin: 0;
+	font-size: 23px;
+	font-weight: 500;
+}
+
+.niche-sale__drawer-close {
+	width: 32px;
+	height: 32px;
+	padding: 0;
+
+	border: 0;
+
+	color: var(--niche-black);
+	background: transparent;
+
+	font-size: 28px;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.niche-sale__drawer-list {
+	display: flex;
+	flex-direction: column;
+}
+
+.niche-sale__drawer-option {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+
+	min-height: 53px;
+
+	border-bottom: 1px solid #ededed;
+
+	color: var(--niche-black);
+	font-size: 15px;
+	text-decoration: none;
+}
+
+.niche-sale__drawer-option.is-active {
+	font-weight: 600;
+}
+
+.niche-sale__drawer-count {
+	color: #888;
+	font-size: 12px;
+}
+
+body.niche-sale-drawer-open {
+	overflow: hidden;
+}
+
+/* Tablet */
+
+@media (max-width: 1199px) {
+	.niche-sale .main-catalog__body {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
+/* Mobile */
+
+@media (max-width: 767.98px) {
+	.niche-sale__hero {
+		height: 285px;
+	}
+
+	.niche-sale__hero-content {
+		right: 15px;
+		bottom: 22px;
+		left: 15px;
+		text-align: left;
+	}
+
+	.niche-sale__hero-title {
+		font-size: 32px;
+	}
+
+	.niche-sale__hero-subtitle {
+		font-size: 11px;
+	}
+
+	.niche-sale__breadcrumbs {
+		top: 14px;
+		right: 15px;
+		bottom: auto;
+		left: 15px;
+		font-size: 11px;
+	}
+
+	.niche-sale__discount-cards > ._container {
+		padding-top: 11px;
+		padding-bottom: 11px;
+	}
+
+	.niche-sale__discount-list {
+		justify-content: flex-start;
+		margin-right: -15px;
+		padding-right: 15px;
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+
+	.niche-sale__discount-list::-webkit-scrollbar {
+		display: none;
+	}
+
+	.niche-sale__discount-card {
+		flex-basis: 116px;
+		min-width: 116px;
+		min-height: 48px;
+	}
+
+	.niche-sale__discount-value {
+		font-size: 16px;
+	}
+
+	.niche-sale__catalog {
+		padding-top: 19px;
+		padding-bottom: 55px;
+	}
+
+	.niche-sale__toolbar {
+		display: flex;
+		justify-content: space-between;
+		gap: 15px;
+	}
+
+	.niche-sale__toolbar-label,
+	.niche-sale__products-count {
+		font-size: 13px;
+	}
+
+	.niche-sale .main-catalog__body {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 34px 10px;
+	}
+
+	.niche-sale__drawer-panel {
+		top: auto;
+		bottom: 0;
+		width: 100%;
+		height: auto;
+		max-height: 78vh;
+		padding: 20px 18px 28px;
+		border-radius: 20px 20px 0 0;
+
+		transform: translateY(100%);
+	}
+
+	.niche-sale__drawer.is-open .niche-sale__drawer-panel {
+		transform: translateY(0);
+	}
+	
+	/* Niche sale: убираем дополнительный offset wrapper */
+
+    body.niche_sale_page {
+        --site-header-offset: 0px !important;
+    }
+    
+    body.niche_sale_page .wrapper {
+        padding-top: 0 !important;
+    }
+    
+    body.niche_sale_page
+    .wrapper:has(.header[data-site-header]) {
+        padding-top: 0 !important;
+    }
+}
+
+
+/* Скрываем Jivo при открытом drawer */
+
+body.niche-sale-drawer-open #jivo-iframe-container,
+body.niche-sale-drawer-open .jivo-iframe-container,
+body.niche-sale-drawer-open jdiv,
+body.niche-sale-drawer-open iframe[src*='jivo'] {
+	visibility: hidden !important;
+	opacity: 0 !important;
+	pointer-events: none !important;
+}
+
+

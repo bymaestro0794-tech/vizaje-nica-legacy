@@ -1,0 +1,251 @@
+/* ==========================================================================
+   Home Categories
+   ========================================================================== */
+
+.home-categories {
+	padding: 36px 0 72px;
+	background: #ffffff;
+}
+
+.home-categories__container {
+	overflow: hidden;
+}
+
+.home-categories__track {
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+	gap: clamp(32px, 4vw, 64px);
+}
+
+/* ==========================================================================
+   Category item
+   ========================================================================== */
+
+.home-category {
+	display: flex;
+	flex: 0 0 auto;
+	flex-direction: column;
+	align-items: center;
+	gap: 14px;
+
+	width: clamp(60px, 7.5vw, 90px);
+
+	color: #111111;
+	text-align: center;
+	text-decoration: none;
+
+	transition:
+		transform 240ms ease,
+		color 240ms ease;
+}
+
+.home-category__media {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	width: 100%;
+	aspect-ratio: 1;
+
+	padding: 5px;
+
+	border: 1px solid #111111;
+	border-radius: 50%;
+	background: #ffffff;
+
+	overflow: hidden;
+}
+
+.home-category__image-wrapper {
+	display: block;
+
+	width: 100%;
+	height: 100%;
+
+	border-radius: inherit;
+	overflow: hidden;
+}
+
+.home-category__image {
+	display: block;
+
+	width: 100%;
+	height: 100%;
+
+	border-radius: inherit;
+
+	object-fit: cover;
+	object-position: center;
+
+	transform: scale(1);
+
+	transition: transform 500ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.home-category__title {
+	display: block;
+
+	max-width: 100%;
+
+	font-size: 13px;
+	font-weight: 300;
+	line-height: 1.35;
+
+	color: inherit;
+
+	transition:
+		font-weight 240ms ease,
+		color 240ms ease;
+}
+
+/* ==========================================================================
+   Hover
+   ========================================================================== */
+
+@media (hover: hover) and (pointer: fine) {
+	.home-category:hover {
+		transform: translateY(-3px);
+	}
+
+	.home-category:hover .home-category__image {
+		transform: scale(1.04);
+	}
+
+	.home-category:hover .home-category__title {
+		font-weight: 500;
+	}
+}
+
+/* ==========================================================================
+   Reveal animation
+   ========================================================================== */
+
+.home-categories:not(.is-visible) .home-category {
+	opacity: 0;
+	transform: translateY(10px);
+}
+
+.home-categories.is-visible .home-category {
+	opacity: 1;
+	transform: translateY(0);
+
+	transition:
+		opacity 480ms ease,
+		transform 480ms ease;
+
+	transition-delay: calc(var(--category-index, 0) * 55ms);
+}
+
+/* ==========================================================================
+   Tablet
+   ========================================================================== */
+
+@media (max-width: 1199px) {
+	.home-categories {
+		padding: 32px 0 64px;
+	}
+
+	.home-categories__track {
+		gap: 28px;
+	}
+
+	.home-category {
+		width: 120px;
+	}
+}
+
+/* ==========================================================================
+   Mobile horizontal scroll
+   ========================================================================== */
+
+@media (max-width: 767px) {
+	.home-categories {
+		padding: 24px 0 48px;
+	}
+
+	.home-categories__container {
+		width: 100%;
+		max-width: none;
+		padding: 0;
+		overflow: visible;
+	}
+
+	.home-categories__track {
+		justify-content: flex-start;
+		gap: 18px;
+
+		width: 100%;
+		overflow-x: auto;
+		overflow-y: hidden;
+
+		padding: 0 max(16px, env(safe-area-inset-right)) 8px
+			max(16px, env(safe-area-inset-left));
+
+		scroll-snap-type: x proximity;
+		scroll-padding-left: max(16px, env(safe-area-inset-left));
+
+		-webkit-overflow-scrolling: touch;
+		overscroll-behavior-inline: contain;
+		scrollbar-width: none;
+	}
+
+	.home-categories__track::-webkit-scrollbar {
+		display: none;
+	}
+
+	.home-category {
+		width: 98px;
+		scroll-snap-align: start;
+	}
+
+	.home-category__media {
+		padding: 4px;
+	}
+
+	.home-category__title {
+		min-height: 38px;
+
+		font-size: 13px;
+		line-height: 1.35;
+
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		overflow: hidden;
+	}
+}
+
+/* ==========================================================================
+   Small mobile
+   ========================================================================== */
+
+@media (max-width: 420px) {
+	.home-categories__track {
+		gap: 16px;
+	}
+
+	.home-category {
+		width: 76px;
+	}
+
+	.home-category__title {
+		font-size: 12px;
+	}
+}
+
+/* ==========================================================================
+   Reduced motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+	.home-category,
+	.home-category__image {
+		transition-duration: 0.01ms !important;
+	}
+
+	.home-categories:not(.is-visible) .home-category {
+		opacity: 1;
+		transform: none;
+	}
+}

@@ -1,0 +1,603 @@
+/* =========================================================
+   Brands page
+   ========================================================= */
+
+.brands {
+	padding: 28px 0 120px;
+}
+
+.brands__container {
+	position: relative;
+}
+
+/* =========================================================
+   Header
+   ========================================================= */
+
+.head-brands {
+	display: grid;
+	grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+	align-items: end;
+	gap: 40px;
+}
+
+.head-brands__main {
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+	min-width: 0;
+}
+
+.head-brands__title {
+	margin: 0;
+	font-weight: 600;
+	font-size: 34px;
+	line-height: 1;
+	letter-spacing: -0.03em;
+	color: #111111;
+}
+
+.head-brands__counts {
+	font-weight: 400;
+	font-size: 14px;
+	line-height: 1;
+	color: #8b8b8b;
+}
+
+/* =========================================================
+   Search
+   ========================================================= */
+
+.search-head-brands {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	min-width: 0;
+	padding-bottom: 12px;
+	border-bottom: 1px solid #b8b8b8;
+	transition: border-color 0.2s ease;
+}
+
+.search-head-brands:focus-within {
+	border-color: #111111;
+}
+
+.search-head-brands__input {
+	flex: 1 1 auto;
+	width: 100%;
+	min-width: 0;
+	padding: 0;
+	border: 0;
+	outline: 0;
+	background: transparent;
+	font: inherit;
+	font-weight: 400;
+	font-size: 15px;
+	line-height: 1.4;
+	color: #111111;
+}
+
+.search-head-brands__input::placeholder {
+	color: #8e8e8e;
+}
+
+.search-head-brands__input::-webkit-search-cancel-button {
+	cursor: pointer;
+}
+
+.search-head-brands__btn {
+	flex: 0 0 22px;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	cursor: pointer;
+}
+
+.search-head-brands__btn img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+/* =========================================================
+   Alphabet navigation
+   ========================================================= */
+
+.brand-letter {
+	position: sticky;
+	top: 70px;
+	z-index: 15;
+	margin-top: 14px;
+	padding: 10px 0;
+	border-bottom: 1px solid #ededed;
+	background: rgba(255, 255, 255, 0.96);
+	backdrop-filter: blur(12px);
+}
+
+.brand-letter__content {
+	width: 100%;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+
+.brand-letter__content::-webkit-scrollbar {
+	display: none;
+}
+
+.brand-letter__list {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	width: max-content;
+	min-width: 100%;
+}
+
+.brand-letter__link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 28px;
+	height: 28px;
+	padding: 0 7px;
+	border: 1px solid transparent;
+	border-radius: 6px;
+	font-weight: 500;
+	font-size: 12px;
+	line-height: 1;
+	text-transform: uppercase;
+	color: #111111;
+	transition:
+		color 0.2s ease,
+		border-color 0.2s ease,
+		background-color 0.2s ease;
+}
+
+.brand-letter__link:hover {
+	border-color: #d4d4d4;
+	background: #f7f7f7;
+}
+
+.brand-letter__link._active {
+	border-color: #d3d3d3;
+	background: #f5f5f5;
+	color: #111111;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* =========================================================
+   Brands list
+   ========================================================= */
+
+.brands__content {
+	width: 100%;
+	margin-top: 30px;
+}
+
+.brands__rows {
+	display: flex;
+	flex-direction: column;
+}
+
+.brands__row {
+	display: grid;
+	grid-template-columns: 70px minmax(0, 1fr);
+	gap: 25px;
+	padding: 30px 0;
+	border-bottom: 1px solid #e8e8e8;
+	scroll-margin-top: 145px;
+}
+
+.brands__row:first-child {
+	padding-top: 20px;
+}
+
+.brands__letter {
+	font-weight: 500;
+	font-size: 52px;
+	line-height: 1;
+	letter-spacing: -0.04em;
+	text-transform: uppercase;
+	color: #111111;
+}
+
+.brands__body {
+	min-width: 0;
+}
+
+.brands__column {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	column-gap: clamp(50px, 10vw, 180px);
+	row-gap: 10px;
+}
+
+.brands__item {
+	min-width: 0;
+}
+
+.brands__link {
+	display: inline-block;
+	font-weight: 400;
+	font-size: 15px;
+	line-height: 1.4;
+	color: #111111;
+	transition:
+		opacity 0.2s ease,
+		transform 0.2s ease;
+}
+
+.brands__link:hover {
+	opacity: 0.55;
+}
+
+.brands__row[hidden],
+.brands__item[hidden] {
+	display: none;
+}
+
+.brands__empty {
+	margin: 60px 0 0;
+	font-size: 16px;
+	color: #777777;
+}
+
+/* =========================================================
+   Active state буквенного блока
+   ========================================================= */
+
+.brands__row {
+	position: relative;
+	transition:
+		background-color 0.25s ease,
+		padding-left 0.25s ease,
+		padding-right 0.25s ease;
+}
+
+.brands__row._active {
+	background-color: #f8f8f8;
+	padding-left: 18px;
+	padding-right: 18px;
+}
+
+.brands__row._active .brands__letter {
+	color: #000000;
+}
+
+.brands__row._search-active {
+	background-color: #fafafa;
+}
+
+/* =========================================================
+   Active state найденного бренда
+   ========================================================= */
+
+.brands__item {
+	border-radius: 4px;
+	transition:
+		background-color 0.2s ease,
+		padding-left 0.2s ease;
+}
+
+.brands__item._active {
+	padding-left: 8px;
+	background-color: #f1f1f1;
+}
+
+.brands__item._active .brands__link {
+	font-weight: 500;
+	color: #000000;
+}
+
+/* =========================================================
+   Tablet
+   ========================================================= */
+
+@media (max-width: 991px) {
+	.head-brands {
+		grid-template-columns: 180px minmax(0, 1fr);
+		gap: 25px;
+	}
+
+	.brands__column {
+		column-gap: 40px;
+	}
+}
+
+/* =========================================================
+   Mobile
+   ========================================================= */
+
+@media (max-width: 767px) {
+	.brands {
+		padding-top: 20px;
+		padding-bottom: 80px;
+	}
+
+	.head-brands {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 24px;
+	}
+
+	.head-brands__title {
+		font-size: 30px;
+	}
+
+	.head-brands__search {
+		width: 100%;
+	}
+
+	.brand-letter {
+		top: 58px;
+		margin-right: calc(var(--container-padding, 16px) * -1);
+		margin-left: calc(var(--container-padding, 16px) * -1);
+		padding-right: var(--container-padding, 16px);
+		padding-left: var(--container-padding, 16px);
+	}
+
+	.brand-letter__list {
+		gap: 4px;
+	}
+
+	.brand-letter__link {
+		min-width: 30px;
+		height: 30px;
+		font-size: 12px;
+	}
+
+	.brands__content {
+		margin-top: 20px;
+	}
+
+	.brands__row {
+		grid-template-columns: 45px minmax(0, 1fr);
+		gap: 18px;
+		padding: 26px 0;
+		scroll-margin-top: 130px;
+	}
+
+	.brands__letter {
+		font-size: 38px;
+	}
+
+	.brands__column {
+		grid-template-columns: 1fr;
+		row-gap: 12px;
+	}
+
+	.brands__link {
+		font-size: 15px;
+	}
+}
+
+/* =========================================================
+   Brands page — mobile
+   ========================================================= */
+
+@media (max-width: 767px) {
+	.brands {
+		padding-top: 18px;
+		padding-bottom: 70px;
+		overflow: hidden;
+	}
+
+	.brands__container {
+		width: 100%;
+	}
+
+	/* -----------------------------
+     Заголовок и поиск
+     ----------------------------- */
+
+	.head-brands {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 20px;
+	}
+
+	.head-brands__main {
+		display: flex;
+		align-items: baseline;
+		gap: 8px;
+		width: 100%;
+	}
+
+	.head-brands__title {
+		margin: 0;
+		font-size: 28px;
+		line-height: 1.15;
+		letter-spacing: -0.03em;
+	}
+
+	.head-brands__counts {
+		padding: 0;
+		font-size: 13px;
+		line-height: 1;
+		color: #8d8d8d;
+	}
+
+	.head-brands__search {
+		order: 2;
+		width: 100%;
+	}
+
+	.search-head-brands {
+		padding-bottom: 10px;
+		gap: 12px;
+	}
+
+	.search-head-brands__input {
+		font-size: 15px;
+		line-height: 20px;
+	}
+
+	.search-head-brands__btn {
+		flex: 0 0 20px;
+		width: 20px;
+		height: 20px;
+	}
+
+	/* -----------------------------
+     Алфавит
+     ----------------------------- */
+
+	.brand-letter {
+		position: relative;
+		top: 48px;
+		left: auto;
+		right: auto;
+		z-index: 5;
+
+		width: 100%;
+		margin: 16px 0 0;
+		padding: 0 0 12px;
+
+		border-bottom: 1px solid #e7e7e7;
+		background: #ffffff;
+		backdrop-filter: none;
+	}
+
+	.brand-letter__content {
+		width: 100%;
+		padding: 0;
+		overflow-x: auto;
+		overflow-y: hidden;
+
+		scrollbar-width: none;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	.brand-letter__content::-webkit-scrollbar {
+		display: none;
+	}
+
+	.brand-letter__list {
+		display: flex;
+		justify-content: flex-start;
+		align-items: center;
+		gap: 6px;
+
+		width: max-content;
+		min-width: max-content;
+		padding-right: 16px;
+	}
+
+	.brand-letter__link {
+		flex: 0 0 auto;
+
+		min-width: 28px;
+		height: 28px;
+		padding: 0 7px;
+
+		border-radius: 6px;
+
+		font-size: 12px;
+		line-height: 1;
+	}
+
+	.brand-letter__link._active {
+		background: #f1f1f1;
+		border-color: #d5d5d5;
+		box-shadow: none;
+	}
+
+	/* -----------------------------
+     Список брендов
+     ----------------------------- */
+
+	.brands__content {
+		margin-top: 22px;
+	}
+
+	.brands__rows {
+		row-gap: 0;
+	}
+
+	.brands__row {
+		display: block;
+
+		padding: 28px 0;
+		border-bottom: 1px solid #e7e7e7;
+
+		scroll-margin-top: 80px;
+
+		background: transparent;
+	}
+
+	.brands__row:first-child {
+		padding-top: 18px;
+	}
+
+	.brands__row._active {
+		padding-right: 0;
+		padding-left: 0;
+		background: transparent;
+	}
+
+	.brands__row._search-active {
+		background: transparent;
+	}
+
+	.brands__letter {
+		display: block;
+
+		margin-bottom: 16px;
+
+		font-size: 34px;
+		line-height: 1;
+		font-weight: 500;
+		letter-spacing: -0.04em;
+	}
+
+	.brands__body {
+		width: 100%;
+	}
+
+	.brands__column {
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+
+		width: 100%;
+		column-count: initial;
+	}
+
+	.brands__item {
+		width: 100%;
+		margin: 0;
+		padding: 0;
+		border-radius: 0;
+	}
+
+	.brands__item + .brands__item {
+		margin-top: 12px;
+	}
+
+	.brands__item._active {
+		padding-left: 0;
+		background: transparent;
+	}
+
+	.brands__item._active .brands__link {
+		font-weight: 500;
+	}
+
+	.brands__link {
+		display: block;
+
+		width: 100%;
+
+		font-size: 17px;
+		line-height: 1.35;
+	}
+
+	.brands__empty {
+		margin-top: 40px;
+		font-size: 15px;
+	}
+}

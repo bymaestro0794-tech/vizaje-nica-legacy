@@ -1,0 +1,37 @@
+# IDE & editors
+.git/
+.idea/
+.vscode/
+
+# Node
+node_modules/
+
+# Composer dependencies
+vendor/
+old_vendor/
+
+# Gulp build output
+dist/
+
+# Credentials & secrets — никогда не пушить в git
+application/config/database.php
+application/libraries/secret/
+.htpasswd
+
+# CI logs
+application/logs/log-*.php
+
+# User-uploaded media (восстанавливается из бэкапа сервера)
+public/
+
+# Server/hosting-specific
+.cpanel.yml
+.ftpquota
+error_log
+
+# Generated/data files
+sitemap.xml
+products.json
+
+# phpMyAdmin
+pmadm/

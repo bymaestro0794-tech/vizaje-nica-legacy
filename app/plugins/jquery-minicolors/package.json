@@ -1,0 +1,63 @@
+{
+  "_from": "@claviska/jquery-minicolors",
+  "_id": "@claviska/jquery-minicolors@2.3.4",
+  "_inBundle": false,
+  "_integrity": "sha512-YSa2enAGxtPNGqI86a49XY3BO+dkEaX0XA6dBpk2+OG60zwNdDmbsoiaQ39dS48jdIEmNTYigw3Kt1YiWc1Q3A==",
+  "_location": "/@claviska/jquery-minicolors",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "@claviska/jquery-minicolors",
+    "name": "@claviska/jquery-minicolors",
+    "escapedName": "@claviska%2fjquery-minicolors",
+    "scope": "@claviska",
+    "rawSpec": "",
+    "saveSpec": null,
+    "fetchSpec": "latest"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/@claviska/jquery-minicolors/-/jquery-minicolors-2.3.4.tgz",
+  "_shasum": "8f5c4af3e7d55396890288b357742711b368f75a",
+  "_spec": "@claviska/jquery-minicolors",
+  "_where": "D:\\JOB\\domains\\citron",
+  "author": {
+    "name": "Cory LaViska"
+  },
+  "bugs": {
+    "url": "https://github.com/claviska/jquery-minicolors/issues"
+  },
+  "bundleDependencies": false,
+  "deprecated": false,
+  "description": "jQuery MiniColors Plugin",
+  "devDependencies": {
+    "del": "^2.2.0",
+    "gulp": "^3.9.1",
+    "gulp-help": "^1.6.1",
+    "gulp-rename": "^1.4.0",
+    "gulp-uglify": "^1.5.3"
+  },
+  "homepage": "https://github.com/claviska/jquery-minicolors",
+  "keywords": [
+    "jquery",
+    "colorpicker"
+  ],
+  "license": "MIT",
+  "main": "jquery.minicolors.js",
+  "name": "@claviska/jquery-minicolors",
+  "peerDependencies": {
+    "jquery": ">= 1.7.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/claviska/jquery-minicolors.git"
+  },
+  "scripts": {
+    "build": "gulp",
+    "watch": "gulp watch"
+  },
+  "version": "2.3.4"
+}

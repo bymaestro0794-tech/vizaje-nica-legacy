@@ -1,0 +1,1492 @@
+/* =========================================================
+   Vizaje-Nica — Stores page
+   ========================================================= */
+
+.vn-stores {
+	--stores-border: #e2e2e2;
+	--stores-text: #111111;
+	--stores-muted: #777777;
+	--stores-soft: #f5f5f3;
+
+	/*
+	 * Высота desktop-header.
+	 * При необходимости скорректировать под реальный header.
+	 */
+	--stores-header-height: 76px;
+
+	/*
+	 * Header + breadcrumbs + верхние отступы страницы.
+	 * Используется для расчёта desktop-высоты layout.
+	 */
+	--stores-page-top: 130px;
+
+	width: 100%;
+	color: var(--stores-text);
+	background: #ffffff;
+	padding-top: 104px;
+}
+
+.vn-stores *,
+.vn-stores *::before,
+.vn-stores *::after {
+	box-sizing: border-box;
+}
+
+/* =========================================================
+   Container
+   ========================================================= */
+
+.vn-stores__container {
+	width: 100%;
+	max-width: none;
+	margin: 0;
+	padding-right: 0;
+	padding-left: clamp(20px, 3.1vw, 52px);
+}
+
+/* =========================================================
+   Breadcrumbs
+   ========================================================= */
+
+.vn-stores__breadcrumbs {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+
+	padding-top: 28px;
+	padding-right: 36px;
+
+	font-size: 14px;
+	line-height: 1.4;
+	color: var(--stores-muted);
+}
+
+.vn-stores__breadcrumbs a {
+	color: inherit;
+	transition: color 0.2s ease;
+}
+
+.vn-stores__breadcrumbs a:hover {
+	color: var(--stores-text);
+}
+
+/* =========================================================
+   Base layout
+   ========================================================= */
+
+.vn-stores__layout {
+	margin-top: 24px;
+}
+
+.vn-stores__content {
+	min-width: 0;
+}
+
+.vn-stores__header {
+	margin-bottom: 24px;
+}
+
+.vn-stores__list {
+	border-top: 1px solid var(--stores-border);
+}
+
+/* =========================================================
+   Heading
+   ========================================================= */
+
+.vn-stores__title {
+	margin: 0;
+
+	font-weight: 500;
+	font-size: clamp(48px, 3.8vw, 64px);
+	line-height: 0.98;
+	letter-spacing: -0.045em;
+}
+
+.vn-stores__count {
+	margin: 18px 0 0;
+
+	font-size: 17px;
+	line-height: 1.4;
+	color: var(--stores-muted);
+}
+
+/* =========================================================
+   Mobile tabs
+   ========================================================= */
+
+.vn-stores__mobile-tabs {
+	display: none;
+}
+
+/* =========================================================
+   Store card
+   ========================================================= */
+
+.vn-store-card {
+	position: relative;
+
+	border-bottom: 1px solid var(--stores-border);
+	background: #ffffff;
+
+	transition:
+		background-color 0.2s ease,
+		box-shadow 0.2s ease;
+}
+
+.vn-store-card::before {
+	content: '';
+
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+
+	width: 3px;
+
+	background: transparent;
+
+	transition: background-color 0.2s ease;
+}
+
+.vn-store-card:hover {
+	background: #fafafa;
+}
+
+.vn-store-card.is-active {
+	background: #fbfbfb;
+}
+
+.vn-store-card.is-active::before {
+	background: #111111;
+}
+
+.vn-store-card__select {
+	display: grid;
+	grid-template-columns:
+		58px
+		minmax(170px, 1.15fr)
+		minmax(135px, 0.8fr)
+		minmax(135px, auto);
+	align-items: center;
+	gap: 18px;
+
+	width: 100%;
+	min-height: 92px;
+	padding: 17px 4px 17px 16px;
+
+	border: 0;
+	background: transparent;
+	color: inherit;
+
+	text-align: left;
+	cursor: pointer;
+}
+
+.vn-store-card__number {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+
+	width: 47px;
+	height: 47px;
+
+	border: 1px solid #cccccc;
+	border-radius: 50%;
+
+	background: #ffffff;
+	color: #111111;
+
+	font-weight: 400;
+	font-size: 16px;
+	line-height: 1;
+
+	transition:
+		border-color 0.2s ease,
+		background-color 0.2s ease,
+		color 0.2s ease,
+		transform 0.2s ease;
+}
+
+.vn-store-card.is-active .vn-store-card__number {
+	border-color: #111111;
+	background: #111111;
+	color: #ffffff;
+}
+
+.vn-store-card__main,
+.vn-store-card__schedule {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.vn-store-card__title {
+	overflow: hidden;
+
+	font-weight: 600;
+	font-size: 16px;
+	line-height: 1.3;
+
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.vn-store-card__address {
+	overflow: hidden;
+
+	margin-top: 4px;
+
+	font-size: 13px;
+	line-height: 1.35;
+	color: #686868;
+
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.vn-store-card__status {
+	font-size: 12px;
+	line-height: 1.35;
+	color: #333333;
+}
+
+.vn-store-card__time {
+	margin-top: 3px;
+
+	font-size: 13px;
+	line-height: 1.35;
+	color: #777777;
+}
+
+.vn-store-card__action {
+	display: inline-flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 8px;
+
+	min-width: 0;
+
+	font-size: 12px;
+	line-height: 1.3;
+	white-space: nowrap;
+}
+
+.vn-store-card__action span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.vn-store-card__action svg {
+	flex: 0 0 auto;
+
+	transition: transform 0.2s ease;
+}
+
+.vn-store-card__select:hover .vn-store-card__action svg {
+	transform: translateX(4px);
+}
+
+/* =========================================================
+   Map wrapper
+   ========================================================= */
+
+.vn-stores__map-wrap {
+	position: relative;
+
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+
+	overflow: hidden;
+
+	border-left: 1px solid #eeeeee;
+	background: #f5f4f0;
+}
+
+.vn-stores__map {
+	position: relative;
+
+	flex: 1 1 auto;
+
+	width: 100%;
+	min-height: 0;
+
+	overflow: hidden;
+}
+
+.vn-stores__map .maplibregl-canvas {
+	outline: none;
+
+	filter: saturate(0.43) brightness(1.06) contrast(0.91);
+}
+
+.vn-stores__map .maplibregl-ctrl-group {
+	overflow: hidden;
+
+	border-radius: 4px;
+
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.vn-stores__map .maplibregl-ctrl-bottom-left {
+	display: none;
+}
+
+.vn-stores__map .maplibregl-ctrl-bottom-right {
+	opacity: 0.55;
+}
+
+.vn-stores__map .maplibregl-ctrl-attrib {
+	font-size: 9px;
+}
+
+/* =========================================================
+   Map markers
+   ========================================================= */
+
+.vn-map-marker {
+	position: relative;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	width: 36px;
+	height: 36px;
+	padding: 0;
+
+	border: 2px solid #ffffff;
+	border-radius: 50%;
+
+	background: #111111;
+	color: #ffffff;
+
+	box-shadow:
+		0 4px 12px rgba(0, 0, 0, 0.22),
+		0 0 0 1px rgba(0, 0, 0, 0.06);
+
+	cursor: pointer;
+	transform-origin: center;
+
+	transition:
+		transform 0.2s ease,
+		box-shadow 0.2s ease,
+		background-color 0.2s ease;
+}
+
+.vn-map-marker::before {
+	content: '';
+
+	position: absolute;
+	z-index: -1;
+	bottom: -5px;
+	left: 50%;
+
+	width: 10px;
+	height: 10px;
+
+	border-right: 2px solid #ffffff;
+	border-bottom: 2px solid #ffffff;
+
+	background: #111111;
+
+	transform: translateX(-50%) rotate(45deg);
+}
+
+.vn-map-marker__number {
+	position: relative;
+	z-index: 2;
+
+	margin: 0;
+
+	font-weight: 500;
+	font-size: 10px;
+	line-height: 1;
+	color: #ffffff;
+}
+
+.vn-map-marker:hover {
+	transform: translateY(-2px) scale(1.05);
+}
+
+.vn-map-marker.is-active {
+	z-index: 5;
+
+	background: #111111;
+
+	transform: scale(1.18);
+
+	box-shadow:
+		0 7px 18px rgba(0, 0, 0, 0.24),
+		0 0 0 6px rgba(255, 255, 255, 0.94);
+}
+
+/* =========================================================
+   Selected store panel
+   ========================================================= */
+
+.vn-map-panel {
+	position: absolute;
+	z-index: 10;
+	right: 28px;
+	bottom: 116px;
+
+	width: min(294px, calc(100% - 56px));
+	padding: 24px;
+
+	border: 1px solid rgba(0, 0, 0, 0.04);
+	border-radius: 16px;
+
+	background: rgba(255, 255, 255, 0.97);
+
+	box-shadow: 0 16px 48px rgba(0, 0, 0, 0.13);
+	backdrop-filter: blur(14px);
+
+	transition:
+		opacity 0.22s ease,
+		transform 0.22s ease,
+		visibility 0.22s ease;
+}
+
+.vn-map-panel.is-hidden {
+	visibility: hidden;
+	opacity: 0;
+
+	transform: translateY(10px);
+
+	pointer-events: none;
+}
+
+.vn-map-panel__close {
+	position: absolute;
+	top: 15px;
+	right: 15px;
+
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+
+	width: 32px;
+	height: 32px;
+	padding: 0;
+
+	border: 0;
+	border-radius: 50%;
+
+	background: transparent;
+	color: #111111;
+
+	cursor: pointer;
+
+	transition: background-color 0.2s ease;
+}
+
+.vn-map-panel__close:hover {
+	background: #f0f0f0;
+}
+
+.vn-map-panel__number {
+	display: none;
+}
+
+.vn-map-panel__title {
+	max-width: calc(100% - 38px);
+	margin: 0;
+
+	font-weight: 600;
+	font-size: 20px;
+	line-height: 1.25;
+}
+
+.vn-map-panel__address {
+	margin: 7px 0 0;
+
+	font-size: 13px;
+	line-height: 1.4;
+	color: #6d6d6d;
+}
+
+.vn-map-panel__time {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+
+	margin-top: 19px;
+}
+
+.vn-map-panel__time > svg {
+	flex: 0 0 auto;
+	margin-top: 1px;
+}
+
+.vn-map-panel__time div {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+}
+
+.vn-map-panel__time strong {
+	font-weight: 500;
+	font-size: 14px;
+	line-height: 1.3;
+}
+
+.vn-map-panel__time span {
+	font-size: 12px;
+	line-height: 1.3;
+	color: #777777;
+}
+
+.vn-map-panel__route {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 16px;
+
+	width: 100%;
+	min-height: 46px;
+	margin-top: 19px;
+	padding: 10px 18px;
+
+	border-radius: 999px;
+
+	background: #111111;
+	color: #ffffff;
+
+	font-weight: 500;
+	font-size: 14px;
+	line-height: 1.2;
+
+	transition:
+		background-color 0.2s ease,
+		transform 0.2s ease;
+}
+
+.vn-map-panel__route:hover {
+	background: #292929;
+}
+
+.vn-map-panel__route:active {
+	transform: scale(0.99);
+}
+
+/* =========================================================
+   Map footer
+   ========================================================= */
+
+.vn-stores__map-footer {
+	flex: 0 0 auto;
+
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+
+	min-height: 94px;
+
+	border-top: 1px solid var(--stores-border);
+
+	background: rgba(250, 249, 246, 0.98);
+}
+
+.vn-stores__map-feature {
+	display: flex;
+	align-items: center;
+	gap: 15px;
+
+	min-width: 0;
+	padding: 18px 26px;
+}
+
+.vn-stores__map-feature + .vn-stores__map-feature {
+	border-left: 1px solid var(--stores-border);
+}
+
+.vn-stores__map-feature > svg {
+	flex: 0 0 auto;
+}
+
+.vn-stores__map-feature div {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+
+	min-width: 0;
+}
+
+.vn-stores__map-feature strong {
+	font-weight: 500;
+	font-size: 12px;
+	line-height: 1.3;
+}
+
+.vn-stores__map-feature span,
+.vn-stores__map-feature a {
+	width: fit-content;
+
+	font-size: 11px;
+	line-height: 1.35;
+	color: #777777;
+}
+
+.vn-stores__map-feature a {
+	border-bottom: 1px solid currentColor;
+}
+
+/* =========================================================
+   Desktop
+   ========================================================= */
+
+@media (min-width: 992px) {
+	.vn-stores__layout {
+		display: grid;
+		grid-template-columns:
+			minmax(610px, 48.5%)
+			minmax(0, 51.5%);
+
+		height: calc(100dvh - var(--stores-page-top));
+		min-height: 620px;
+
+		overflow: hidden;
+	}
+
+	.vn-stores__content {
+		display: flex;
+		flex-direction: column;
+
+		height: 100%;
+		min-height: 0;
+		padding-right: 38px;
+
+		overflow: hidden;
+	}
+
+	.vn-stores__header {
+		flex: 0 0 auto;
+	}
+
+	.vn-stores__list {
+		flex: 1 1 auto;
+
+		min-height: 0;
+
+		overflow-x: hidden;
+		overflow-y: auto;
+
+		scrollbar-width: thin;
+		scrollbar-color: #c7c7c7 transparent;
+
+		overscroll-behavior: contain;
+	}
+
+	.vn-stores__list::-webkit-scrollbar {
+		width: 5px;
+	}
+
+	.vn-stores__list::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.vn-stores__list::-webkit-scrollbar-thumb {
+		border-radius: 999px;
+		background: #c7c7c7;
+	}
+
+	.vn-stores__list::-webkit-scrollbar-thumb:hover {
+		background: #999999;
+	}
+
+	.vn-stores__map-wrap {
+		align-self: stretch;
+
+		height: 100%;
+		min-height: 0;
+	}
+}
+
+/* =========================================================
+   Large desktop
+   ========================================================= */
+
+@media (min-width: 1260px) {
+	.vn-store-card__select {
+		grid-template-columns:
+			56px
+			minmax(205px, 1.25fr)
+			minmax(165px, 0.9fr)
+			minmax(140px, auto);
+
+		gap: 20px;
+
+		min-height: 96px;
+		padding: 18px 7px 18px 15px;
+	}
+
+	.vn-store-card__number {
+		width: 48px;
+		height: 48px;
+	}
+
+	.vn-store-card__action {
+		padding-right: 2px;
+	}
+}
+
+/* =========================================================
+   Tablet
+   ========================================================= */
+
+@media (max-width: 1250px) and (min-width: 992px) {
+	.vn-stores__layout {
+		grid-template-columns:
+			minmax(500px, 51%)
+			minmax(0, 49%);
+	}
+
+	.vn-stores__content {
+		padding-right: 26px;
+	}
+
+	.vn-store-card__select {
+		grid-template-columns:
+			52px
+			minmax(145px, 1fr)
+			minmax(120px, 0.8fr);
+
+		gap: 13px;
+
+		min-height: 98px;
+	}
+
+	.vn-store-card__action {
+		grid-column: 2 / -1;
+
+		justify-content: flex-start;
+
+		margin-top: -7px;
+	}
+
+	.vn-stores__map-feature {
+		padding: 16px;
+	}
+}
+
+/* =========================================================
+   Stores — Mobile
+   ========================================================= */
+
+@media (max-width: 991px) {
+    .vn-stores {
+    	--stores-mobile-header-height: 60px;
+    	--stores-mobile-page-gap: 66px;
+    	--stores-mobile-side-space: 16px;
+    	--stores-mobile-map-gap: 18px;
+    
+    	width: 100%;
+    	padding:
+    		var(--stores-mobile-header-height)
+    		0
+    		60px;
+    
+    	background: #ffffff;
+    }
+
+
+	/* =====================================================
+	   Container
+	   ===================================================== */
+
+	.vn-stores__container {
+		width: 100%;
+		max-width: none;
+		margin: 0;
+
+		padding: 0 var(--stores-mobile-side-space);
+	}
+
+	/* =====================================================
+	   Breadcrumbs
+	   ===================================================== */
+
+    .vn-stores__breadcrumbs {
+    	display: flex;
+    	align-items: center;
+    	gap: 9px;
+    
+    	width: 100%;
+    	padding-top: var(--stores-mobile-page-gap);
+    
+    	font-size: 13px;
+    	line-height: 1.4;
+    	color: var(--stores-muted);
+    }
+
+	.vn-stores__breadcrumbs a {
+		overflow: hidden;
+
+		max-width: 44%;
+
+		color: inherit;
+
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.vn-stores__breadcrumbs span:last-child {
+		overflow: hidden;
+
+		max-width: 48%;
+
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	/* =====================================================
+	   Layout
+	   ===================================================== */
+
+	.vn-stores__layout {
+		position: relative;
+
+		display: block;
+
+		width: 100%;
+		height: auto;
+		min-height: 0;
+		margin-top: 25px;
+
+		overflow: visible;
+	}
+
+	.vn-stores__content {
+		width: 100%;
+		height: auto;
+		min-height: 0;
+		padding: 0;
+
+		overflow: visible;
+	}
+
+	/* =====================================================
+	   Header
+	   ===================================================== */
+
+	.vn-stores__header {
+		margin: 0;
+	}
+
+	.vn-stores__title {
+		margin: 0;
+
+		font-weight: 500;
+		font-size: clamp(39px, 11vw, 44px);
+		line-height: 1;
+		letter-spacing: -0.04em;
+	}
+
+	.vn-stores__count {
+		margin: 14px 0 0;
+
+		font-size: 15px;
+		line-height: 1.4;
+		color: var(--stores-muted);
+	}
+
+	/* =====================================================
+	   List / map tabs
+	   ===================================================== */
+
+	.vn-stores__mobile-tabs {
+		position: sticky;
+		top: var(--stores-mobile-header-height);
+		z-index: 25;
+
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+
+		width: 100%;
+		margin-top: 24px;
+		margin-bottom: 18px;
+		padding: 3px;
+
+		border: 1px solid rgba(0, 0, 0, 0.025);
+		border-radius: 13px;
+
+		background: rgba(242, 242, 242, 0.96);
+
+		box-shadow: 0 6px 18px rgba(0, 0, 0, 0.035);
+		backdrop-filter: blur(12px);
+	}
+
+	.vn-stores.is-map-view .vn-stores__mobile-tabs {
+		top: var(--stores-mobile-header-height);
+		margin-top: 8px;
+	}
+
+	.vn-stores__mobile-tab {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+
+		width: 100%;
+		min-width: 0;
+		min-height: 48px;
+		padding: 8px 12px;
+
+		border: 0;
+		border-radius: 10px;
+
+		background: transparent;
+		color: #7d7d7d;
+
+		font-family: inherit;
+		font-weight: 500;
+		font-size: 14px;
+		line-height: 1.2;
+
+		cursor: pointer;
+
+		transition:
+			background-color 0.2s ease,
+			color 0.2s ease,
+			box-shadow 0.2s ease;
+	}
+
+	.vn-stores__mobile-tab svg {
+		flex: 0 0 auto;
+	}
+
+	.vn-stores__mobile-tab.is-active {
+		background: #ffffff;
+		color: #111111;
+
+		box-shadow:
+			0 2px 8px rgba(0, 0, 0, 0.06),
+			0 0 0 1px rgba(0, 0, 0, 0.025);
+	}
+
+	/* =====================================================
+	   Animated list / map switching
+	   ===================================================== */
+
+
+	/*
+	 * List mode
+	 */
+	.vn-stores__content,
+	.vn-stores__map-wrap {
+		min-width: 0;
+	}
+
+	.vn-stores__list,
+	.vn-stores__map-wrap {
+		transition:
+			opacity 0.22s ease,
+			transform 0.22s ease,
+			visibility 0.22s ease;
+	}
+
+	/* Список */
+
+	.vn-stores.is-list-view .vn-stores__list {
+		position: relative;
+		z-index: 2;
+
+		visibility: visible;
+		opacity: 1;
+		transform: translateY(0);
+
+		pointer-events: auto;
+	}
+
+	.vn-stores.is-list-view .vn-stores__map-wrap {
+		position: absolute;
+		z-index: 1;
+		inset: 0 auto auto 0;
+
+		width: 100%;
+
+		visibility: hidden;
+		opacity: 0;
+		transform: translateY(8px);
+
+		pointer-events: none;
+	}
+
+	/* Карта */
+
+	/*
+	 * Map mode
+	 */
+
+    .vn-stores.is-map-view .vn-stores__breadcrumbs,
+    .vn-stores.is-map-view .vn-stores__header {
+    	display: none;
+    }
+    
+    .vn-stores.is-map-view .vn-stores__container {
+    	padding-top: var(--stores-mobile-map-gap);
+    }
+    
+    .vn-stores.is-map-view .vn-stores__layout {
+    	margin-top: 0;
+    }
+    
+    .vn-stores.is-map-view .vn-stores__mobile-tabs {
+    	margin-top: 0;
+    	margin-bottom: 14px;
+    }
+
+	.vn-stores.is-map-view .vn-stores__list {
+		position: absolute;
+		z-index: 1;
+		top: 0;
+		left: 0;
+
+		width: 100%;
+
+		opacity: 0;
+		transform: translateY(-8px);
+
+		pointer-events: none;
+	}
+
+	.vn-stores.is-map-view .vn-stores__map-wrap {
+		position: relative;
+		z-index: 2;
+
+		width: 100%;
+
+		opacity: 1;
+		transform: translateY(0);
+
+		pointer-events: auto;
+	}
+
+	/* =====================================================
+	   Stores list
+	   ===================================================== */
+
+	.vn-stores__list {
+		width: 100%;
+
+		border-top: 1px solid var(--stores-border);
+
+		overflow: visible;
+	}
+
+	.vn-store-card {
+		width: 100%;
+
+		background: #ffffff;
+	}
+
+	.vn-store-card::before {
+		width: 3px;
+	}
+
+	.vn-store-card:hover {
+		background: #ffffff;
+	}
+
+	.vn-store-card.is-active {
+		background: #fbfbfb;
+	}
+
+	.vn-store-card__select {
+		display: grid;
+		grid-template-columns: 52px minmax(0, 1fr);
+		grid-template-rows: auto auto auto;
+		align-items: start;
+		gap: 8px 14px;
+
+		width: 100%;
+		min-height: 0;
+		padding: 19px 8px 19px 12px;
+
+		border: 0;
+
+		background: transparent;
+		text-align: left;
+	}
+
+	.vn-store-card__number {
+		grid-column: 1;
+		grid-row: 1 / span 3;
+
+		align-self: center;
+
+		width: 46px;
+		height: 46px;
+
+		font-size: 15px;
+	}
+
+	.vn-store-card__main {
+		grid-column: 2;
+		grid-row: 1;
+
+		min-width: 0;
+	}
+
+	.vn-store-card__title {
+		display: block;
+		overflow: visible;
+
+		font-weight: 600;
+		font-size: 16px;
+		line-height: 1.3;
+
+		text-overflow: initial;
+		white-space: normal;
+	}
+
+	.vn-store-card__address {
+		display: block;
+		overflow: visible;
+
+		margin-top: 4px;
+
+		font-size: 13px;
+		line-height: 1.4;
+		color: #777777;
+
+		text-overflow: initial;
+		white-space: normal;
+	}
+
+	.vn-store-card__schedule {
+		grid-column: 2;
+		grid-row: 2;
+
+		min-width: 0;
+	}
+
+	.vn-store-card__status {
+		font-size: 12px;
+		line-height: 1.35;
+		color: #888888;
+	}
+
+	.vn-store-card__time {
+		margin-top: 3px;
+
+		font-size: 13px;
+		line-height: 1.4;
+		color: #777777;
+
+		white-space: normal;
+	}
+
+	.vn-store-card__action {
+		grid-column: 2;
+		grid-row: 3;
+
+		justify-content: flex-start;
+		gap: 7px;
+
+		margin-top: 3px;
+
+		font-size: 12px;
+		line-height: 1.3;
+		color: #111111;
+	}
+
+	.vn-store-card__action span {
+		overflow: visible;
+
+		text-overflow: initial;
+		white-space: normal;
+	}
+
+	.vn-store-card__select:hover .vn-store-card__action svg {
+		transform: none;
+	}
+
+	/* =====================================================
+	   Map wrapper
+	   ===================================================== */
+
+	.vn-stores__map-wrap {
+		display: flex;
+		flex-direction: column;
+
+		width: 100%;
+		height: auto;
+		min-height: 0;
+
+		border: 0;
+		border-radius: 15px;
+
+		background: #f5f4f0;
+
+		overflow: hidden;
+	}
+
+.vn-stores__map {
+		flex: none;
+
+		width: 100%;
+		height: clamp(
+			460px,
+			calc(
+				100dvh -
+				var(--stores-mobile-header-height) -
+				92px
+			),
+			620px
+		);
+
+		min-height: 0;
+
+		overflow: hidden;
+	}
+
+	.vn-stores__map .maplibregl-canvas {
+		filter:
+			saturate(0.46)
+			brightness(1.06)
+			contrast(0.92);
+	}
+
+	.vn-stores__map .maplibregl-ctrl-top-right {
+		top: 8px;
+		right: 8px;
+	}
+
+	.vn-stores__map .maplibregl-ctrl-group {
+		border-radius: 5px;
+
+		box-shadow: 0 3px 12px rgba(0, 0, 0, 0.14);
+	}
+
+	.vn-stores__map .maplibregl-ctrl-group button {
+		width: 34px;
+		height: 34px;
+	}
+
+	.vn-stores__map .maplibregl-ctrl-bottom-right {
+		opacity: 0.42;
+	}
+
+	.vn-stores__map .maplibregl-ctrl-attrib {
+		max-width: 160px;
+		font-size: 8px;
+	}
+
+	/* =====================================================
+	   Map markers
+	   ===================================================== */
+
+	.vn-map-marker {
+		width: 34px;
+		height: 34px;
+
+		border-width: 2px;
+
+		box-shadow:
+			0 4px 10px rgba(0, 0, 0, 0.2),
+			0 0 0 1px rgba(0, 0, 0, 0.05);
+	}
+
+	.vn-map-marker::before {
+		bottom: -5px;
+
+		width: 9px;
+		height: 9px;
+	}
+
+	.vn-map-marker__number {
+		font-size: 9px;
+	}
+
+	.vn-map-marker:hover {
+		transform: none;
+	}
+
+	.vn-map-marker.is-active {
+		transform: scale(1.13);
+
+		box-shadow:
+			0 6px 15px rgba(0, 0, 0, 0.2),
+			0 0 0 5px rgba(255, 255, 255, 0.94);
+	}
+
+	/* =====================================================
+	   Selected store panel
+	   ===================================================== */
+
+	.vn-map-panel {
+		position: absolute;
+		z-index: 12;
+		right: 12px;
+		bottom: 12px;
+		left: 12px;
+
+		width: auto;
+		max-height: calc(100% - 24px);
+		padding: 16px;
+
+		border: 1px solid rgba(0, 0, 0, 0.04);
+		border-radius: 14px;
+
+		background: rgba(255, 255, 255, 0.97);
+
+		box-shadow: 0 13px 38px rgba(0, 0, 0, 0.14);
+		backdrop-filter: blur(13px);
+
+		overflow-x: hidden;
+		overflow-y: auto;
+	}
+
+	.vn-map-panel.is-hidden {
+		opacity: 0;
+		visibility: hidden;
+
+		transform: translateY(8px);
+
+		pointer-events: none;
+	}
+
+	.vn-map-panel__close {
+		top: 9px;
+		right: 9px;
+
+		width: 30px;
+		height: 30px;
+	}
+
+	.vn-map-panel__number {
+		display: block;
+
+		margin-bottom: 5px;
+
+		font-size: 11px;
+		line-height: 1.3;
+		color: #8a8a8a;
+	}
+
+	.vn-map-panel__title {
+		max-width: calc(100% - 38px);
+		padding-right: 4px;
+
+		font-size: 18px;
+		line-height: 1.25;
+	}
+
+	.vn-map-panel__address {
+		margin-top: 5px;
+
+		font-size: 13px;
+		line-height: 1.4;
+	}
+
+	.vn-map-panel__time {
+		gap: 9px;
+
+		margin-top: 12px;
+	}
+
+	.vn-map-panel__time > svg {
+		width: 18px;
+		height: 18px;
+	}
+
+	.vn-map-panel__time strong {
+		font-size: 13px;
+		line-height: 1.4;
+
+		white-space: normal;
+	}
+
+	.vn-map-panel__time span {
+		margin-top: 1px;
+
+		font-size: 11px;
+	}
+
+	.vn-map-panel__route {
+		gap: 12px;
+
+		min-height: 43px;
+		margin-top: 12px;
+		padding: 9px 16px;
+
+		font-size: 13px;
+	}
+
+	.vn-map-panel__route svg {
+		width: 17px;
+		height: 17px;
+	}
+
+	/* Footer преимуществ на mobile скрыт */
+
+	.vn-stores__map-footer {
+		display: none;
+	}
+}
+/* =========================================================
+   Stores — Small mobile
+   ========================================================= */
+
+@media (max-width: 420px) {
+	.vn-stores {
+		--stores-mobile-side-space: 14px;
+	}
+
+	.vn-stores__title {
+		font-size: 39px;
+	}
+
+	.vn-stores__mobile-tabs {
+		top: 59px;
+	}
+
+	.vn-store-card__select {
+		grid-template-columns: 50px minmax(0, 1fr);
+		gap: 8px 12px;
+
+		padding-right: 4px;
+		padding-left: 10px;
+	}
+
+	.vn-store-card__number {
+		width: 44px;
+		height: 44px;
+
+		font-size: 14px;
+	}
+
+	.vn-stores__map {
+		height: 470px;
+    	height: clamp(
+    			440px,
+    			calc(
+    				100dvh -
+    				var(--stores-mobile-header-height) -
+    				88px
+    			),
+    			570px
+    		);
+	
+	}
+
+	.vn-map-panel {
+		right: 10px;
+		bottom: 10px;
+		left: 10px;
+
+		max-height: calc(100% - 20px);
+		padding: 15px;
+	}
+
+	.vn-map-panel__title {
+		font-size: 17px;
+	}
+
+	.vn-map-panel__route {
+		min-height: 42px;
+	}
+}

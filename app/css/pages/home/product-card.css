@@ -1,0 +1,738 @@
+/* ==========================================================================
+   Home Product Card
+   Scoped to home sliders
+   ========================================================================== */
+
+.home-products .products-slider__products.product {
+	position: relative;
+
+	display: flex;
+	flex-direction: column;
+
+	min-width: 0;
+	width: 100%;
+	height: 430px;
+	min-height: 430px;
+	overflow: hidden;
+
+	border: 1px solid #eeeeee;
+	border-radius: 14px;
+	background: #ffffff;
+
+	color: #111111;
+
+	transition:
+		border-color 220ms ease,
+		box-shadow 220ms ease,
+		transform 220ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.home-products .products-slider__products.product:hover {
+		border-color: #dddddd;
+
+		box-shadow: 0 14px 34px rgba(17, 17, 17, 0.06);
+	}
+}
+
+/* ==========================================================================
+   Image area
+   ========================================================================== */
+
+.home-products .product__head,
+.home-products .head-product {
+	position: relative;
+	flex: 0 0 292px;
+	height: 292px;
+	width: 100%;
+}
+
+.home-products .head-product__image {
+	position: relative;
+
+	display: block;
+
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+
+	border-radius: 13px 13px 0 0;
+	background: #f2f2f2;
+}
+
+.home-products .head-product__image picture {
+	display: block;
+
+	width: 100%;
+	height: 100%;
+}
+
+.home-products .head-product__image img {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+
+	display: block;
+
+	width: auto;
+	height: auto;
+	max-width: 88%;
+	max-height: 88%;
+	mix-blend-mode: multiply;
+	object-fit: contain;
+
+	transform: translate(-50%, -50%) scale(1);
+
+	transition:
+		transform 520ms cubic-bezier(0.2, 0.7, 0.2, 1),
+		opacity 300ms ease;
+
+	user-select: none;
+	-webkit-user-drag: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.home-products .product:hover .head-product__image img {
+		transform: translate(-50%, -50%) scale(1.035);
+	}
+}
+
+/* ==========================================================================
+   Product badges
+   ========================================================================== */
+
+.home-products .head-product__modificator {
+	position: absolute;
+	z-index: 4;
+	top: 16px;
+	left: 16px;
+
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 6px;
+
+	max-width: calc(100% - 72px);
+}
+
+.home-products .head-product__modificator p {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+
+	min-height: 25px;
+	margin: 0;
+	padding: 6px 11px;
+
+	border: 0;
+	border-radius: 999px;
+
+	font-size: 10px;
+	font-weight: 600;
+	line-height: 1;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
+.home-products .head-product__modificator_new {
+	background: rgba(255, 255, 255, 0.92);
+	color: #111111;
+
+	box-shadow: 0 2px 8px rgba(17, 17, 17, 0.04);
+}
+
+.home-products .head-product__modificator_sale {
+	background: #1a1a1a;
+	color: #ffffff;
+}
+
+.home-products .products-colection__modification_hit {
+	background: #e5ff00;
+	color: #111111;
+}
+
+/* ==========================================================================
+   Card information
+   ========================================================================== */
+
+.home-products .product__body {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+
+	min-width: 0;
+	min-height: 0;
+	height: 138px;
+	padding: 14px 16px 16px;
+}
+.home-products .product__info {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+
+	min-width: 0;
+}
+
+.home-products .product__brand {
+	margin: 0;
+
+	overflow: hidden;
+
+	font-size: 9px;
+	font-weight: 500;
+	line-height: 1.2;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+
+	color: #6f6f6f;
+}
+
+.home-products .product__name {
+	display: block;
+
+	width: 100%;
+	min-width: 0;
+	margin: 0;
+	overflow: hidden;
+
+	font-size: 13px;
+	font-weight: 500;
+	line-height: 1.3;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+
+	color: #111111;
+	text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.home-products .product__name:hover {
+		opacity: 0.62;
+	}
+}
+
+/* ==========================================================================
+   Price and actions row
+   ========================================================================== */
+
+.home-products .product__other {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+
+	margin-top: auto;
+	padding-top: 8px;
+}
+
+.home-products .product__price {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.home-products .price-product__prices {
+	display: flex;
+	align-items: baseline;
+	flex-wrap: nowrap;
+	gap: 7px;
+
+	min-width: 0;
+}
+
+.home-products .price-product__value {
+	font-size: 16px;
+	font-weight: 600;
+	line-height: 1.15;
+	white-space: nowrap;
+
+	color: #111111;
+}
+
+.home-products .price-product__old {
+	overflow: hidden;
+
+	font-size: 11px;
+	font-weight: 400;
+	line-height: 1.2;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+
+	color: #999999;
+	text-decoration: line-through;
+}
+
+.home-products .price-product__bonuses {
+	margin-top: 3px;
+
+	font-size: 10px;
+	line-height: 1.2;
+
+	color: #858585;
+}
+
+/* ==========================================================================
+   Product cart — top right
+   ========================================================================== */
+
+.home-products .head-product__cart {
+	position: absolute;
+	z-index: 6;
+	top: 14px;
+	right: 14px;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	width: 38px;
+	height: 38px;
+	padding: 0;
+
+	border: 1px solid rgba(17, 17, 17, 0.1);
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.92);
+
+	color: #111111;
+	text-decoration: none;
+
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+
+	transition:
+		background-color 200ms ease,
+		border-color 200ms ease,
+		color 200ms ease,
+		transform 200ms ease;
+}
+
+.home-products .head-product__cart svg {
+	display: block;
+
+	width: 18px;
+	height: 18px;
+
+	color: inherit;
+}
+
+.home-products .head-product__cart svg path {
+	fill: currentColor;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.home-products .head-product__cart:hover {
+		border-color: #111111;
+		background: #111111;
+		color: #ffffff;
+
+		transform: translateY(-1px);
+	}
+}
+
+.home-products .head-product__cart:active {
+	transform: scale(0.94);
+}
+
+.home-products .head-product__cart:focus-visible {
+	outline: 2px solid #111111;
+	outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Card actions
+   ========================================================================== */
+
+.home-products .product__actions {
+	flex: 0 0 auto;
+}
+
+.home-products .action-product {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+/*
+ * Wishlist визуально находится сверху.
+ * В нижнем блоке остаётся только корзина.
+ */
+
+.home-products .action-product__cart {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	width: 42px;
+	height: 42px;
+
+	border: 1px solid #d7d7d7;
+	border-radius: 50%;
+	background: #ffffff;
+
+	color: #111111;
+
+	transition:
+		border-color 200ms ease,
+		background-color 200ms ease,
+		color 200ms ease,
+		transform 200ms ease;
+}
+
+.home-products .action-product__cart svg {
+	display: block;
+
+	width: 19px;
+	height: 19px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.home-products .action-product__cart:hover {
+		border-color: #111111;
+		background: #111111;
+		color: #ffffff;
+
+		transform: translateY(-2px);
+	}
+
+	.home-products .action-product__cart:hover svg path {
+		fill: currentColor;
+	}
+}
+
+/* ==========================================================================
+   Optional hover CTA
+   ========================================================================== */
+
+/*
+ * Текущая PHP-разметка пока не содержит отдельную чёрную hover-панель
+ * как на дизайне. После добавления соответствующего HTML можно использовать
+ * этот готовый класс.
+ */
+
+.home-products .product-card-hover {
+	position: absolute;
+	z-index: 6;
+	right: 16px;
+	bottom: 16px;
+	left: 16px;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 14px;
+
+	min-height: 56px;
+	padding: 12px 18px;
+
+	border-radius: 12px;
+	background: rgba(17, 17, 17, 0.96);
+
+	color: #ffffff;
+
+	opacity: 0;
+	visibility: hidden;
+	transform: translateY(10px);
+
+	transition:
+		opacity 260ms ease,
+		visibility 260ms ease,
+		transform 260ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.home-products .product:hover .product-card-hover {
+		opacity: 1;
+		visibility: visible;
+		transform: translateY(0);
+	}
+}
+
+/* ==========================================================================
+   Stock state
+   ========================================================================== */
+
+.home-products .product.stock_off {
+	opacity: 0.55;
+}
+
+.home-products .product.stock_off .head-product__image img {
+	filter: grayscale(0.2);
+}
+
+/* ==========================================================================
+   Mobile
+   ========================================================================== */
+
+/* ==========================================================================
+   Mobile product card
+   ========================================================================== */
+
+@media (max-width: 767px) {
+	.home-products .products-slider__products.product {
+		display: flex;
+		flex-direction: column;
+
+		width: 100%;
+		height: 360px;
+		min-height: 360px;
+		overflow: visible;
+
+		border: 0;
+		border-radius: 0;
+		background: #ffffff;
+
+		box-shadow: none;
+		padding: 0;
+	}
+
+	/* ----------------------------------------------------------------------
+	   Image area
+	   ---------------------------------------------------------------------- */
+
+	.home-products .product__head,
+	.home-products .head-product {
+		position: relative;
+
+		flex: 0 0 230px;
+		width: 100%;
+		height: 230px;
+	}
+
+	.home-products .head-product__image {
+		display: block;
+
+		width: 100%;
+		height: 100%;
+		overflow: hidden;
+
+		border-radius: 0;
+		background: #f2f2f2;
+	}
+
+	.home-products .head-product__image picture {
+		display: block;
+
+		width: 100%;
+		height: 100%;
+	}
+
+	.home-products .head-product__image img {
+		max-width: 82%;
+		max-height: 82%;
+
+		mix-blend-mode: multiply;
+	}
+
+	/* ----------------------------------------------------------------------
+	   Badges
+	   ---------------------------------------------------------------------- */
+
+	.home-products .head-product__modificator {
+		top: 8px;
+		left: 8px;
+
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 4px;
+
+		max-width: calc(100% - 50px);
+	}
+
+	.home-products .head-product__modificator p {
+		min-height: 20px;
+		padding: 4px 7px;
+
+		border-radius: 0;
+
+		font-size: 9px;
+		font-weight: 600;
+		line-height: 1;
+		letter-spacing: 0.02em;
+	}
+
+	.home-products .head-product__modificator_new {
+		background: #ffffff;
+		color: #111111;
+	}
+
+	.home-products .head-product__modificator_sale {
+		background: #111111;
+		color: #ffffff;
+	}
+
+	.home-products .products-colection__modification_hit {
+		background: #e8ff00;
+		color: #111111;
+	}
+
+	/* ----------------------------------------------------------------------
+	   Cart button
+	   ---------------------------------------------------------------------- */
+
+	.home-products .head-product__cart {
+		top: auto;
+		right: 8px;
+		bottom: -17px;
+
+		width: 36px;
+		height: 36px;
+
+		border: 0;
+		border-radius: 50%;
+		background: #2f2f2f;
+
+		color: #ffffff;
+
+		box-shadow: none;
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
+	}
+
+	.home-products .head-product__cart svg {
+		width: 17px;
+		height: 17px;
+	}
+
+	.home-products .head-product__cart svg path {
+		fill: currentColor;
+	}
+
+	/* ----------------------------------------------------------------------
+	   Content
+	   ---------------------------------------------------------------------- */
+
+	.home-products .product__body {
+		display: flex;
+		flex: 1 1 auto;
+		flex-direction: column;
+
+		height: 130px;
+		min-height: 0;
+		padding: 17px 0 0;
+	}
+
+	.home-products .product__info {
+		display: flex;
+		flex-direction: column;
+		gap: 7px;
+
+		min-width: 0;
+	}
+
+	.home-products .product__brand {
+		margin: 0;
+
+		overflow: hidden;
+
+		font-size: 10px;
+		font-weight: 600;
+		line-height: 1.25;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+
+		color: #111111;
+	}
+
+	.home-products .product__name {
+		display: -webkit-box;
+
+		width: 100%;
+		min-height: 2.7em;
+		margin: 0;
+		overflow: hidden;
+
+		font-size: 15px;
+		font-weight: 400;
+		line-height: 1.35;
+		white-space: normal;
+		text-overflow: initial;
+
+		color: #111111;
+
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+	}
+
+	/* ----------------------------------------------------------------------
+	   Price
+	   ---------------------------------------------------------------------- */
+
+	.home-products .product__other {
+		display: flex;
+		align-items: flex-end;
+
+		margin-top: auto;
+		padding-top: 10px;
+	}
+
+	.home-products .price-product__prices {
+		display: flex;
+		align-items: baseline;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+
+	.home-products .price-product__value {
+		font-size: 16px;
+		font-weight: 600;
+		line-height: 1.15;
+
+		color: #111111;
+	}
+
+	.home-products .price-product__old {
+		font-size: 11px;
+		line-height: 1.2;
+
+		color: #979797;
+		text-decoration: line-through;
+	}
+
+	.home-products .price-product__bonuses {
+		margin-top: 4px;
+
+		font-size: 10px;
+		line-height: 1.2;
+
+		color: #777777;
+	}
+
+	.home-products .product.stock_off {
+		opacity: 0.55;
+	}
+}
+/* ==========================================================================
+   Small mobile
+   ========================================================================== */
+
+@media (max-width: 420px) {
+	.home-products .product__body {
+		padding: 14px;
+	}
+
+	.home-products .product__name {
+		font-size: 13px;
+	}
+
+	.home-products .price-product__value {
+		font-size: 15px;
+	}
+}
+
+/* ==========================================================================
+   Reduced motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+	.home-products .products-slider__products.product,
+	.home-products .head-product__image img,
+	.home-products .action-product__cart,
+	.home-products .product-card-hover {
+		transition-duration: 0.01ms !important;
+	}
+}

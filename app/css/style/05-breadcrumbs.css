@@ -1,0 +1,64 @@
+/* =========================================================
+   Breadcrumbs
+   ========================================================= */
+
+.breacrums {
+	padding: 24px 0 0;
+}
+
+.breacrums__list {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px 10px;
+}
+
+.breacrums__item {
+	position: relative;
+	display: flex;
+	align-items: center;
+	font-size: 14px;
+	line-height: 1.4;
+	color: #8f8f8f;
+}
+
+.breacrums__item:not(:last-child)::after {
+	content: '/';
+	margin-left: 10px;
+	color: #c4c4c4;
+}
+
+.breacrums__name,
+.breadcrums__link {
+	color: #8f8f8f;
+	text-decoration: none;
+	transition: color 0.2s ease;
+}
+
+a.breacrums__name:hover,
+.breadcrums__link:hover {
+	color: #000000;
+}
+
+.breacrums__item:last-child .breacrums__name {
+	color: #000000;
+	pointer-events: none;
+}
+
+@media (max-width: 767px) {
+	.breacrums {
+		padding-top: 14px;
+	}
+
+	.breacrums__list {
+		gap: 4px 8px;
+	}
+
+	.breacrums__item {
+		font-size: 13px;
+	}
+
+	.breacrums__item:not(:last-child)::after {
+		margin-left: 8px;
+	}
+}
