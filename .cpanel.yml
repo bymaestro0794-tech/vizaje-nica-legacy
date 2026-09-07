@@ -1,4 +1,6 @@
+---
 deployment:
   tasks:
     - export DEPLOYPATH=/home/vizajeni/public_html
-    - /bin/cp * $DEPLOYPATH
+    - /bin/cp -r . $DEPLOYPATH
+    - cd $DEPLOYPATH && /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction
