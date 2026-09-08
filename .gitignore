@@ -20,6 +20,7 @@ application/libraries/secret/
 
 # CI logs
 application/logs/log-*.php
+application/logs/
 
 # User-uploaded media (восстанавливается из бэкапа сервера)
 public/
