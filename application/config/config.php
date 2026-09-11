@@ -19,9 +19,45 @@ $env = static function ($key, $default = null) {
     return $default;
 };
 
+$https = strtolower(
+    trim(
+        (string) ($_SERVER['HTTPS'] ?? '')
+    )
+);
+
+$forwardedProto = strtolower(
+    trim(
+        explode(
+            ',',
+            (string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')
+        )[0]
+    )
+);
+
 $isHttps =
-    !empty($_SERVER['HTTPS'])
-    && strtolower((string) $_SERVER['HTTPS']) !== 'off';
+    in_array(
+        $https,
+        ['on', '1', 'https'],
+        true
+    )
+    || $forwardedProto === 'https';
+
+ini_set(
+    'session.cookie_secure',
+    $isHttps ? '1' : '0'
+);
+
+ini_set(
+    'session.cookie_httponly',
+    '1'
+);
+
+if (PHP_VERSION_ID >= 70300) {
+    ini_set(
+        'session.cookie_samesite',
+        'Lax'
+    );
+}
 
 $appUrl = rtrim(
     (string) $env(
