@@ -16,7 +16,7 @@
 	--header-muted: rgba(17, 17, 17, 0.48);
 	--header-border: #eaeaea;
 	--header-transition: 220ms ease;
-	
+
 	--mobile-header-height: 64px;
 }
 
@@ -102,7 +102,7 @@ body.is-header-locked {
 	height: var(--header-announcement-height);
 	overflow: hidden;
 
-	background: #0354a1;
+	background: #efae45;
 
 	transition:
 		height var(--header-transition),
