@@ -25,6 +25,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
         <div class="cookie-panel__content">
             <h2 class="cookie-panel__title" id="cookiePanelTitle"><?= COOKIE_SETTINGS_LINK ?></h2>
             <p class="cookie-panel__description"><?= COOKIE_PANEL_DESCRIPTION ?></p>
+            <a style="margin-top: 10px;font-size: 14px;color: inherit;text-decoration: underline;" href="https://vizaje-nica.com/ro/politica-de-confidentialitate-si-cookie-uri" class="cookie-panel__link"> Privacy Policy.</a>
 
             <div class="cookie-panel__categories">
                 <div class="cookie-panel__category">

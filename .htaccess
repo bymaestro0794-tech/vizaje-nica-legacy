@@ -5,11 +5,12 @@ RewriteBase /
 
 RewriteRule ^certificates$ /ro/certificate [R=301,L]
 
-# HTTPS только для production
+# Force HTTPS only on production
 RewriteCond %{HTTP_HOST} ^(www\.)?vizaje\-nica\.com$ [NC]
 RewriteCond %{HTTPS} !=on
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
+# Remove trailing slash
 RewriteCond %{REQUEST_URI} !\?
 RewriteCond %{REQUEST_URI} !\&
 RewriteCond %{REQUEST_URI} !\=
@@ -17,10 +18,9 @@ RewriteCond %{REQUEST_URI} !\.
 RewriteCond %{REQUEST_URI} ![^\/]$
 RewriteRule ^(.*)\/$ /$1 [R=301,L]
 
+# CodeIgniter routing
 RewriteCond $1 !^(index\.php|images|static|robots\.txt|sitemap\.xml|ckeditor|kcfinder|public|app|dist|img|phpThumb|phpMyAdmin)
 RewriteRule ^(.*)$ /index.php?/$1 [L,QSA]
-RewriteCond %{HTTP_HOST} ^vizaje\-nica\.com$ [OR]
-RewriteCond %{HTTP_HOST} ^www\.vizaje\-nica\.com$
 
 # BEGIN cPanel-generated php ini directives, do not edit
 # Manual editing of this file may result in unexpected behavior.

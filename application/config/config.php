@@ -1,6 +1,38 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
+$env = static function ($key, $default = null) {
+    $value = getenv($key);
+
+    if ($value !== false) {
+        return $value;
+    }
+
+    if (isset($_SERVER[$key])) {
+        return $_SERVER[$key];
+    }
+
+    if (isset($_ENV[$key])) {
+        return $_ENV[$key];
+    }
+
+    return $default;
+};
+
+$isHttps =
+    !empty($_SERVER['HTTPS'])
+    && strtolower((string) $_SERVER['HTTPS']) !== 'off';
+
+$appUrl = rtrim(
+    (string) $env(
+        'APP_URL',
+        ($isHttps ? 'https' : 'http')
+        . '://'
+        . ($_SERVER['HTTP_HOST'] ?? 'localhost')
+    ),
+    '/'
+);
+
 /*
 |--------------------------------------------------------------------------
 | Base Site URL
@@ -23,7 +55,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = (isset($_SERVER['HTTPS']) ? "https" : "http") . '://' . $_SERVER['HTTP_HOST'];
+// $config['base_url'] = (isset($_SERVER['HTTPS']) ? "https" : "http") . '://' . $_SERVER['HTTP_HOST'];
+
+$config['base_url'] = $appUrl . '/';
 
 /*
 |--------------------------------------------------------------------------
@@ -403,9 +437,11 @@ $config['sess_regenerate_destroy'] = FALSE;
 $config['cookie_prefix']	= '';
 $config['cookie_domain']	= '';
 $config['cookie_path']		= '/';
-$config['cookie_secure']	= FALSE;
-$config['cookie_httponly'] 	= TRUE;
+$config['cookie_secure'] = $isHttps;
+$config['cookie_httponly'] = TRUE;
 
+// $config['cookie_secure']	= FALSE;
+// $config['cookie_httponly'] 	= TRUE;
 /*
 |--------------------------------------------------------------------------
 | Standardize newlines

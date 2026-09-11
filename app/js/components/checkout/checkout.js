@@ -1,0 +1,8 @@
+import './checkout-bonus.js'
+import './checkout-delivery.js'
+import './checkout-payment.js'
+import './checkout-pickup.js'
+import './checkout-recipient.js'
+import './checkout-scroll.js'
+import './checkout-state.js'
+import './checkout-summary.js'
