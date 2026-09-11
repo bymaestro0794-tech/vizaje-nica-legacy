@@ -686,73 +686,6 @@ if (strpos($currentView, 'pages/offers/') === 0) {
 
     <?php $this->load->view('layouts/pages/cookie/panel'); ?>
 
-
-<script>
-	window.CERTIFICATE_MESSAGES = {
-		design: <?= json_encode(
-			CERTIFICATE_ERR_DESIGN_NOT_SELECTED,
-			JSON_UNESCAPED_UNICODE
-		) ?>,
-
-		amountEmpty: <?= json_encode(
-			CERTIFICATE_ERR_AMOUNT_EMPTY,
-			JSON_UNESCAPED_UNICODE
-		) ?>,
-
-		amountMin: <?= json_encode(
-			CERTIFICATE_ERR_AMOUNT_MIN,
-			JSON_UNESCAPED_UNICODE
-		) ?>,
-
-		amountMax: <?= json_encode(
-			CERTIFICATE_ERR_AMOUNT_MAX,
-			JSON_UNESCAPED_UNICODE
-		) ?>,
-
-		sender: <?= json_encode(
-			CERTIFICATE_ERR_SENDER_NAME_EMPTY,
-			JSON_UNESCAPED_UNICODE
-		) ?>,
-
-		recipient: <?= json_encode(
-			CERTIFICATE_ERR_RECIPIENT_NAME_EMPTY,
-			JSON_UNESCAPED_UNICODE
-		) ?>,
-
-		greeting: <?= json_encode(
-			CERTIFICATE_ERR_GREETING_TEXT_EMPTY,
-			JSON_UNESCAPED_UNICODE
-		) ?>,
-
-		phone: <?= json_encode(
-			CERTIFICATE_ERR_PHONE_EMPTY,
-			JSON_UNESCAPED_UNICODE
-		) ?>,
-
-		timeMode: <?= json_encode(
-			CERTIFICATE_ERR_SEND_TIME_NOT_SELECTED,
-			JSON_UNESCAPED_UNICODE
-		) ?>,
-
-		date: <?= json_encode(
-			CERTIFICATE_ERR_SEND_DATE_EMPTY,
-			JSON_UNESCAPED_UNICODE
-		) ?>,
-
-		time: <?= json_encode(
-			CERTIFICATE_ERR_SEND_TIME_EMPTY,
-			JSON_UNESCAPED_UNICODE
-		) ?>,
-
-		email: <?= json_encode(
-			CERTIFICATE_ERR_EMAIL_EMPTY,
-			JSON_UNESCAPED_UNICODE
-		) ?>
-	}
-</script>
-
-
-
      <script
         src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"
     ></script>
@@ -805,8 +738,9 @@ if (strpos($currentView, 'pages/offers/') === 0) {
 	></script>
 
 	<script
+        type="module"
 		src="<?= asset_url(
-			'app/js/components/checkout-v2.js'
+			'app/js/components/checkout/checkout.js'
 		) ?>"
 		defer
 	></script>
