@@ -1,14 +1,6 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/vizajeni/dev.vizaje-nica.com/
-    - cd /home/vizajeni/repositories/vizaje-nica-legacy &&
-      /opt/cpanel/ea-php74/root/usr/bin/php
-      /opt/cpanel/ea-wappspector/composer.phar install --no-dev
-      --optimize-autoloader --no-interaction
-    - cd /home/vizajeni/repositories/vizaje-nica-legacy && tar -cf -
-      --exclude=".git" --exclude=".env"
-      --exclude="application/config/database.php" --exclude="application/logs"
-      --exclude="public/uploads" . | (cd "$DEPLOYPATH" && tar -xf -
-      --no-same-permissions --no-same-owner) && find "$DEPLOYPATH" -type d -exec
-      chmod 755 {} + && find "$DEPLOYPATH" -type f -exec chmod 644 {} +
+    - export DEPLOYPATH=/home/vizajeni/public_html/
+    - cd /home/vizajeni/repositories/vizaje-nica-prod && /opt/cpanel/ea-php74/root/usr/bin/php /opt/cpanel/ea-wappspector/composer.phar install --no-dev --optimize-autoloader --no-interaction
+    - cd /home/vizajeni/repositories/vizaje-nica-prod && tar -cf - --exclude=".git" --exclude=".env" --exclude="application/config/database.php" --exclude="application/logs" --exclude="public/uploads" . | (cd "$DEPLOYPATH" && tar -xf - --no-same-permissions --no-same-owner) && find "$DEPLOYPATH" -type d -exec chmod 755 {} + && find "$DEPLOYPATH" -type f -exec chmod 644 {} +
