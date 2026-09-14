@@ -345,7 +345,6 @@ $renderPagination = static function ($pagination, $pageParameter, $buildPaginati
             <?php endif; ?>
             </tbody>
         </table>
-        <?php $renderPagination($topPagesPagination, 'top_pages_page', $buildPaginationUrl); ?>
     </div>
 </div>
 
@@ -390,7 +389,6 @@ $renderPagination = static function ($pagination, $pageParameter, $buildPaginati
             <?php endif; ?>
             </tbody>
         </table>
-        <?php $renderPagination($landingPagesPagination, 'landing_pages_page', $buildPaginationUrl); ?>
     </div>
 </div>
 
@@ -427,6 +425,7 @@ $renderPagination = static function ($pagination, $pageParameter, $buildPaginati
             <?php endif; ?>
             </tbody>
         </table>
+        <?php $renderPagination($topPagesPagination, 'top_pages_page', $buildPaginationUrl); ?>
     </div>
 </div>
 
@@ -471,6 +470,7 @@ $renderPagination = static function ($pagination, $pageParameter, $buildPaginati
             <?php endif; ?>
             </tbody>
         </table>
+        <?php $renderPagination($landingPagesPagination, 'landing_pages_page', $buildPaginationUrl); ?>
     </div>
 </div>
 
