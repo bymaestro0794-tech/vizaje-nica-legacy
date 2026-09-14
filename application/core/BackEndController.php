@@ -29,6 +29,13 @@ class BackEndController extends CI_Controller
                 exit();
             }
         }
+        log_message(
+            'error',
+            'ADMIN CHECK: sid=' . session_id()
+            . ' admin_id=' . ($_SESSION['admin_id'] ?? 'none')
+            . ' login=' . ($_SESSION['login'] ?? 'none')
+            . ' key=' . (!empty($_SESSION['admin_key']) ? 'yes' : 'no')
+        );
     }
 
     private function _admin_is_valid()
@@ -70,7 +77,18 @@ class BackEndController extends CI_Controller
     {
         parent::__construct();
 
-        @session_start();
+        session_start();
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            $started = session_start();
+
+            log_message(
+                'error',
+                'SESSION: started=' . ($started ? 'yes' : 'no')
+                . ' status=' . session_status()
+                . ' sid=' . session_id()
+                . ' save_path=' . session_save_path()
+            );
+        }
 
         header('Content-type: text/html; charset=utf-8');
 

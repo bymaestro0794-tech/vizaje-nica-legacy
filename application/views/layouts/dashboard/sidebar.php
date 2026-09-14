@@ -61,6 +61,7 @@ $sidebar_menu = array(
              */
         ],
     ],
+    
     'dates' => array('name' => lang("Dates"), 'ico' => '<i class="fa fa-calendar"></i>'),
     // Пример составления выпадающего меню
     /*
@@ -73,6 +74,7 @@ $sidebar_menu = array(
             'products' => array('name' => 'Товары', 'ico' => '<i class="fa fa-opencart"></i>')
         )),
     */
+    
     'constants' => array('name' => lang("Constants"), 'ico' => '<i class="fa fa-globe"></i>')
 );
 ?>
