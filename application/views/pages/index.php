@@ -595,6 +595,8 @@ if (strpos($currentView, 'pages/offers/') === 0) {
         })(window, document, 'script', 'dataLayer', 'GTM-N4P57D64');
     </script>
     <!-- End Google Tag Manager -->
+
+    
 <?php endif; ?>
 <!-- inner_view: <?= htmlspecialchars($inner_view ?? '') ?> -->
  <script
@@ -690,9 +692,17 @@ if (strpos($currentView, 'pages/offers/') === 0) {
         src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"
     ></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
-    <script src="/app/js/vendors.min.js"></script>
+    <script src="/app/js/vendors.min.js"></script> 
     <script src="/app/js/components/brands.js?v=1" defer></script>
     <script src="/app/js/analytics/ga4-ecommerce.js"></script>
+    <script>
+        window.VN_ANALYTICS_CONSENT =
+            <?= !empty($consent['analytics']) ? 'true' : 'false' ?>;
+    </script>
+
+    <script src="/app/js/analytics/site-analytics.js?v=5" defer></script>
+    <script src="/app/js/analytics/site-analytics-events.js?v=2" defer></script>
+
     <script src="/app/js/components/auth-drawer.js" defer></script>
     <!-- APP JS START HERE -->
      <script type="module" src="/app/js/pages/home/home.js"></script>
@@ -707,6 +717,7 @@ if (strpos($currentView, 'pages/offers/') === 0) {
     <script src="/app/js/app/09-quantity-range.js"></script>
     <script src="/app/js/app/10-scroll-navigation.js"></script>
     <script src="/app/js/app/11-catalog-filters.js"></script>
+    
     <!-- APP JS END HERE -->
     <script
         src="<?= asset_url('app/js/components/cart-drawer.js') ?>"

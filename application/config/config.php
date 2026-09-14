@@ -58,7 +58,13 @@ if (PHP_VERSION_ID >= 70300) {
         'Lax'
     );
 }
+if (PHP_OS_FAMILY === 'Windows') {
+    $localSessionPath = 'C:\\xampp74\\tmp';
 
+    if (is_dir($localSessionPath) && is_writable($localSessionPath)) {
+        session_save_path($localSessionPath);
+    }
+}
 $appUrl = rtrim(
     (string) $env(
         'APP_URL',
@@ -293,7 +299,7 @@ $config['allow_get_array'] = TRUE;
 | your log files will fill up very fast.
 |
 */
-$config['log_threshold'] = 1;
+$config['log_threshold'] = 4;
 
 /*
 |--------------------------------------------------------------------------
