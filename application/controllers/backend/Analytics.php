@@ -1,217 +1,142 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Analytics extends CI_Controller
+class Analytics extends BackEndController
 {
-    private $allowedEvents = array(
-        'session_start',
-        'view_catalog',
-        'view_item',
-        'add_to_cart',
-        'remove_from_cart',
-        'cart_updated',
-        'view_cart',
-        'begin_checkout',
-        'order_submitted',
-        'purchase',
-    );
-
     public function __construct()
     {
-        parent::__construct();
+        parent::__construct(__CLASS__);
+
+        $this->data['title'] = 'Аналитика продаж';
+        $this->load->model('analytics_model');
         $this->load->model('site_analytics_model');
     }
 
-    public function event()
+    public function index()
     {
-        if (strtoupper($this->input->method()) !== 'POST') {
-            return $this->respond(array('error' => 'POST required'), 405);
-        }
-
-        if (!$this->hasAnalyticsConsent()) {
-            return $this->respond(array('accepted' => false), 204);
-        }
-
-        if ($this->requestSizeIsTooLarge()) {
-            return $this->respond(array('error' => 'Payload too large'), 413);
-        }
-
-        $payload = $this->readPayload();
-        $event = $this->validatePayload($payload);
-
-        if ($event === false) {
-            return $this->respond(array('error' => 'Invalid analytics event'), 422);
-        }
-
-        if (!$this->site_analytics_model->insert_event($event)) {
-            $dbError = $this->db->error();
-            log_message('error', 'Site analytics event insert failed: ' . json_encode($dbError));
-
-            $message = 'Event was not saved';
-            if (defined('ENVIRONMENT') && ENVIRONMENT === 'development' && !empty($dbError['message'])) {
-                $message = $dbError['message'];
-            }
-
-            return $this->respond(array('error' => $message), 500);
-        }
-
-        return $this->respond(array('accepted' => true), 201);
-    }
-
-    private function hasAnalyticsConsent()
-    {
-        $raw = (string) $this->input->cookie('cookie_consent', true);
-        $decoded = json_decode(rawurldecode($raw), true);
-
-        if (!is_array($decoded)) {
-            $decoded = json_decode($raw, true);
-        }
-
-        return is_array($decoded) && !empty($decoded['analytics']);
-    }
-
-    private function requestSizeIsTooLarge()
-    {
-        return isset($_SERVER['CONTENT_LENGTH']) && (int) $_SERVER['CONTENT_LENGTH'] > 16384;
-    }
-
-    private function readPayload()
-    {
-        $raw = trim((string) $this->input->raw_input_stream);
-
-        if ($raw !== '') {
-            $json = json_decode($raw, true);
-
-            if (is_array($json)) {
-                return $json;
-            }
-        }
-
-        $post = $this->input->post(NULL, true);
-        return is_array($post) ? $post : array();
-    }
-
-    private function validatePayload(array $payload)
-    {
-        $eventName = isset($payload['event_name']) ? trim((string) $payload['event_name']) : '';
-        $eventUid = isset($payload['event_uid']) ? trim((string) $payload['event_uid']) : '';
-        $visitorKey = isset($payload['visitor_key']) ? trim((string) $payload['visitor_key']) : '';
-        $sessionKey = isset($payload['session_key']) ? trim((string) $payload['session_key']) : '';
-
-        if (!in_array($eventName, $this->allowedEvents, true)) {
-            return false;
-        }
-
-        if (!preg_match('/^[a-f0-9-]{36}$/i', $eventUid)) {
-            return false;
-        }
-
-        if (!$this->isSafeKey($visitorKey) || !$this->isSafeKey($sessionKey)) {
-            return false;
-        }
-
-        $event = array(
-            'event_uid' => $eventUid,
-            'event_name' => $eventName,
-            'visitor_key' => $visitorKey,
-            'session_key' => $sessionKey,
-            'cart_key' => $this->nullableKey($payload, 'cart_key'),
-            'product_id' => $this->nullablePositiveInt($payload, 'product_id'),
-            'category_id' => $this->nullablePositiveInt($payload, 'category_id'),
-            'order_id' => $this->nullablePositiveInt($payload, 'order_id'),
-            'quantity' => $this->nullableUnsignedInt($payload, 'quantity', 100000),
-            'cart_items_count' => $this->nullableUnsignedInt($payload, 'cart_items_count', 100000),
-            'cart_value' => $this->nullableMoney($payload, 'cart_value'),
-            'event_value' => $this->nullableMoney($payload, 'event_value'),
-            'currency' => $this->nullableCurrency($payload),
-            'page_path' => $this->nullablePath($payload),
-            'consent_version' => 'v1',
-            'created_at' => date('Y-m-d H:i:s'),
+        $range = $this->analytics_model->normalize_date_range(
+            $this->input->get('date_from', true),
+            $this->input->get('date_to', true)
         );
 
-        if ($event['cart_key'] === false || $event['product_id'] === false || $event['category_id'] === false || $event['order_id'] === false || $event['quantity'] === false || $event['cart_items_count'] === false || $event['cart_value'] === false || $event['event_value'] === false || $event['currency'] === false || $event['page_path'] === false) {
-            return false;
+        $productSort = $this->input->get('product_sort', true);
+        $brandSort = $this->input->get('brand_sort', true);
+        $categorySort = $this->input->get('category_sort', true);
+        $direction = $this->input->get('direction', true);
+        $groupBy = $this->input->get('group_by', true);
+        $brandId = $this->input->get('brand_id', true);
+
+        $productSorts = array('quantity', 'revenue', 'orders', 'title');
+        $brandSorts = array('quantity', 'revenue', 'orders', 'title');
+        $categorySorts = array('quantity', 'revenue', 'orders', 'title');
+
+        if (!in_array($productSort, $productSorts, true)) {
+            $productSort = 'quantity';
         }
 
-        return $event;
-    }
-
-    private function isSafeKey($value)
-    {
-        return (bool) preg_match('/^[A-Za-z0-9_-]{16,64}$/', $value);
-    }
-
-    private function nullableKey(array $payload, $field)
-    {
-        if (!isset($payload[$field]) || $payload[$field] === '') {
-            return null;
+        if (!in_array($brandSort, $brandSorts, true)) {
+            $brandSort = 'quantity';
         }
 
-        $value = trim((string) $payload[$field]);
-        return $this->isSafeKey($value) ? $value : false;
-    }
-
-    private function nullablePositiveInt(array $payload, $field)
-    {
-        if (!isset($payload[$field]) || $payload[$field] === '') {
-            return null;
+        if (!in_array($categorySort, $categorySorts, true)) {
+            $categorySort = 'quantity';
         }
 
-        $value = filter_var($payload[$field], FILTER_VALIDATE_INT, array('options' => array('min_range' => 1)));
-        return $value === false ? false : $value;
-    }
-
-    private function nullableUnsignedInt(array $payload, $field, $max)
-    {
-        if (!isset($payload[$field]) || $payload[$field] === '') {
-            return null;
+        if (!in_array($direction, array('asc', 'desc'), true)) {
+            $direction = 'desc';
         }
 
-        $value = filter_var($payload[$field], FILTER_VALIDATE_INT, array('options' => array('min_range' => 0, 'max_range' => $max)));
-        return $value === false ? false : $value;
-    }
-
-    private function nullableMoney(array $payload, $field)
-    {
-        if (!isset($payload[$field]) || $payload[$field] === '') {
-            return null;
+        if (!in_array($groupBy, array('day', 'month'), true)) {
+            $groupBy = 'month';
         }
 
-        $value = trim((string) $payload[$field]);
-        return preg_match('/^\d{1,10}(\.\d{1,2})?$/', $value) ? $value : false;
+        $brandId = ctype_digit((string) $brandId) && (int) $brandId > 0
+            ? (int) $brandId
+            : null;
+
+        $this->data['date_from'] = $range['date_from'];
+        $this->data['date_to'] = $range['date_to'];
+        $this->data['product_sort'] = $productSort;
+        $this->data['brand_sort'] = $brandSort;
+        $this->data['category_sort'] = $categorySort;
+        $this->data['direction'] = $direction;
+        $this->data['group_by'] = $groupBy;
+        $this->data['brand_id'] = $brandId;
+        $this->data['brands'] = $this->analytics_model->get_brands();
+        $this->data['analytics'] = $this->analytics_model->get_dashboard(
+            $range['from_datetime'],
+            $range['to_datetime'],
+            array(
+                'product_sort' => $productSort,
+                'brand_sort' => $brandSort,
+                'category_sort' => $categorySort,
+                'direction' => $direction,
+                'group_by' => $groupBy,
+                'brand_id' => $brandId,
+            )
+        );
+
+        $this->data['inner_view'] = $this->index_view;
+        $this->load->vars($this->data);
+        $this->load->view($this->main_layout);
     }
 
-    private function nullableCurrency(array $payload)
+    public function funnel()
     {
-        if (!isset($payload['currency']) || $payload['currency'] === '') {
-            return null;
-        }
+        $range = $this->analytics_model->normalize_date_range(
+            $this->input->get('date_from', true),
+            $this->input->get('date_to', true)
+        );
 
-        $value = strtoupper(trim((string) $payload['currency']));
-        return preg_match('/^[A-Z]{3}$/', $value) ? $value : false;
+        $groupBy = $this->input->get('group_by', true);
+        $groupBy = in_array($groupBy, array('day', 'month'), true) ? $groupBy : 'month';
+
+        $this->data['title'] = 'Воронка продаж';
+        $this->data['date_from'] = $range['date_from'];
+        $this->data['date_to'] = $range['date_to'];
+        $this->data['group_by'] = $groupBy;
+        $this->data['order_funnel'] = $this->analytics_model->get_order_funnel(
+            $range['from_datetime'],
+            $range['to_datetime'],
+            $groupBy
+        );
+        $this->data['inner_view'] = $this->folder . 'funnel';
+        $this->load->vars($this->data);
+        $this->load->view($this->main_layout);
     }
 
-    private function nullablePath(array $payload)
+    public function site()
     {
-        if (!isset($payload['page_path']) || $payload['page_path'] === '') {
-            return null;
-        }
+        $range = $this->analytics_model->normalize_date_range(
+            $this->input->get('date_from', true),
+            $this->input->get('date_to', true)
+        );
 
-        $path = trim((string) $payload['page_path']);
-        $path = (string) parse_url($path, PHP_URL_PATH);
+        $groupBy = $this->input->get('group_by', true);
+        $groupBy = in_array($groupBy, array('day', 'month'), true) ? $groupBy : 'month';
 
-        if ($path === '' || strlen($path) > 255 || strpos($path, '/') !== 0) {
-            return false;
-        }
+        $trafficSource = $this->input->get('traffic_source', true);
+        $allowedTrafficSources = array(
+            'instagram', 'google', 'facebook', 'tiktok', 'youtube',
+            'vk', 'yandex', 'bing', 'duckduckgo', 'direct', 'referral', 'unknown',
+        );
+        $trafficSource = in_array($trafficSource, $allowedTrafficSources, true)
+            ? $trafficSource
+            : null;
 
-        return $path;
-    }
-
-    private function respond(array $body, $status)
-    {
-        return $this->output
-            ->set_status_header($status)
-            ->set_content_type('application/json', 'UTF-8')
-            ->set_output($status === 204 ? '' : json_encode($body));
+        $this->data['title'] = 'Аналитика сайта';
+        $this->data['date_from'] = $range['date_from'];
+        $this->data['date_to'] = $range['date_to'];
+        $this->data['group_by'] = $groupBy;
+        $this->data['traffic_source'] = $trafficSource;
+        $this->data['site_analytics'] = $this->site_analytics_model->get_dashboard(
+            $range['from_datetime'],
+            $range['to_datetime'],
+            $groupBy,
+            $trafficSource
+        );
+        $this->data['inner_view'] = $this->folder . 'site';
+        $this->load->vars($this->data);
+        $this->load->view($this->main_layout);
     }
 }

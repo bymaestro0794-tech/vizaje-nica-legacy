@@ -5,6 +5,7 @@
 	var consentCookieName = 'cookie_consent'
 	var visitorStorageKey = 'vn_analytics_visitor'
 	var sessionStorageKey = 'vn_analytics_session'
+	var attributionStorageKey = 'vn_analytics_attribution'
 	var sessionStarted = false
 	var memoryVisitorKey = null
 	var memorySessionKey = null
@@ -123,6 +124,143 @@
 		}
 	}
 
+	function cleanAttributionValue(value, maxLength) {
+		return String(value || '')
+			.trim()
+			.toLowerCase()
+			.replace(/[^a-z0-9._-]+/g, '_')
+			.slice(0, maxLength)
+	}
+
+	function getQueryValue(name) {
+		var search = window.location.search || ''
+		var query = search.replace(/^\?/, '').split('&')
+
+		for (var i = 0; i < query.length; i += 1) {
+			var parts = query[i].split('=')
+
+			if (decodeURIComponent(parts[0] || '') === name) {
+				return decodeURIComponent(parts.slice(1).join('=') || '')
+			}
+		}
+
+		return ''
+	}
+
+	function getReferrerHost() {
+		if (!document.referrer) {
+			return ''
+		}
+
+		try {
+			return new URL(document.referrer).hostname.toLowerCase().slice(0, 191)
+		} catch (error) {
+			return ''
+		}
+	}
+
+	function inferSource(referrerHost) {
+		if (!referrerHost) {
+			return { source: 'direct', medium: 'none' }
+		}
+
+		if (/instagram\.com$/.test(referrerHost)) {
+			return { source: 'instagram', medium: 'social' }
+		}
+
+		if (/facebook\.com$|fb\.com$/.test(referrerHost)) {
+			return { source: 'facebook', medium: 'social' }
+		}
+
+		if (/tiktok\.com$/.test(referrerHost)) {
+			return { source: 'tiktok', medium: 'social' }
+		}
+
+		if (/youtube\.com$/.test(referrerHost)) {
+			return { source: 'youtube', medium: 'social' }
+		}
+
+		if (/vk\.com$/.test(referrerHost)) {
+			return { source: 'vk', medium: 'social' }
+		}
+
+		if (/(^|\.)google\.[a-z.]+$/.test(referrerHost)) {
+			return { source: 'google', medium: 'organic' }
+		}
+
+		if (/bing\.com$/.test(referrerHost)) {
+			return { source: 'bing', medium: 'organic' }
+		}
+
+		if (/(^|\.)yandex\.[a-z.]+$/.test(referrerHost)) {
+			return { source: 'yandex', medium: 'organic' }
+		}
+
+		if (/duckduckgo\.com$/.test(referrerHost)) {
+			return { source: 'duckduckgo', medium: 'organic' }
+		}
+
+		return { source: 'referral', medium: 'referral' }
+	}
+
+	function getAttribution() {
+		var stored = getStorageValue(window.sessionStorage, attributionStorageKey)
+		var referrerHost
+		var inferred
+		var source
+		var medium
+		var attribution
+
+		if (stored) {
+			try {
+				return JSON.parse(stored)
+			} catch (error) {
+				// Rebuild malformed attribution data.
+			}
+		}
+
+		referrerHost = getReferrerHost()
+		inferred = inferSource(referrerHost)
+		source =
+			cleanAttributionValue(getQueryValue('utm_source'), 80) || inferred.source
+		medium =
+			cleanAttributionValue(getQueryValue('utm_medium'), 80) || inferred.medium
+
+		attribution = {
+			traffic_source: source || 'direct',
+			traffic_medium: medium || 'none',
+			traffic_campaign: cleanAttributionValue(
+				getQueryValue('utm_campaign'),
+				120
+			),
+			referrer_host: referrerHost
+		}
+
+		setStorageValue(
+			window.sessionStorage,
+			attributionStorageKey,
+			JSON.stringify(attribution)
+		)
+		return attribution
+	}
+
+	function getDeviceType() {
+		var userAgent = navigator.userAgent || ''
+		var isTablet =
+			/iPad|Tablet|Android(?!.*Mobile)/i.test(userAgent) ||
+			(/Macintosh/i.test(userAgent) && navigator.maxTouchPoints > 1)
+
+		if (isTablet) {
+			return 'tablet'
+		}
+
+		if (/Mobi|Android|iPhone|iPod|Windows Phone/i.test(userAgent)) {
+			return 'mobile'
+		}
+
+		return 'desktop'
+	}
+
 	function getIdentity() {
 		if (!hasAnalyticsConsent()) {
 			return null
@@ -234,10 +372,16 @@
 		}
 
 		var payload = cleanDetails(details)
+		var attribution = getAttribution()
 		payload.event_uid = uuid()
 		payload.event_name = eventName
 		payload.visitor_key = identity.visitor_key
 		payload.session_key = identity.session_key
+		payload.traffic_source = attribution.traffic_source
+		payload.traffic_medium = attribution.traffic_medium
+		payload.traffic_campaign = attribution.traffic_campaign
+		payload.referrer_host = attribution.referrer_host
+		payload.device_type = getDeviceType()
 
 		return getCartKey().then(function (cartKey) {
 			if (cartKey) {
@@ -255,7 +399,9 @@
 					keepalive: true
 				})
 				.then(function (response) {
-					return response.status === 201
+					// The event is already persisted when the server returns any 2xx response.
+					// Some local/proxy configurations normalize 201 Created to 200 OK.
+					return response.ok
 				})
 				.catch(function () {
 					return false
@@ -264,7 +410,11 @@
 	}
 
 	function init() {
-		if (sessionStarted || !hasAnalyticsConsent()) {
+		if (sessionStarted) {
+			return Promise.resolve(true)
+		}
+
+		if (!hasAnalyticsConsent()) {
 			return Promise.resolve(false)
 		}
 

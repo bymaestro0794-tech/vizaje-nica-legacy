@@ -700,7 +700,8 @@ if (strpos($currentView, 'pages/offers/') === 0) {
             <?= !empty($consent['analytics']) ? 'true' : 'false' ?>;
     </script>
 
-    <script src="/app/js/analytics/site-analytics.js?v=3" defer></script>
+    <script src="/app/js/analytics/site-analytics.js?v=5" defer></script>
+    <script src="/app/js/analytics/site-analytics-events.js?v=2" defer></script>
 
     <script src="/app/js/components/auth-drawer.js" defer></script>
     <!-- APP JS START HERE -->

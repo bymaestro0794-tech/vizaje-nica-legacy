@@ -56,6 +56,7 @@ $periodLabel = static function ($period, $groupBy, $monthNames) {
 <ul class="nav nav-tabs" style="margin-bottom:20px;">
     <li class="active"><a href="/<?= ADM_CONTROLLER ?>/analytics">Аналитика продаж</a></li>
     <li><a href="/<?= ADM_CONTROLLER ?>/analytics/funnel">Воронка продаж</a></li>
+    <li><a href="/<?= ADM_CONTROLLER ?>/analytics/site">Аналитика сайта</a></li>
 </ul>
 
 <form method="get" action="<?= html_escape(current_url()) ?>" class="form-inline" style="margin-bottom:20px;">

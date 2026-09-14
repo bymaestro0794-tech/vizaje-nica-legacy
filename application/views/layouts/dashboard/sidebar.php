@@ -20,6 +20,7 @@ $sidebar_menu = array(
     'clients' => array('name' => lang("Clients"), 'ico' => '<i class="fa fa-users"></i>'),
     'stores' => array('name' => lang("Stores"), 'ico' => '<i class="fa fa-home"></i>'),
     'promocodes' => array('name' => "Промокоды", 'ico' => '<i class="fa fa-gift"></i>'),
+    'analytics' => array('name' => "Аналитика", 'ico' => '<i class="fa fa-bar-chart"></i>'),
     /*
      * Управление новой главной страницей.
      */

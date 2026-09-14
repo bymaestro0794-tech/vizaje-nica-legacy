@@ -4,8 +4,9 @@ defined('BASEPATH') or exit('No direct script access allowed');
 /**
  * Read-only sales analytics for the legacy admin.
  *
- * This model intentionally uses finished orders only. Behaviour analytics
- * will be added later through a separate first-party event store.
+ * Sales widgets use finished orders only. The order funnel additionally
+ * reads the current status of all orders; behaviour analytics lives in a
+ * separate first-party event store.
  */
 class Analytics_model extends BaseModel
 {
@@ -80,6 +81,78 @@ class Analytics_model extends BaseModel
                 isset($options['group_by']) ? $options['group_by'] : 'month',
                 isset($options['brand_id']) ? $options['brand_id'] : null
             ),
+        );
+    }
+
+    /**
+     * Returns an order-status funnel for orders created in the selected range.
+     *
+     * This is deliberately a current-status snapshot. The legacy schema does
+     * not store an order-status history, so it must not be presented as a
+     * historical transition funnel.
+     */
+    public function get_order_funnel($fromDateTime, $toDateTime, $groupBy = 'month')
+    {
+        $groupBy = $groupBy === 'day' ? 'day' : 'month';
+
+        $summaryRow = $this->db->query(
+            "SELECT
+                COUNT(*) AS total_orders,
+                SUM(status = 'new') AS new_orders,
+                SUM(status = 'progress') AS progress_orders,
+                SUM(status = 'finished') AS finished_orders,
+                SUM(status = 'canceled') AS canceled_orders
+             FROM orders
+             WHERE added >= ? AND added < ?",
+            array($fromDateTime, $toDateTime)
+        )->row_array();
+
+        $summary = array(
+            'total_orders' => (int) (isset($summaryRow['total_orders']) ? $summaryRow['total_orders'] : 0),
+            'new_orders' => (int) (isset($summaryRow['new_orders']) ? $summaryRow['new_orders'] : 0),
+            'progress_orders' => (int) (isset($summaryRow['progress_orders']) ? $summaryRow['progress_orders'] : 0),
+            'finished_orders' => (int) (isset($summaryRow['finished_orders']) ? $summaryRow['finished_orders'] : 0),
+            'canceled_orders' => (int) (isset($summaryRow['canceled_orders']) ? $summaryRow['canceled_orders'] : 0),
+        );
+
+        $summary['finished_conversion'] = $summary['total_orders'] > 0
+            ? ($summary['finished_orders'] / $summary['total_orders']) * 100
+            : 0;
+        $summary['cancellation_rate'] = $summary['total_orders'] > 0
+            ? ($summary['canceled_orders'] / $summary['total_orders']) * 100
+            : 0;
+
+        $periodExpression = $groupBy === 'day'
+            ? 'DATE(added)'
+            : "DATE_FORMAT(added, '%Y-%m')";
+
+        $periods = $this->db->query(
+            "SELECT
+                {$periodExpression} AS period_key,
+                COUNT(*) AS total_orders,
+                SUM(status = 'new') AS new_orders,
+                SUM(status = 'progress') AS progress_orders,
+                SUM(status = 'finished') AS finished_orders,
+                SUM(status = 'canceled') AS canceled_orders
+             FROM orders
+             WHERE added >= ? AND added < ?
+             GROUP BY period_key
+             ORDER BY period_key DESC",
+            array($fromDateTime, $toDateTime)
+        )->result_array();
+
+        foreach ($periods as &$period) {
+            $period['total_orders'] = (int) $period['total_orders'];
+            $period['new_orders'] = (int) $period['new_orders'];
+            $period['progress_orders'] = (int) $period['progress_orders'];
+            $period['finished_orders'] = (int) $period['finished_orders'];
+            $period['canceled_orders'] = (int) $period['canceled_orders'];
+        }
+        unset($period);
+
+        return array(
+            'summary' => $summary,
+            'periods' => $periods,
         );
     }
 
