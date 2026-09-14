@@ -94,6 +94,58 @@ $deviceNames = array(
 );
 
 $selectedSource = isset($traffic_source) ? (string) $traffic_source : '';
+$topPagesPagination = isset($siteAnalytics['top_pages_pagination']) && is_array($siteAnalytics['top_pages_pagination'])
+    ? $siteAnalytics['top_pages_pagination']
+    : array('page' => 1, 'per_page' => 20, 'total' => count($topPages), 'total_pages' => 1);
+$landingPagesPagination = isset($siteAnalytics['landing_pages_pagination']) && is_array($siteAnalytics['landing_pages_pagination'])
+    ? $siteAnalytics['landing_pages_pagination']
+    : array('page' => 1, 'per_page' => 20, 'total' => count($landingPages), 'total_pages' => 1);
+
+$buildPaginationUrl = static function ($page, $pageParameter) use ($date_from, $date_to, $group_by, $selectedSource, $topPagesPagination, $landingPagesPagination) {
+    $query = array(
+        'date_from' => $date_from,
+        'date_to' => $date_to,
+        'group_by' => $group_by,
+        'top_pages_page' => (int) $topPagesPagination['page'],
+        'landing_pages_page' => (int) $landingPagesPagination['page'],
+    );
+
+    if ($selectedSource !== '') {
+        $query['traffic_source'] = $selectedSource;
+    }
+
+    $query[$pageParameter] = max(1, (int) $page);
+
+    return current_url() . '?' . http_build_query($query);
+};
+
+$renderPagination = static function ($pagination, $pageParameter, $buildPaginationUrl) {
+    $currentPage = (int) ($pagination['page'] ?? 1);
+    $totalPages = (int) ($pagination['total_pages'] ?? 1);
+    $total = (int) ($pagination['total'] ?? 0);
+
+    if ($totalPages <= 1) {
+        return;
+    }
+
+    echo '<div class="text-muted" style="margin-top:10px;">Всего страниц: ' . $total . '</div>';
+    echo '<ul class="pagination" style="margin:10px 0 0;">';
+
+    if ($currentPage > 1) {
+        echo '<li><a href="' . html_escape($buildPaginationUrl($currentPage - 1, $pageParameter)) . '">← Назад</a></li>';
+    }
+
+    for ($page = 1; $page <= $totalPages; $page++) {
+        $active = $page === $currentPage ? ' class="active"' : '';
+        echo '<li' . $active . '><a href="' . html_escape($buildPaginationUrl($page, $pageParameter)) . '">' . $page . '</a></li>';
+    }
+
+    if ($currentPage < $totalPages) {
+        echo '<li><a href="' . html_escape($buildPaginationUrl($currentPage + 1, $pageParameter)) . '">Далее →</a></li>';
+    }
+
+    echo '</ul>';
+};
 ?>
 
 <div class="page-bar">
@@ -293,6 +345,7 @@ $selectedSource = isset($traffic_source) ? (string) $traffic_source : '';
             <?php endif; ?>
             </tbody>
         </table>
+        <?php $renderPagination($topPagesPagination, 'top_pages_page', $buildPaginationUrl); ?>
     </div>
 </div>
 
@@ -337,6 +390,7 @@ $selectedSource = isset($traffic_source) ? (string) $traffic_source : '';
             <?php endif; ?>
             </tbody>
         </table>
+        <?php $renderPagination($landingPagesPagination, 'landing_pages_page', $buildPaginationUrl); ?>
     </div>
 </div>
 

@@ -124,16 +124,31 @@ class Analytics extends BackEndController
             ? $trafficSource
             : null;
 
+        $topPagesPage = $this->input->get('top_pages_page', true);
+        $landingPagesPage = $this->input->get('landing_pages_page', true);
+        $topPagesPage = ctype_digit((string) $topPagesPage) && (int) $topPagesPage > 0
+            ? (int) $topPagesPage
+            : 1;
+        $landingPagesPage = ctype_digit((string) $landingPagesPage) && (int) $landingPagesPage > 0
+            ? (int) $landingPagesPage
+            : 1;
+
         $this->data['title'] = 'Аналитика сайта';
         $this->data['date_from'] = $range['date_from'];
         $this->data['date_to'] = $range['date_to'];
         $this->data['group_by'] = $groupBy;
         $this->data['traffic_source'] = $trafficSource;
+        $this->data['top_pages_page'] = $topPagesPage;
+        $this->data['landing_pages_page'] = $landingPagesPage;
         $this->data['site_analytics'] = $this->site_analytics_model->get_dashboard(
             $range['from_datetime'],
             $range['to_datetime'],
             $groupBy,
-            $trafficSource
+            $trafficSource,
+            array(
+                'top_pages_page' => $topPagesPage,
+                'landing_pages_page' => $landingPagesPage,
+            )
         );
         $this->data['inner_view'] = $this->folder . 'site';
         $this->load->vars($this->data);
