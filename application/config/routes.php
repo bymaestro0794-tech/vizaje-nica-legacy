@@ -203,6 +203,7 @@ $route[$langs.'/products/brands'] = "frontend/catalog/products_brand";
 $route[$langs.'/(our-project)'] = "frontend/projects/index";
 
 $route['cp_features/(:any)'] = "features/$1";
+$route['feedback/submit'] = 'frontend/feedback/submit';
 /* Default Routing */
 $route['analytics/event'] = 'frontend/analytics/event';
 $route[$langs . '/:any/:any/:any/:any/:any'] = 'pages/text_pages';

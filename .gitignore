@@ -24,6 +24,7 @@ application/logs/
 
 # User-uploaded media (восстанавливается из бэкапа сервера)
 public/
+uploads/
 
 # Server/hosting-specific
 .ftpquota
@@ -32,6 +33,6 @@ error_log
 # Generated/data files
 sitemap.xml
 products.json
-
+session-test.php
 # phpMyAdmin
 pmadm/

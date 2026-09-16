@@ -375,6 +375,7 @@ $globalCss = [
     'app/css/style/25-auth-drawer.css',
     'app/css/style/26-cookie-consent-panel.css',
     'app/css/style/27-quick-view.css',
+    'app/css/style/site-feedback.css',
 ];
 
 /*
@@ -702,7 +703,10 @@ if (strpos($currentView, 'pages/offers/') === 0) {
 
     <script src="/app/js/analytics/site-analytics.js?v=5" defer></script>
     <script src="/app/js/analytics/site-analytics-events.js?v=2" defer></script>
-
+        <script
+    src="<?= asset_url('app/js/components/site-feedback.js') ?>"
+    defer
+></script>
     <script src="/app/js/components/auth-drawer.js" defer></script>
     <!-- APP JS START HERE -->
      <script type="module" src="/app/js/pages/home/home.js"></script>

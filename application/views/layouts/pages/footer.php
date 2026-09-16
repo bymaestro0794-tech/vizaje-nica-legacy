@@ -165,7 +165,7 @@ $socialLinks = [
                                 </a>
                             </li>
                         <?php endforeach; ?>
-
+                        
                         <li class="main-footer__item">
                             <a
                                 href="<?= $certificatesUrl ?>"
@@ -173,6 +173,9 @@ $socialLinks = [
                             >
                                 <?= $certificatesTitle ?>
                             </a>
+                        </li>
+                        <li class="main-footer__item">
+                            <?php $this->load->view('partials/site-feedback'); ?>
                         </li>
                     </ul>
                 </div>
