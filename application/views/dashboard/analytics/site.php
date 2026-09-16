@@ -128,20 +128,35 @@ $renderPagination = static function ($pagination, $pageParameter, $buildPaginati
         return;
     }
 
-    echo '<div class="text-muted" style="margin-top:10px;">Всего страниц: ' . $total . '</div>';
+    echo '<div class="text-muted" style="margin-top:10px;">Всего записей: ' . $total . '</div>';
     echo '<ul class="pagination" style="margin:10px 0 0;">';
 
     if ($currentPage > 1) {
-        echo '<li><a href="' . html_escape($buildPaginationUrl($currentPage - 1, $pageParameter)) . '">← Назад</a></li>';
+        echo '<li><a aria-label="Предыдущая страница" href="' . html_escape($buildPaginationUrl($currentPage - 1, $pageParameter)) . '">‹</a></li>';
     }
 
-    for ($page = 1; $page <= $totalPages; $page++) {
+    $visiblePages = array(1, $totalPages);
+    $windowStart = max(2, $currentPage - 2);
+    $windowEnd = min($totalPages - 1, $currentPage + 2);
+    for ($page = $windowStart; $page <= $windowEnd; $page++) {
+        $visiblePages[] = $page;
+    }
+    $visiblePages = array_values(array_unique($visiblePages));
+    sort($visiblePages, SORT_NUMERIC);
+
+    $previousPage = 0;
+    foreach ($visiblePages as $page) {
+        if ($previousPage > 0 && $page - $previousPage > 1) {
+            echo '<li class="disabled"><span>…</span></li>';
+        }
+
         $active = $page === $currentPage ? ' class="active"' : '';
         echo '<li' . $active . '><a href="' . html_escape($buildPaginationUrl($page, $pageParameter)) . '">' . $page . '</a></li>';
+        $previousPage = $page;
     }
 
     if ($currentPage < $totalPages) {
-        echo '<li><a href="' . html_escape($buildPaginationUrl($currentPage + 1, $pageParameter)) . '">Далее →</a></li>';
+        echo '<li><a aria-label="Следующая страница" href="' . html_escape($buildPaginationUrl($currentPage + 1, $pageParameter)) . '">›</a></li>';
     }
 
     echo '</ul>';
