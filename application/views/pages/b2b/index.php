@@ -108,7 +108,7 @@ $b2bAsset = static function ($path) use ($b2bAssetBase) {
 				<div class="our-business__cards">
 					<button type="button" class="business-card" data-modal="retail">
 						<div class="business-card__image">
-							<img src="<?= $b2bAsset('img/our-bussines/store.png'); ?>" alt="" />
+							<img src="<?= $b2bAsset('img/our-bussines/store.jpg'); ?>" alt="" />
 						</div>
 						<div class="business-card__text">
 							<p class="business-card__eyebrow">Retail</p>
@@ -132,7 +132,7 @@ $b2bAsset = static function ($path) use ($b2bAssetBase) {
 					</button>
 					<button type="button" class="business-card" data-modal="ecom">
 						<div class="business-card__image">
-							<img src="<?= $b2bAsset('img/our-bussines/web.png'); ?>" alt="" />
+							<img src="<?= $b2bAsset('img/our-bussines/web.jpg'); ?>" alt="" />
 						</div>
 						<div class="business-card__text">
 							<p class="business-card__eyebrow">E-com</p>
