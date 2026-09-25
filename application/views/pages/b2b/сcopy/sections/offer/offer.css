@@ -1,0 +1,275 @@
+.offer {
+	background: var(--bg-section);
+}
+
+.offer__inner {
+	max-width: var(--container-max);
+	margin-inline: auto;
+	padding: 46px 80px 140px;
+}
+
+.offer__header {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 20px;
+	padding-bottom: 72px;
+	text-align: center;
+}
+
+.offer__eyebrow {
+	font-size: 15px;
+	font-weight: 600;
+	letter-spacing: 1.5px;
+	color: var(--text-secondary);
+}
+
+.offer__title {
+	font-size: 56px;
+	font-weight: 600;
+	line-height: 1;
+	letter-spacing: -1.68px;
+	color: var(--text-primary);
+}
+
+.offer__lead {
+	font-size: 21px;
+	color: var(--text-secondary);
+}
+
+.offer-card {
+	display: flex;
+	height: 560px;
+	background: var(--bg-page);
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-card-lg);
+	overflow: hidden;
+}
+
+.offer-card__list {
+	flex: 0 0 768px;
+	padding: 56px 64px;
+}
+
+.offer-card__title {
+	margin-bottom: var(--space-lg);
+	font-size: 40px;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.offer-card__rows {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+}
+
+.offer-card__row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-md);
+	padding: 22px 0;
+	border-top: 1px solid var(--border-default);
+}
+
+.offer-card__num {
+	flex: 0 0 40px;
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--text-secondary);
+}
+
+.offer-card__text {
+	font-size: 26px;
+	color: var(--text-primary);
+}
+
+.offer-card__visual {
+	position: relative;
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	background: var(--offer-gradient);
+}
+
+.offer-card__puzzle {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 546px;
+	height: 364px;
+	transform: translate(-50%, -50%) rotate(39.35deg);
+}
+
+.offer-card__piece,
+.offer-card__whole {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	max-width: none;
+}
+
+/* Без JS и при reduced motion видна целая картинка, части скрыты */
+.offer-card__piece {
+	opacity: 0;
+}
+
+/* Области частей пазла в координатах исходника 360.png: вершины фигуры и середины её сторон,
+   найденные по прозрачности. Вместе четыре области покрывают картинку без зазоров */
+.offer-card__piece--top {
+	clip-path: polygon(0% 0%, 100% 0%, 67.2% 23.8%, 49.5% 45%, 32% 23%);
+}
+
+.offer-card__piece--right {
+	clip-path: polygon(100% 0%, 100% 100%, 66.6% 69.8%, 49.5% 45%, 67.2% 23.8%);
+}
+
+.offer-card__piece--bottom {
+	clip-path: polygon(100% 100%, 0% 100%, 31.5% 69%, 49.5% 45%, 66.6% 69.8%);
+}
+
+.offer-card__piece--left {
+	clip-path: polygon(0% 100%, 0% 0%, 32% 23%, 49.5% 45%, 31.5% 69%);
+}
+
+.offer-card__glow {
+	position: absolute;
+	inset: 15%;
+	background: radial-gradient(closest-side, rgba(255, 255, 255, 0.9), transparent);
+	opacity: 0;
+}
+
+.offer-card__shadow {
+	position: absolute;
+	left: 20%;
+	right: 20%;
+	top: 70%;
+	height: 60px;
+	background: radial-gradient(closest-side, rgba(26, 38, 77, 0.2), transparent);
+	opacity: 0;
+}
+
+.offer-growth {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 56px;
+	padding-top: 36px;
+}
+
+.offer-growth__title {
+	font-size: 56px;
+	font-weight: 600;
+	letter-spacing: -1.12px;
+	text-align: center;
+	color: var(--text-primary);
+}
+
+.offer-growth__principles {
+	display: flex;
+	gap: var(--space-lg);
+	width: 100%;
+}
+
+.principle {
+	position: relative;
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding-top: 28px;
+}
+
+/* Линия над принципом отдельным элементом, чтобы прорисовывать её через scaleX */
+.principle__line {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 1px;
+	background: var(--border-default);
+	transform-origin: left;
+}
+
+.principle__title {
+	font-size: 36px;
+	font-weight: 600;
+	letter-spacing: -0.36px;
+	color: var(--text-primary);
+}
+
+.principle__text {
+	font-size: 19px;
+	color: var(--text-secondary);
+}
+
+@media (max-width: 767px) {
+	.offer__inner {
+		padding: 64px 20px 72px;
+	}
+
+	.offer__header {
+		padding-bottom: var(--space-lg);
+	}
+
+	.offer__title {
+		font-size: 36px;
+		letter-spacing: -0.72px;
+	}
+
+	.offer__lead {
+		font-size: 17px;
+	}
+
+	.offer-card {
+		flex-direction: column-reverse;
+		height: auto;
+	}
+
+	.offer-card__list {
+		flex-basis: auto;
+		padding: 32px 24px 24px;
+	}
+
+	.offer-card__title {
+		font-size: 30px;
+	}
+
+	.offer-card__text {
+		flex: 1;
+		min-width: 0;
+		font-size: 20px;
+	}
+
+	.offer-card__visual {
+		flex: 0 0 360px;
+	}
+
+	.offer-card__puzzle {
+		width: 416px;
+		height: 278px;
+	}
+
+	.offer-growth {
+		gap: 32px;
+		padding-top: 72px;
+		text-align: center;
+	}
+
+	.offer-growth__title {
+		font-size: 27px;
+		letter-spacing: -0.54px;
+	}
+
+	.offer-growth__principles {
+		flex-direction: column;
+		gap: var(--space-md);
+	}
+
+	.principle__title {
+		font-size: 30px;
+		letter-spacing: -0.3px;
+	}
+}

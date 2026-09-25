@@ -110,7 +110,8 @@ $route['product/quick-view'] =
 
 /* Frontend */
 $route[$langs] = "pages/index";
-
+// $route['b2b'] = 'frontend/b2b/index';
+$route['(ro|ru)/b2b'] = 'frontend/b2b/index/$1';
 $route[$langs.'/(certificat-cadou|podarochnyie-sertifikatyi)'] = "frontend/certificat/index";
 $route[$langs.'/(certificat-cadou|podarochnyie-sertifikatyi)/success'] = "frontend/certificat/success";
 $route[$langs.'/(certificat-cadou|podarochnyie-sertifikatyi)/error'] = "frontend/certificat/success";

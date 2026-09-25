@@ -102,7 +102,7 @@ body.is-header-locked {
 	height: var(--header-announcement-height);
 	overflow: hidden;
 
-	background: #efae45;
+	background: #42b5f9;
 
 	transition:
 		height var(--header-transition),

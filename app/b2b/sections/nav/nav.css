@@ -1,0 +1,100 @@
+.nav {
+	position: sticky;
+	top: 0;
+	z-index: 50;
+}
+
+/* Фон после 40px скролла: полупрозрачный с размытием, проявляется через opacity */
+.nav__backdrop {
+	position: absolute;
+	inset: 0;
+	background: color-mix(in srgb, var(--bg-page) 80%, transparent);
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
+	border-bottom: 1px solid var(--border-default);
+	opacity: 0;
+	pointer-events: none;
+}
+
+.nav__inner {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	max-width: var(--container-max);
+	margin-inline: auto;
+	padding: 16px 40px;
+}
+
+.nav__logo {
+	display: block;
+	flex-shrink: 0;
+}
+
+.nav__links {
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
+}
+
+.nav__link {
+	position: relative;
+	display: block;
+	padding: 4px 10px;
+	font-size: 12px;
+	color: var(--text-primary);
+}
+
+.nav__underline {
+	position: absolute;
+	left: 10px;
+	right: 10px;
+	bottom: 0;
+	height: 1px;
+	background: var(--text-primary);
+	transform: scaleX(0);
+	transform-origin: left;
+}
+
+.nav__partner {
+	position: relative;
+	display: inline-block;
+	padding: 4px 0;
+	font-size: 12px;
+	color: var(--accent-blue);
+}
+
+.nav__partner .nav__underline {
+	left: 0;
+	right: 0;
+	background: var(--accent-blue);
+}
+
+/* Стартовое состояние до анимации появления шапки */
+.js .nav__logo,
+.js .nav__links li,
+.js .nav__partner {
+	opacity: 0;
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+	.nav__inner {
+		padding: 16px 32px;
+	}
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+	.nav__inner {
+		padding: 16px 24px;
+	}
+}
+
+@media (max-width: 767px) {
+	.nav__inner {
+		padding: 16px 20px;
+	}
+
+	.nav__links {
+		display: none;
+	}
+}

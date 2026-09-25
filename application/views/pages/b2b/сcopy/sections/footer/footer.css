@@ -1,0 +1,148 @@
+.footer {
+	background: var(--bg-section);
+}
+
+.footer__inner {
+	max-width: var(--container-max);
+	margin-inline: auto;
+	padding: 72px 80px 32px;
+	display: flex;
+	flex-direction: column;
+	gap: 48px;
+}
+
+.footer__top {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-xl);
+}
+
+.footer__brand {
+	flex: 0 0 360px;
+	margin-right: auto;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-sm);
+}
+
+/* В логотипе растр с белым фоном: multiply растворяет белое на сером фоне футера */
+.footer__logo img {
+	mix-blend-mode: multiply;
+}
+
+.footer__tagline {
+	font-size: 15px;
+	color: var(--text-secondary);
+}
+
+.footer__col {
+	flex: 0 0 240px;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 12px;
+	font-size: 14px;
+	color: var(--text-primary);
+}
+
+.footer__col-title {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-secondary);
+}
+
+.footer__col a {
+	position: relative;
+}
+
+/* Подчёркивание ссылки, прорисовывается слева при наведении */
+.footer__underline {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: -2px;
+	height: 1px;
+	background: currentColor;
+	transform: scaleX(0);
+	transform-origin: left;
+}
+
+/* Стартовое состояние до появления по скроллу */
+.js .footer__brand,
+.js .footer__col,
+.js .footer__bottom {
+	opacity: 0;
+}
+
+.footer__bottom {
+	display: flex;
+	justify-content: space-between;
+	padding-top: 48px;
+	border-top: 1px solid var(--border-default);
+	font-size: 12px;
+	color: var(--text-secondary);
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+	.footer__inner {
+		padding-inline: 32px;
+	}
+
+	.footer__top {
+		gap: var(--space-lg);
+	}
+
+	.footer__brand {
+		flex-basis: 260px;
+		margin-right: 0;
+	}
+
+	.footer__col {
+		flex-basis: 220px;
+	}
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+	.footer__inner {
+		padding-inline: 32px;
+	}
+
+	.footer__top {
+		gap: 32px;
+	}
+
+	.footer__brand {
+		flex: 1;
+		min-width: 0;
+		margin-right: 0;
+	}
+
+	.footer__col {
+		flex-basis: 190px;
+	}
+}
+
+@media (max-width: 767px) {
+	.footer__inner {
+		padding: 48px 20px 28px;
+		gap: 32px;
+	}
+
+	.footer__top {
+		flex-direction: column;
+		gap: 32px;
+	}
+
+	.footer__brand,
+	.footer__col {
+		flex: none;
+		margin-right: 0;
+	}
+
+	.footer__bottom {
+		flex-direction: column;
+		gap: var(--space-xs);
+		padding-top: 32px;
+	}
+}

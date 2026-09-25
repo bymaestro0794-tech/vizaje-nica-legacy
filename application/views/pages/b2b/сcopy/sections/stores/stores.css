@@ -1,0 +1,166 @@
+.stores {
+	--stores-inset: max(20px, calc((100% - 1000px) / 2));
+	background: var(--bg-dark);
+	padding: 35px 0 60px;
+	display: flex;
+	flex-direction: column;
+	gap: 28px;
+}
+
+.stores__track {
+	position: relative;
+	display: flex;
+	gap: 20px;
+	padding-inline: var(--stores-inset);
+	scroll-padding-inline: var(--stores-inset);
+	overflow-x: auto;
+	scroll-snap-type: x mandatory;
+	overscroll-behavior-x: contain;
+	scrollbar-width: none;
+}
+
+.stores__track::-webkit-scrollbar {
+	display: none;
+}
+
+/* Во время перетаскивания и анимации стрелок scroll-snap мешает, выключаем */
+.stores__track.is-dragging,
+.stores__track.is-animating {
+	scroll-snap-type: none;
+}
+
+.stores__track.is-dragging {
+	cursor: grabbing;
+	user-select: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.stores__track {
+		cursor: grab;
+	}
+}
+
+.store-card {
+	flex: 0 0 1000px;
+	scroll-snap-align: start;
+	will-change: transform, opacity;
+}
+
+/* Стартовое состояние до появления по скроллу */
+.js .store-card__inner {
+	opacity: 0;
+}
+
+.store-card__media {
+	position: relative;
+	height: 540px;
+	border-radius: var(--radius-card);
+	overflow: hidden;
+	background: var(--text-primary);
+}
+
+/* Фото шире слота на 5% с каждой стороны — запас для параллакса ±5% */
+.store-card__media img {
+	position: absolute;
+	top: 0;
+	left: -5%;
+	width: 110%;
+	max-width: none;
+	height: 100%;
+	object-fit: cover;
+}
+
+.store-card__badge {
+	position: absolute;
+	top: 32px;
+	left: 32px;
+	padding: 6px 9px;
+	border-radius: 8px;
+	background: var(--text-secondary);
+	color: var(--text-inverse);
+	font-size: 15px;
+	font-weight: 600;
+}
+
+.store-card__caption {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 18px;
+	padding: 20px 0 0 14px;
+	font-size: 21px;
+	font-weight: 600;
+	color: var(--text-inverse);
+}
+
+.store-card__text {
+	max-width: 760px;
+	font-weight: 400;
+	color: var(--text-secondary);
+}
+
+.store-card__text strong {
+	font-weight: 600;
+	color: var(--text-inverse);
+}
+
+.stores__arrows {
+	display: flex;
+	justify-content: flex-end;
+	gap: 18px;
+	padding-inline: var(--stores-inset);
+}
+
+.stores__arrow {
+	width: 36px;
+	height: 36px;
+	border-radius: 18px;
+	background: var(--text-primary);
+}
+
+.stores__arrow img {
+	width: 36px;
+	height: 36px;
+	filter: invert(1);
+}
+
+.stores__arrow:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+
+@media (max-width: 767px) {
+	.stores {
+		--stores-inset: 20px;
+		padding: 56px 0;
+		gap: 20px;
+	}
+
+	.stores__track {
+		gap: 12px;
+	}
+
+	.store-card {
+		flex-basis: 310px;
+	}
+
+	.store-card__media {
+		height: 210px;
+		border-radius: 24px;
+	}
+
+	.store-card__badge {
+		top: 16px;
+		left: 16px;
+	}
+
+	.store-card__caption {
+		gap: 12px;
+		padding: 16px 0 0 4px;
+		font-size: 17px;
+	}
+
+	.stores__arrows {
+		display: none;
+	}
+}
