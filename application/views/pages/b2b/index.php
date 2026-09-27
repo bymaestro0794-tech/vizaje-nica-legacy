@@ -56,7 +56,7 @@ $b2bAsset = static function ($path) use ($b2bAssetBase) {
 			<div class="nav__backdrop" aria-hidden="true"></div>
 			<div class="nav__inner">
 				<a href="#" class="nav__logo">
-					<img src="<?= $b2bAsset('img/logo.svg'); ?>" alt="Vizaje-Nica" width="172" height="24" />
+					<img src="<?= $b2bAsset('img/logo-1.svg'); ?>" alt="Vizaje-Nica" width="172" height="24" />
 				</a>
 				<ul class="nav__links">
 					<li><a href="#business" class="nav__link">Business</a></li>
@@ -64,7 +64,7 @@ $b2bAsset = static function ($path) use ($b2bAssetBase) {
 					<li><a href="#stores" class="nav__link">Stores</a></li>
 					<li><a href="#contact" class="nav__link">Contact</a></li>
 				</ul>
-				<a href="#contact" class="nav__partner">Become a partner</a>
+				<a href="mailto:marketing@vizaje-nica.com" class="nav__partner">Become a partner</a>
 			</div>
 		</header>
 
@@ -77,7 +77,7 @@ $b2bAsset = static function ($path) use ($b2bAssetBase) {
 					Vizaje-Nica is a second-generation family company, started in 1989 and grown into a
 					market leader in beauty retail and distribution.
 				</p>
-				<a href="#contact" class="btn btn-dark hero__cta"
+				<a href="mailto:marketing@vizaje-nica.com" class="btn btn-dark hero__cta"
 					>Business inquiry <span class="btn__arrow" aria-hidden="true">→</span></a
 				>
 				<p class="hero__tagline">Beauty brings people together.</p>
@@ -273,7 +273,7 @@ $b2bAsset = static function ($path) use ($b2bAssetBase) {
 				<div class="faq__heading">
 					<h2 class="faq__title">Frequently asked questions</h2>
 					<p class="faq__lead">Answers for brands considering a partnership with Vizaje-Nica.</p>
-					<a href="#contact" class="faq__link">Contact us ›</a>
+					<a href="mailto:marketing@vizaje-nica.com" class="faq__link">Contact us ›</a>
 				</div>
 
 				<div class="faq__items">
@@ -385,7 +385,7 @@ $b2bAsset = static function ($path) use ($b2bAssetBase) {
 				<p class="cta__lead">
 					Tell us about your brand and we will get back to you to discuss the next steps.
 				</p>
-				<a href="#contact" class="btn btn-dark cta__button"
+				<a href="mailto:marketing@vizaje-nica.com" class="btn btn-dark cta__button"
 					>Business inquiry <span class="btn__arrow" aria-hidden="true">→</span></a
 				>
 			</div>
