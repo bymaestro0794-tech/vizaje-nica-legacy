@@ -36,7 +36,7 @@ const stores = [
 	{
 		name: 'Soiuz',
 		address: 'str. Alecu Russo 1/5',
-		image: './img/stores/store-soiuz.png'
+		image: '/app/b2b/img/stores/store-soiuz.png'
 	}
 ]
 
@@ -51,13 +51,9 @@ function createCard(store) {
 	img.draggable = false
 	img.addEventListener('error', () => img.remove())
 
-	const badge = document.createElement('span')
-	badge.className = 'store-card__badge'
-	badge.textContent = 'Chisinau'
-
 	const media = document.createElement('div')
 	media.className = 'store-card__media'
-	media.append(img, badge)
+	media.append(img)
 
 	const name = document.createElement('strong')
 	name.textContent = `${store.name}.`

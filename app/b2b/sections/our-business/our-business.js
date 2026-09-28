@@ -7,7 +7,7 @@ const content = {
 	retail: {
 		eyebrow: 'Retail',
 		title: 'Beauty for everyone, closer to you.',
-		image: '/app/b2b/img/our-bussines/modal/store.jpg',
+		image: '/app/b2b/img/our-bussines/modal/store.png',
 		items: [
 			{
 				label: 'Our stores.',
@@ -43,7 +43,7 @@ const content = {
 		eyebrow: 'E-com',
 		title: 'Beauty anywhere, closer to you.',
 		// TODO: нет отдельной картинки для модалки E-com, временно берём web.png
-		image: '/app/b2b/img/our-bussines/web.jpg',
+		image: '/app/b2b/img/modal/our-bussines/web.png',
 		items: [
 			{
 				label: 'Assortment.',

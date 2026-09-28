@@ -66,9 +66,9 @@
 	opacity: 0;
 }
 
-.number-card__value--red {
+/* .number-card__value--red {
 	color: var(--accent-red);
-}
+} */
 
 .number-card__value--blue {
 	color: var(--accent-blue);

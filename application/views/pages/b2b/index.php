@@ -77,7 +77,7 @@ $b2bAsset = static function ($path) use ($b2bAssetBase) {
 					Vizaje-Nica is a second-generation family company, started in 1989 and grown into a
 					market leader in beauty retail and distribution.
 				</p>
-				<a href="mailto:marketing@vizaje-nica.com" class="btn btn-dark hero__cta"
+				<a href="#contact" class="btn btn-dark hero__cta"
 					>Business inquiry <span class="btn__arrow" aria-hidden="true">→</span></a
 				>
 				<p class="hero__tagline">Beauty brings people together.</p>
@@ -98,6 +98,28 @@ $b2bAsset = static function ($path) use ($b2bAssetBase) {
 							<img src="<?= $b2bAsset('img/hero/hero-boxes.png'); ?>" alt="" />
 						</div>
 					</div>
+				</div>
+			</div>
+		</section>
+
+		<section class="welcome-video" aria-labelledby="welcome-video-title">
+			<div class="welcome-video__inner">
+				<div class="welcome-video__heading">
+					<p class="welcome-video__eyebrow">WELCOME TO VIZAJE-NICA</p>
+					<h2 class="welcome-video__title" id="welcome-video-title">Beauty brings people together.</h2>
+				</div>
+				<div class="welcome-video__frame">
+					<video
+						class="welcome-video__player"
+						controls
+						playsinline
+						preload="none"
+						poster="<?= $b2bAsset('img/our-bussines/store.jpg'); ?>"
+						data-lazy-video
+					>
+						<source data-src="<?= $b2bAsset('img/videos/welcome.MOV'); ?>" type="video/quicktime" />
+						Your browser does not support the video format.
+					</video>
 				</div>
 			</div>
 		</section>
