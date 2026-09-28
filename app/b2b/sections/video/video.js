@@ -8,6 +8,10 @@ function loadVideo(video) {
 	delete source.dataset.src;
 	video.dataset.videoLoaded = "true";
 	video.load();
+	video.muted = true;
+	video.play().catch(() => {
+		// Autoplay may be blocked; keep the poster visible as a graceful fallback.
+	});
 }
 
 export function initVideo() {

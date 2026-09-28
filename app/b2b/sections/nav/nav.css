@@ -4,6 +4,67 @@
 	z-index: 50;
 }
 
+/* Float the existing navigation above the cinematic hero. */
+.nav {
+	position: fixed;
+	left: 0;
+	right: 0;
+	color: #fff;
+}
+
+.nav__logo img {
+	filter: brightness(0) invert(1);
+}
+
+.nav__link,
+.nav__partner {
+	color: #fff;
+}
+
+.nav__link .nav__underline,
+.nav__partner .nav__underline {
+	background: #fff;
+}
+
+.nav--solid {
+	color: var(--text-primary);
+}
+
+.nav--solid .nav__logo img {
+	filter: none;
+}
+
+.nav--solid .nav__link {
+	color: var(--text-primary);
+}
+
+.nav--solid .nav__partner {
+	color: var(--accent-blue);
+}
+
+.nav--solid .nav__link .nav__underline {
+	background: var(--text-primary);
+}
+
+.nav--solid .nav__partner .nav__underline {
+	background: var(--accent-blue);
+}
+
+.nav:not(.nav--solid) .nav__link,
+.nav:not(.nav--solid) .nav__partner {
+	color: #fff;
+	text-shadow: 0 1px 5px rgba(0, 0, 0, 0.48);
+}
+
+.nav:not(.nav--solid) .nav__logo img {
+	filter: brightness(0) invert(1) drop-shadow(0 1px 4px rgba(0, 0, 0, 0.42));
+}
+
+.nav:not(.nav--solid) .nav__link .nav__underline,
+.nav:not(.nav--solid) .nav__partner .nav__underline {
+	background: #fff;
+}
+
 /* Фон после 40px скролла: полупрозрачный с размытием, проявляется через opacity */
 .nav__backdrop {
 	position: absolute;

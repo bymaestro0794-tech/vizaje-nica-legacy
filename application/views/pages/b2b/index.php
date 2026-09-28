@@ -68,60 +68,33 @@ $b2bAsset = static function ($path) use ($b2bAssetBase) {
 			</div>
 		</header>
 
-		<section class="hero">
-			<div class="hero__bg" aria-hidden="true"></div>
-			<div class="hero__text">
-				<p class="hero__eyebrow">B2B / MOLDOVA</p>
-				<h1 class="hero__title">Beauty retail. Distribution.<br />One local partner.</h1>
-				<p class="hero__description">
-					Vizaje-Nica is a second-generation family company, started in 1989 and grown into a
-					market leader in beauty retail and distribution.
-				</p>
-				<a href="#contact" class="btn btn-dark hero__cta"
-					>Business inquiry <span class="btn__arrow" aria-hidden="true">→</span></a
+		<section class="hero" aria-labelledby="hero-title">
+			<div class="hero__media" aria-hidden="true">
+				<video
+					class="hero__video"
+					autoplay
+					muted
+					playsinline
+					loop
+					preload="none"
+					poster="<?= $b2bAsset('img/our-bussines/store.jpg'); ?>"
+					data-lazy-video
 				>
-				<p class="hero__tagline">Beauty brings people together.</p>
+					<source data-src="<?= $b2bAsset('img/videos/welcome.mp4'); ?>" type="video/mp4" />
+				</video>
 			</div>
-			<div class="hero__bags" aria-hidden="true">
-				<div class="hero__layer" data-hero-scroll>
-					<div class="hero__layer" data-hero-float>
-						<div class="hero__layer" data-hero-mouse>
-							<img src="<?= $b2bAsset('img/hero/hero-bags.png'); ?>" alt="" />
-						</div>
-					</div>
-				</div>
+			<div class="hero__scrim" aria-hidden="true"></div>
+			<div class="hero__welcome" aria-hidden="true">
+				<span>Welcome</span>
+				<span>To</span>
+				<span>Vizaje-Nica</span>
 			</div>
-			<div class="hero__boxes" aria-hidden="true">
-				<div class="hero__layer" data-hero-scroll>
-					<div class="hero__layer" data-hero-float>
-						<div class="hero__layer" data-hero-mouse>
-							<img src="<?= $b2bAsset('img/hero/hero-boxes.png'); ?>" alt="" />
-						</div>
-					</div>
-				</div>
-			</div>
-		</section>
-
-		<section class="welcome-video" aria-labelledby="welcome-video-title">
-			<div class="welcome-video__inner">
-				<div class="welcome-video__heading">
-					<p class="welcome-video__eyebrow">WELCOME TO VIZAJE-NICA</p>
-					<h2 class="welcome-video__title" id="welcome-video-title">Beauty brings people together.</h2>
-				</div>
-				<div class="welcome-video__frame">
-					<video
-						class="welcome-video__player"
-						controls
-						playsinline
-						preload="none"
-						poster="<?= $b2bAsset('img/our-bussines/store.jpg'); ?>"
-						data-lazy-video
-					>
-						<source data-src="<?= $b2bAsset('img/videos/welcome.MOV'); ?>" type="video/quicktime" />
-						Your browser does not support the video format.
-					</video>
-				</div>
-			</div>
+			<a class="hero__scroll" href="#business" aria-label="Scroll down to Our business">
+				<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+					<path d="M12 4v15m-6-6 6 6 6-6" />
+				</svg>
+			</a>
+			<h1 class="visually-hidden" id="hero-title">Vizaje-Nica — beauty retail, distribution and e-commerce in Moldova</h1>
 		</section>
 
 		<section class="our-business" id="business">

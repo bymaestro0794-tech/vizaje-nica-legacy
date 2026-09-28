@@ -66,6 +66,7 @@ export function initNav(lenis) {
 	const setSolid = (value) => {
 		if (value === solid) return;
 		solid = value;
+		nav.classList.toggle("nav--solid", solid);
 		animate(backdrop, { opacity: solid ? 1 : 0 }, reducedMotion ? { duration: 0.15 } : springs.responsive);
 	};
 
