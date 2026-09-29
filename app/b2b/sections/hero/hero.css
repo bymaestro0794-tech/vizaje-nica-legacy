@@ -300,3 +300,116 @@
 		font-size: 16px;
 	}
 }
+
+/* Responsive, framed video hero */
+.hero {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	min-height: 100vh;
+	min-height: 100svh;
+	height: auto;
+	overflow: hidden;
+	padding: clamp(118px, 14vh, 156px) clamp(24px, 5vw, 72px) 40px;
+	background: var(--bg-section);
+	isolation: isolate;
+}
+
+.hero__bg,
+.hero__bags,
+.hero__boxes {
+	display: none;
+}
+
+.hero__intro {
+	width: min(760px, 100%);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 14px;
+	text-align: center;
+}
+
+.hero .hero__eyebrow {
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.14em;
+	color: var(--text-secondary);
+}
+
+.hero .hero__title {
+	max-width: 760px;
+	font-size: clamp(42px, 5vw, 68px);
+	font-weight: 500;
+	line-height: 1.04;
+	letter-spacing: -0.06em;
+	color: var(--text-primary);
+}
+
+.hero .hero__description {
+	width: min(560px, 100%);
+	font-size: clamp(16px, 1.35vw, 19px);
+	line-height: 1.5;
+	color: var(--text-secondary);
+}
+
+/* The previous cinematic intro hid these elements until an animation ran. */
+.js .hero .hero__intro,
+.js .hero .hero__intro * {
+	opacity: 1 !important;
+	visibility: visible !important;
+	filter: none !important;
+	transform: none !important;
+}
+
+.hero__scroll {
+	position: relative;
+	left: auto;
+	bottom: auto;
+	width: 40px;
+	height: 40px;
+	margin: 22px auto 0;
+	color: var(--text-primary);
+	transform: none;
+	filter: none;
+}
+
+.hero__scroll img {
+	width: 22px;
+	height: 22px;
+}
+
+@media (max-width: 767px) {
+	.hero {
+		min-height: 100vh;
+		min-height: 100svh;
+		padding: 104px 20px 32px;
+	}
+
+	.hero__intro {
+		align-items: flex-start;
+		gap: 12px;
+		text-align: left;
+	}
+
+	.hero .hero__eyebrow {
+		font-size: 10px;
+		letter-spacing: 0.12em;
+	}
+
+	.hero .hero__title {
+		font-size: clamp(34px, 10vw, 44px);
+		line-height: 1.02;
+		letter-spacing: -0.055em;
+	}
+
+	.hero .hero__description {
+		font-size: 15px;
+		line-height: 1.48;
+	}
+
+	.hero__scroll {
+		margin-top: 14px;
+	}
+}

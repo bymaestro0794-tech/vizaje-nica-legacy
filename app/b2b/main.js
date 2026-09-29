@@ -19,7 +19,7 @@ const lenis = initLenis();
 initModal(lenis);
 initProgress(lenis);
 initHero();
-initVideo();
+initVideo(lenis);
 initOurBusiness();
 initNumbers();
 initBrands();

@@ -6,6 +6,9 @@ $b2bAssetBase = function_exists('base_url')
 $b2bAsset = static function ($path) use ($b2bAssetBase) {
     return htmlspecialchars($b2bAssetBase . ltrim($path, '/'), ENT_QUOTES, 'UTF-8');
 };
+$b2bIconCss = function_exists('base_url')
+    ? base_url('static/assets/global/plugins/font-awesome/css/font-awesome.css')
+    : '/static/assets/global/plugins/font-awesome/css/font-awesome.css';
 ?>
 <!doctype html>
 <html lang="en">
@@ -20,6 +23,7 @@ $b2bAsset = static function ($path) use ($b2bAssetBase) {
 			rel="stylesheet"
 		/>
 		<link rel="stylesheet" href="<?= $b2bAsset('main.css'); ?>" />
+		<link rel="stylesheet" href="<?= htmlspecialchars($b2bIconCss, ENT_QUOTES, 'UTF-8'); ?>" />
 		<!-- Прячем элементы до анимации появления; если скрипты не запустились за 4 с, показываем всё как есть -->
 		<script>
 			document.documentElement.classList.add("js");
@@ -69,7 +73,14 @@ $b2bAsset = static function ($path) use ($b2bAssetBase) {
 		</header>
 
 		<section class="hero" aria-labelledby="hero-title">
-			<div class="hero__media" aria-hidden="true">
+			<div class="hero__intro">
+				<p class="hero__eyebrow">WELCOME TO VIZAJE-NICA</p>
+				<h1 class="hero__title" id="hero-title">Beauty brings people together.</h1>
+				<p class="hero__description">
+					A family-owned beauty retail and distribution partner, connecting global brands with people across Moldova since 1989.
+				</p>
+			</div>
+			<div class="hero__media">
 				<video
 					class="hero__video"
 					autoplay
@@ -78,23 +89,26 @@ $b2bAsset = static function ($path) use ($b2bAssetBase) {
 					loop
 					preload="none"
 					poster="<?= $b2bAsset('img/our-bussines/store.jpg'); ?>"
+					aria-hidden="true"
 					data-lazy-video
 				>
 					<source data-src="<?= $b2bAsset('img/videos/welcome.mp4'); ?>" type="video/mp4" />
 				</video>
-			</div>
-			<div class="hero__scrim" aria-hidden="true"></div>
-			<div class="hero__welcome" aria-hidden="true">
-				<span>Welcome</span>
-				<span>To</span>
-				<span>Vizaje-Nica</span>
+				<button class="hero__video-trigger" type="button" data-video-open aria-haspopup="dialog">
+					<span class="hero__video-trigger-copy">
+						<span>Watch our story</span>
+						<small>1 minute</small>
+					</span>
+					<span class="hero__video-trigger-play" aria-hidden="true">
+						<i class="fa fa-play"></i>
+					</span>
+				</button>
 			</div>
 			<a class="hero__scroll" href="#business" aria-label="Scroll down to Our business">
-				<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+				<svg viewBox="0 0 24 24" aria-hidden="true">
 					<path d="M12 4v15m-6-6 6 6 6-6" />
 				</svg>
 			</a>
-			<h1 class="visually-hidden" id="hero-title">Vizaje-Nica — beauty retail, distribution and e-commerce in Moldova</h1>
 		</section>
 
 		<section class="our-business" id="business">
@@ -433,6 +447,16 @@ $b2bAsset = static function ($path) use ($b2bAssetBase) {
 			<div class="modal__panel"></div>
 			<div class="modal__image">
 				<img src="" alt="" />
+			</div>
+		</dialog>
+
+		<dialog class="video-modal" data-video-modal aria-labelledby="video-modal-title" data-lenis-prevent>
+			<div class="video-modal__surface">
+				<h2 class="visually-hidden" id="video-modal-title">Watch the Vizaje-Nica story</h2>
+				<button class="video-modal__close" type="button" data-video-close aria-label="Close video">
+					<img src="<?= $b2bAsset('img/close.svg'); ?>" alt="" />
+				</button>
+				<div class="video-modal__mount" data-video-mount></div>
 			</div>
 		</dialog>
 
