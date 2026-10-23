@@ -2114,36 +2114,6 @@
    Условие: max-width: 720.98px
    ========================================================================== */
 @media (max-width: 720.98px) {
-	/* ==================== COOKIE-БАННЕР — START ==================== */
-	.cookie_on {
-		left: 16px;
-		right: 16px;
-		bottom: calc(30px + env(safe-area-inset-bottom));
-		width: auto;
-		transform: none;
-		border-radius: 16px;
-	}
-	.cookie_on .wrapper .cookie_content {
-		padding: 14px;
-		display: flex;
-		flex-direction: column;
-		text-align: center;
-		align-items: center;
-	}
-	.cookie_text {
-		font-size: 13px;
-		margin-bottom: 20px;
-	}
-	.cookie_actions {
-		width: 100%;
-		flex-direction: column-reverse;
-		gap: 10px;
-	}
-	.cookie_actions__button {
-		width: 100%;
-	}
-	/* ==================== COOKIE-БАННЕР — END ==================== */
-
 	/* ==================== КАРТА ВЫБОРА МАГАЗИНА — START ==================== */
 	.map-order__head {
 		padding: 15px 20px;

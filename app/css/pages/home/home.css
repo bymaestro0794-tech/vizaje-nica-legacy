@@ -1,7 +1,67 @@
 @import url('./hero.css');
-@import url('./categories.css');
+@import url('./categories.css?v=20261006-7');
 @import url('./products.css?v=20260805-1');
-@import url('./product-card.css');
+@import url('./product-card.css?v=20261022-catalog-cards');
+@import url('./product-tabs.css?v=20261006-11');
 @import url('./home-brand.css');
+@import url('./stores-teaser.css?v=20261006-3');
+@import url('./blog-teaser.css?v=20261009-4');
+@import url('./home-extras.css?v=20261019-about-company');
 @import url('./collection.css');
 @import url('./tile.css');
+
+.home-arrow-icon {
+	display: block;
+	flex: 0 0 auto;
+	width: 25px;
+	height: 15px;
+	overflow: visible;
+}
+
+.home-arrow-icon--right {
+	transform: scaleX(-1);
+}
+
+.home-editorial-marquee {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	width: 100%;
+	height: clamp(54px, 8.5vw, 122px);
+	align-items: center;
+	justify-content: center;
+	margin-bottom: clamp(-38px, -2.6vw, -18px);
+	overflow: hidden;
+	color: #fff;
+	pointer-events: none;
+}
+
+.home-editorial-marquee__title {
+	width: max-content;
+	max-width: none;
+	margin: 0;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	color: transparent;
+	font-size: clamp(38px, 7.4vw, 106px);
+	font-style: italic;
+	font-weight: 400;
+	letter-spacing: -.045em;
+	line-height: 1;
+	white-space: nowrap;
+	-webkit-text-stroke: 1px #171717;
+}
+
+@media (max-width: 767px) {
+	.home-editorial-marquee {
+		height: 48px;
+		margin-bottom: -6px;
+		justify-content: flex-start;
+	}
+
+	.home-editorial-marquee__title {
+		font-size: 33px;
+		-webkit-text-stroke-width: .8px;
+	}
+}

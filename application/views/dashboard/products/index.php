@@ -205,7 +205,7 @@
                                             <tr>
                                                 <td width="200"><?= lang('Photo') ?></td>
                                                 <td>
-                                                    <input type="file" name="images[]" id="file" multiple
+                                                    <input type="file" name="images[]" id="file" accept=".jpg,.jpeg,.png,.webp,.avif" multiple
                                                            class="form-control">
                                                     <div class="note note-warning"
                                                          style="margin-bottom: 0px; margin-top: 10px;">

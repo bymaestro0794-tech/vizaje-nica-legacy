@@ -81,11 +81,10 @@ class Clients extends BackEndController
                 }
             }
 
-            $id = $this->clients_model->put($post);
-            if (!$id) {
+            $created = $this->clients_model->put($post);
+            if (!$created) {
                 throw new Exception('Ошибка записи данных в таблицу: ' . $this->main_page);
             }
-            $this->db->insert('clients_addresses',array('client_id'=>$id));
 
             $_SESSION['success'] = $this->success_add;
         } catch (Exception $e) {

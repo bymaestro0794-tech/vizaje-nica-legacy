@@ -1,3 +1,6 @@
-import './categories.js'
 import './hero.js'
 import './products-slider.js?v=3'
+import './product-hover-gallery.js'
+import './product-tabs.js'
+import './instagram-carousel.js'
+import './blog-carousel.js'

@@ -27,6 +27,11 @@ $isRomanian = $lclang === 'ro';
         tabindex="-1"
         data-cart-drawer-panel
     >
+        <span
+            class="cart-drawer__halloween-decoration cart-drawer__halloween-ghost"
+            aria-hidden="true"
+        ></span>
+
         <header class="cart-drawer__header">
             <div class="cart-drawer__heading">
                 <h2

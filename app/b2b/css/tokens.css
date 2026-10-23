@@ -1,4 +1,12 @@
 /* Tokens из переменных Figma (коллекции Colors и Spacing) */
+@font-face {
+	font-family: 'Geist';
+	font-display: swap;
+	src: url('../../fonts/Geist-Variable.woff2') format('woff2');
+	font-style: normal;
+	font-weight: 100 900;
+}
+
 :root {
 	/* Colors */
 	--text-primary: #1d1d1f;
@@ -25,7 +33,7 @@
 	--radius-tile: 32px;
 
 	/* Font */
-	--font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	--font-sans: 'Geist';
 
 	/* Layout */
 	--container-max: 1440px;

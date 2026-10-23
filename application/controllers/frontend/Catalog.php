@@ -47,8 +47,24 @@ class Catalog extends FrontEndController
         }
     }
 
+    private function validatePaginationPage($pageNumber, $totalItems)
+    {
+        $lastPage = max(
+            1,
+            (int) ceil(max(0, (int) $totalItems) / max(1, (int) $this->per_page))
+        );
+
+        if ((int) $pageNumber > $lastPage) {
+            throw_on_404();
+        }
+    }
+
     public function index()
     {
+        if (in_array($this->uri2, ['katalog-categories', 'catalog-categories'], true)) {
+            $this->data['body_class'] = 'mobile_catalog_list_page';
+        }
+
         $page = $this->menu_model->get_page_data_by_id($this->clang, $this->page_id);
         if (empty($page)) throw_on_404();
 
@@ -57,8 +73,9 @@ class Catalog extends FrontEndController
         $start = ($pagination_nr - 1) * $this->per_page;
 
         $product_all = $this->products_model->get_all_products();
-        $products = $this->products_model->get_products_pag($this->clang, $start, $this->per_page);
         $count = count($product_all);
+        $this->validatePaginationPage($pagination_nr, $count);
+        $products = $this->products_model->get_products_pag($this->clang, $start, $this->per_page);
 
         $uri_parts = explode('?', $_SERVER['REQUEST_URI'], 2);
         $string = '';
@@ -72,7 +89,25 @@ class Catalog extends FrontEndController
         );
         $paginator->setMaxPagesToShow(5);
 
-        $this->data['canonical_url'] = $this->without_get_url;
+        $catalogLanguage = $this->uri1 === 'ro' ? 'ro' : 'ru';
+        $catalogLanguageField = strtoupper($catalogLanguage);
+        $catalogCanonical = $this->site_url . '/'
+            . $catalogLanguage . '/'
+            . trim((string) $page->{'uri' . $catalogLanguageField}, '/');
+        $catalogPageNumber = isset($_GET['page'])
+            ? filter_var($_GET['page'], FILTER_VALIDATE_INT)
+            : false;
+        $catalogHasOnlyPagination = empty(
+            array_diff(array_keys($_GET), array('page'))
+        );
+        if (
+            $catalogHasOnlyPagination
+            && $catalogPageNumber !== false
+            && $catalogPageNumber > 1
+        ) {
+            $catalogCanonical .= '?page=' . $catalogPageNumber;
+        }
+        $this->data['canonical_url'] = $catalogCanonical;
         $this->data['page_url'] = '/' . $this->uri1 . '/' . $this->uri2;
         $this->data['paginator'] = $paginator;
 
@@ -91,6 +126,35 @@ class Catalog extends FrontEndController
         $this->loadOGImgData($page);
         $this->_load_main_page($page);
 
+        $this->_render();
+    }
+
+    public function mobile_categories()
+    {
+        $page = $this->menu_model->get_page_data_by_id($this->clang, $this->page_id);
+        if (empty($page)) throw_on_404();
+
+        $categories = $this->categories_model->get_category_menu($this->clang);
+        if (empty($categories)) throw_on_404();
+
+        $this->load->model('home_categories_model');
+        $this->data['story_categories'] = $this->home_categories_model
+            ->get_front_items($this->clang);
+
+        $this->data['categories'] = $categories;
+        $this->data['header_categories'] = $categories;
+        $this->data['body_class'] = 'mobile_catalog_categories_page';
+        $this->data['canonical_url'] = $this->without_get_url;
+        $this->data['page_url'] = '/' . $this->uri1 . '/' . $this->uri2;
+        $this->data['inner_view'] = 'pages/catalog/mobile_categories';
+        $this->data['lang_urls'] = [
+            // select_language() prepends the language prefix itself.
+            'ro' => ['catalog-collections'],
+            'ru' => ['katalog-collections'],
+        ];
+
+        $this->loadOGImgData($page);
+        $this->_load_main_page($page);
         $this->_render();
     }
 
@@ -192,9 +256,31 @@ class Catalog extends FrontEndController
 
     $start = ($pagination_nr - 1) * $this->per_page;
 
-    $product_all =
-        $this->products_model
+    $activeQuery = $_GET;
+    foreach (array('page', 'sort', 'category', 'brand', 'sex', 'price_min', 'price_max', 'filter_count') as $filterKey) {
+        unset($_GET[$filterKey]);
+    }
+    $allDiscountedProducts = $this->products_model
+        ->get_all_products_best_sellers();
+    $_GET = $activeQuery;
+
+    if ($this->input->get('filter_count')) {
+        $filteredProducts = $this->products_model
             ->get_all_products_best_sellers();
+        $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode(array('count' => count($filteredProducts))));
+        return;
+    }
+
+    $product_all = $this->products_model
+        ->get_all_products_best_sellers();
+
+    $products_count = count($product_all);
+    $this->validatePaginationPage(
+        $pagination_nr,
+        $products_count
+    );
 
     $products =
         $this->products_model
@@ -204,17 +290,18 @@ class Catalog extends FrontEndController
                 $this->per_page
             );
 
-    $products_count = count($product_all);
-
     $uri_parts = explode(
         '?',
         $_SERVER['REQUEST_URI'],
         2
     );
 
-    $urlPattern =
-        $uri_parts[0]
-        . '?page=(:num)';
+    $paginationQuery = $activeQuery;
+    unset($paginationQuery['page'], $paginationQuery['filter_count']);
+    $paginationQueryString = http_build_query($paginationQuery);
+    $urlPattern = $uri_parts[0] . '?'
+        . ($paginationQueryString !== '' ? $paginationQueryString . '&' : '')
+        . 'page=(:num)';
 
     $paginator = new Paginator(
         $products_count,
@@ -250,7 +337,7 @@ class Catalog extends FrontEndController
     $this->data['brands'] =
         $this->brands_model
             ->get_brands_category(
-                $product_all
+                $allDiscountedProducts
             );
 
     /*
@@ -267,7 +354,7 @@ class Catalog extends FrontEndController
     $cat_ids = array_unique(
         array_filter(
             array_column(
-                $product_all,
+                $allDiscountedProducts,
                 'category_id'
             )
         )
@@ -281,7 +368,8 @@ class Catalog extends FrontEndController
                 "
                 id,
                 uri{$this->clang} AS uri,
-                title{$this->clang} AS title
+                title{$this->clang} AS title,
+                img
                 "
             )
             ->where('isShown', 1)
@@ -296,7 +384,7 @@ class Catalog extends FrontEndController
     ) {
         $filter_category->count = count(
             array_filter(
-                $product_all,
+                $allDiscountedProducts,
                 static function (
                     $product
                 ) use (
@@ -326,15 +414,19 @@ class Catalog extends FrontEndController
     |--------------------------------------------------------------------------
     */
 
-    if (!empty($product_all)) {
+    if (!empty($allDiscountedProducts)) {
         $prices = array_filter(
             array_map(
                 static function ($product) {
+                    if (!empty($product->discount_price)) {
+                        return (float) $product->discount_price;
+                    }
+
                     return isset($product->price)
                         ? (float) $product->price
                         : null;
                 },
-                $product_all
+                $allDiscountedProducts
             ),
             static function ($price) {
                 return $price !== null;
@@ -356,6 +448,13 @@ class Catalog extends FrontEndController
         $this->data['price_min'] = 0;
     }
 
+    $this->data['filter_price_min'] = isset($activeQuery['price_min'])
+        ? max((float) $this->data['price_min'], (float) $activeQuery['price_min'])
+        : (float) $this->data['price_min'];
+    $this->data['filter_price_max'] = isset($activeQuery['price_max'])
+        ? min((float) $this->data['price_max'], (float) $activeQuery['price_max'])
+        : (float) $this->data['price_max'];
+
     /*
     |--------------------------------------------------------------------------
     | Page data
@@ -366,6 +465,29 @@ class Catalog extends FrontEndController
         'ro' => '/reduceri',
         'ru' => '/skidki',
     ];
+    $bestSellersBasePath = $this->uri1 === 'ro'
+        ? '/ro/reduceri'
+        : '/ru/skidki';
+    $bestSellersPageNumber = isset($_GET['page'])
+        ? filter_var($_GET['page'], FILTER_VALIDATE_INT)
+        : false;
+    $bestSellersHasOnlyPagination = empty(
+        array_diff(array_keys($_GET), array('page'))
+    );
+    $bestSellersPageSuffix = '';
+    if (
+        $bestSellersHasOnlyPagination
+        && $bestSellersPageNumber !== false
+        && $bestSellersPageNumber > 1
+    ) {
+        $bestSellersPageSuffix = '?page=' . $bestSellersPageNumber;
+    }
+    $this->data['canonical_url'] = $this->site_url
+        . $bestSellersBasePath . $bestSellersPageSuffix;
+    $this->data['hreflang_urls'] = array(
+        'ro' => $this->site_url . '/ro/reduceri' . $bestSellersPageSuffix,
+        'ru' => $this->site_url . '/ru/skidki' . $bestSellersPageSuffix,
+    );
 
     $this->data['inner_view'] =
         'pages/catalog/best_sellers';
@@ -375,6 +497,92 @@ class Catalog extends FrontEndController
 
     $this->_render();
 }
+
+    public function hits()
+    {
+        $page = $this->menu_model->get_page_data_by_id($this->clang, 36);
+        if (empty($page)) {
+            throw_on_404();
+        }
+
+        $requestedPage = isset($_GET['page']) && is_scalar($_GET['page'])
+            ? filter_var($_GET['page'], FILTER_VALIDATE_INT)
+            : false;
+        $pagination_nr = $requestedPage !== false && $requestedPage > 0
+            ? $requestedPage
+            : 1;
+        $start = ($pagination_nr - 1) * $this->per_page;
+
+        $allProducts = $this->products_model->get_all_products_hits();
+        $products_count = count($allProducts);
+        $this->validatePaginationPage($pagination_nr, $products_count);
+        $products = $this->products_model->get_products_pag_hits(
+            $this->clang,
+            $start,
+            $this->per_page
+        );
+
+        $uriParts = explode('?', $_SERVER['REQUEST_URI'], 2);
+        $paginationQuery = array();
+        if (!empty($uriParts[1])) {
+            parse_str($uriParts[1], $paginationQuery);
+        }
+        unset($paginationQuery['page']);
+        $paginationQueryString = http_build_query($paginationQuery);
+        $urlPattern = $uriParts[0] . '?'
+            . ($paginationQueryString !== '' ? $paginationQueryString . '&' : '')
+            . 'page=(:num)';
+
+        $paginator = new Paginator(
+            $products_count,
+            $this->per_page,
+            $pagination_nr,
+            $urlPattern
+        );
+        $paginator->setMaxPagesToShow(5);
+
+        $hitsBasePath = '/' . $this->uri1 . '/' . $this->uri2;
+        $hitsRuUri = !empty($page->uriRU) ? $page->uriRU : 'top-prodaj';
+        $hitsRoUri = !empty($page->uriRO) ? $page->uriRO : 'top-vanzari';
+        $hitsPageSuffix = '';
+        if (
+            empty(array_diff(array_keys($_GET), array('page')))
+            && $requestedPage !== false
+            && $requestedPage > 1
+        ) {
+            $hitsPageSuffix = '?page=' . $requestedPage;
+        }
+
+        $this->data['page_url'] = $hitsBasePath;
+        $this->data['paginator'] = $paginator;
+        $this->data['hits_page'] = $page;
+        $this->data['products'] = $products;
+        $this->data['products_count'] = $products_count;
+        $this->data['brands'] = $this->brands_model->get_brands();
+        $this->data['lang_urls'] = array(
+            'ro' => array($hitsRoUri),
+            'ru' => array($hitsRuUri),
+        );
+        $this->data['canonical_url'] = $this->site_url
+            . $hitsBasePath . $hitsPageSuffix;
+        $this->data['hreflang_urls'] = array(
+            'ro' => $this->site_url . '/ro/' . $hitsRoUri . $hitsPageSuffix,
+            'ru' => $this->site_url . '/ru/' . $hitsRuUri . $hitsPageSuffix,
+        );
+        $this->data['inner_view'] = 'pages/catalog/hits';
+
+        $breadcrumbTitle = !empty($page->breadcrumb_title)
+            ? $page->breadcrumb_title
+            : $page->title;
+        $this->breadcrumbs[] = $this->_generate_bc_data(
+            $breadcrumbTitle,
+            $page->uri
+        );
+
+        $this->loadOGImgData($page);
+        $this->_load_main_page($page);
+        $this->_render();
+    }
 
     public function new_products()
     {
@@ -386,8 +594,9 @@ class Catalog extends FrontEndController
         $start = ($pagination_nr - 1) * $this->per_page;
 
         $product_all = $this->products_model->get_all_products_new_products();
-        $products = $this->products_model->get_products_pag_new_products($this->clang, $start, $this->per_page);
         $count = count($product_all);
+        $this->validatePaginationPage($pagination_nr, $count);
+        $products = $this->products_model->get_products_pag_new_products($this->clang, $start, $this->per_page);
 
         $uri_parts = explode('?', $_SERVER['REQUEST_URI'], 2);
         $string = '';
@@ -402,6 +611,30 @@ class Catalog extends FrontEndController
         $paginator->setMaxPagesToShow(5);
         $this->data['page_url'] = '/' . $this->uri1 . '/' . $this->uri2;
         $this->data['paginator'] = $paginator;
+
+        $newProductsBasePath = $this->uri1 === 'ro'
+            ? '/ro/nou'
+            : '/ru/novinki';
+        $newProductsPageNumber = isset($_GET['page'])
+            ? filter_var($_GET['page'], FILTER_VALIDATE_INT)
+            : false;
+        $newProductsHasOnlyPagination = empty(
+            array_diff(array_keys($_GET), array('page'))
+        );
+        $newProductsPageSuffix = '';
+        if (
+            $newProductsHasOnlyPagination
+            && $newProductsPageNumber !== false
+            && $newProductsPageNumber > 1
+        ) {
+            $newProductsPageSuffix = '?page=' . $newProductsPageNumber;
+        }
+        $this->data['canonical_url'] = $this->site_url
+            . $newProductsBasePath . $newProductsPageSuffix;
+        $this->data['hreflang_urls'] = array(
+            'ro' => $this->site_url . '/ro/nou' . $newProductsPageSuffix,
+            'ru' => $this->site_url . '/ru/novinki' . $newProductsPageSuffix,
+        );
 
         $this->data['products'] = $products;
         $this->data['products_count'] = $count;
@@ -436,7 +669,7 @@ class Catalog extends FrontEndController
                 $this->data['cat_parent2'] = $cat_parent2;
             }
 
-            $categories_id[] = $category->id;
+            $categories_id = array((int) $category->id);
             $children = $this->categories_model->get_category_children($this->clang, $category->id);
 
 
@@ -461,19 +694,33 @@ class Catalog extends FrontEndController
             $start = ($pagination_nr - 1) * $this->per_page;
 
             $product_all = $this->products_model->get_all_category_products($categories_id);
+
+            if ($this->input->get('filter_count')) {
+                $this->output
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode(array('count' => count($product_all))));
+                return;
+            }
+
+            $count = count($product_all);
+            $this->validatePaginationPage($pagination_nr, $count);
+
             $products = $this->products_model->get_category_products_pag($this->clang, $categories_id, $start, $this->per_page);
 
             foreach ($products as $product) {
                 $product->variable = $this->products_model->get_product_variable($this->clang, $product->id);
             }
 
-            $count = count($product_all);
             $uri_parts = explode('?', $_SERVER['REQUEST_URI'], 2);
-            $string = $_SERVER['QUERY_STRING'];
-            if (empty($_GET['page'])) $_GET['page'] = '';
-            $string = str_replace("&page=" . $_GET['page'], '', $string);
-
-            $urlPattern = $uri_parts[0] . '?' . $string . '&page=(:num)';
+            $paginationQuery = array();
+            if (!empty($uri_parts[1])) {
+                parse_str($uri_parts[1], $paginationQuery);
+            }
+            unset($paginationQuery['page']);
+            $paginationQueryString = http_build_query($paginationQuery);
+            $urlPattern = $uri_parts[0] . '?'
+                . ($paginationQueryString !== '' ? $paginationQueryString . '&' : '')
+                . 'page=(:num)';
             $paginator = new Paginator(
                 $count,
                 $this->per_page,
@@ -482,7 +729,24 @@ class Catalog extends FrontEndController
             );
             $paginator->setMaxPagesToShow(5);
 
-            $this->data['canonical_url'] = $this->without_get_url;
+            $categoryLanguage = $this->uri1 === 'ro' ? 'ro' : 'ru';
+            $categoryLanguageField = strtoupper($categoryLanguage);
+            $categoryCanonical = $this->site_url . '/'
+                . $categoryLanguage . '/'
+                . trim((string) $page->{'uri' . $categoryLanguageField}, '/') . '/'
+                . trim((string) $category->{'uri' . $categoryLanguageField}, '/');
+            $pageNumber = isset($_GET['page']) ? filter_var($_GET['page'], FILTER_VALIDATE_INT) : false;
+            $nonPageQueryKeys = array('brand', 'sex', 'feature', 'in_stock', 'discounted', 'price_min', 'price_max', 'sort', 'sorder');
+            $hasFilterOrSort = count(array_intersect($nonPageQueryKeys, array_keys($_GET))) > 0;
+            if ($hasFilterOrSort) {
+                // Filter/sort combinations stay usable, but are not search landing pages.
+                // Keep them crawlable so Google can read this directive and the canonical.
+                $this->data['meta_robots'] = 'noindex,follow';
+            }
+            if (!$hasFilterOrSort && $pageNumber !== false && $pageNumber > 1) {
+                $categoryCanonical .= '?page=' . $pageNumber;
+            }
+            $this->data['canonical_url'] = $categoryCanonical;
             $this->data['page_url'] = '/' . $this->uri1 . '/' . $this->uri2 . '/' . $this->uri3;
             $this->data['paginator'] = $paginator;
             $this->data['products'] = $products;
@@ -492,14 +756,27 @@ class Catalog extends FrontEndController
 
             $this->data['category'] = $category;
 
-            $this->data['brands'] = $this->brands_model->get_brands_category($product_all);
+            $activeQuery = $_GET;
+            foreach (array('brand', 'sex', 'feature', 'in_stock', 'discounted', 'price_min', 'price_max', 'filter_count') as $filterKey) {
+                unset($_GET[$filterKey]);
+            }
+            $facetProducts = $this->products_model->get_all_category_products($categories_id);
+            $_GET = $activeQuery;
+            $this->data['brands'] = $this->brands_model->get_brands_category($facetProducts);
+            $this->data['category_children'] = !empty($children) ? $children : array();
+            $this->data['filter_features'] = $this->products_model->get_category_filter_features(
+                strtoupper($this->clang),
+                $category->feature_type,
+                $categories_id
+            );
 
 
             //                Features Start
-            $price_max = $this->products_model->get_all_category_products_price_max($categories_id);
-            $this->data['price_max'] = $price_max->price;
-            $price_min = $this->products_model->get_all_category_products_price_min($categories_id);
-            $this->data['price_min'] = $price_min->price;
+            $priceBounds = $this->products_model->get_category_listing_price_bounds($categories_id);
+            $this->data['price_min'] = $priceBounds->price_min;
+            $this->data['price_max'] = $priceBounds->price_max;
+            $this->data['filter_price_min'] = isset($_GET['price_min']) ? (float) $_GET['price_min'] : (float) $this->data['price_min'];
+            $this->data['filter_price_max'] = isset($_GET['price_max']) ? (float) $_GET['price_max'] : (float) $this->data['price_max'];
             //                Features END
 
             $this->data['inner_view'] = 'pages/catalog/category';
@@ -513,10 +790,91 @@ class Catalog extends FrontEndController
                 'ru' => '/' . $page->uriRU . '/' . $category->uriRU,
             );
 
+            $roCategoryPath = '/ro/' . trim($page->uriRO, '/') . '/' . trim($category->uriRO, '/');
+            $ruCategoryPath = '/ru/' . trim($page->uriRU, '/') . '/' . trim($category->uriRU, '/');
+            if (!$hasFilterOrSort && $pageNumber !== false && $pageNumber > 1) {
+                $roCategoryPath .= '?page=' . $pageNumber;
+                $ruCategoryPath .= '?page=' . $pageNumber;
+            }
+            $this->data['hreflang_urls'] = array(
+                'ro' => $this->site_url . $roCategoryPath,
+                'ru' => $this->site_url . $ruCategoryPath,
+            );
+            $this->data['breadcrumb_schema'] = $this->buildCategoryBreadcrumbSchema(
+                $page,
+                $category,
+                array($cat_parent2 ?? null, $cat_parent1 ?? null)
+            );
+
+            $categoryMetaTitle = !empty($category->seo_title)
+                ? trim((string) $category->seo_title)
+                : trim((string) $category->title) . ' | Vizaje-Nica';
+            $this->data['meta_title'] = $categoryMetaTitle;
+            $this->data['otitle'] = $categoryMetaTitle;
+            $this->data['keywords_for_layout'] = !empty($category->seo_keywords)
+                ? trim((string) $category->seo_keywords)
+                : '';
+
+            if (!empty($category->seo_desc)) {
+                $this->data['description_for_layout'] = trim((string) $category->seo_desc);
+            } else {
+                $categoryDescription = trim(preg_replace('/\s+/u', ' ', strip_tags((string) $category->desc)));
+                $this->data['description_for_layout'] = $categoryDescription !== ''
+                    ? mb_substr($categoryDescription, 0, 240, 'UTF-8')
+                    : '';
+            }
+
             $this->_render();
         } else {
             $this->brands();
         }
+    }
+
+    private function buildCategoryBreadcrumbSchema($page, $category, $parents)
+    {
+        $language = $this->lclang === 'ro' ? 'ro' : 'ru';
+        $languageField = strtoupper($language);
+        $catalogUri = trim((string) ($page->{'uri' . $languageField} ?? ''), '/');
+        $catalogUrl = $this->site_url . '/' . $language . '/' . $catalogUri;
+        $items = array(
+            array(
+                '@type' => 'ListItem',
+                'position' => 1,
+                'name' => (string) $this->data['home_bc_title'],
+                'item' => $this->site_url . '/' . $language,
+            ),
+            array(
+                '@type' => 'ListItem',
+                'position' => 2,
+                'name' => (string) $page->title,
+                'item' => $catalogUrl,
+            ),
+        );
+
+        foreach ($parents as $parent) {
+            if (empty($parent) || empty($parent->uri)) {
+                continue;
+            }
+            $items[] = array(
+                '@type' => 'ListItem',
+                'position' => count($items) + 1,
+                'name' => (string) (!empty($parent->breadcrumb_title) ? $parent->breadcrumb_title : $parent->title),
+                'item' => $catalogUrl . '/' . trim((string) $parent->uri, '/'),
+            );
+        }
+
+        $items[] = array(
+            '@type' => 'ListItem',
+            'position' => count($items) + 1,
+            'name' => (string) (!empty($category->breadcrumb_title) ? $category->breadcrumb_title : $category->title),
+        );
+
+        return array(
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            '@id' => $this->data['canonical_url'] . '#breadcrumb',
+            'itemListElement' => $items,
+        );
     }
 
     public function brands()
@@ -531,24 +889,53 @@ class Catalog extends FrontEndController
             die();
         }
 
+        $brandFilterQuery = $_GET;
+        foreach (array('category', 'price_min', 'price_max', 'in_stock', 'discounted', 'filter_count') as $filterKey) {
+            unset($_GET[$filterKey]);
+        }
+        $product_all = $this->products_model->get_all_products_brands($brand->id);
+        $_GET = $brandFilterQuery;
+        $allowedCategoryIds = array();
+        foreach ($product_all as $product) {
+            if (!empty($product->category_id)) {
+                $allowedCategoryIds[(int) $product->category_id] = (int) $product->category_id;
+            }
+        }
+        $categoryFilters = !empty($_GET['category']) && is_array($_GET['category'])
+            ? array_values(array_intersect(
+                array_map('intval', $_GET['category']),
+                array_values($allowedCategoryIds)
+            ))
+            : array();
+
+        $count = count($this->products_model->get_all_products_brands($brand->id, $categoryFilters));
+        if ($this->input->get('filter_count')) {
+            $this->output
+                ->set_content_type('application/json')
+                ->set_output(json_encode(array('count' => $count)));
+            return;
+        }
+
         $pagination_nr = @$_GET['page'];
         if (empty($pagination_nr) || $pagination_nr < 1) $pagination_nr = 1;
         $start = ($pagination_nr - 1) * $this->per_page;
+        $products = $this->products_model->get_products_pag_brands(
+            $this->clang,
+            $brand->id,
+            $start,
+            $this->per_page,
+            $categoryFilters
+        );
 
-        if (!empty($_GET['category'])) {
-            $categories_id = $_GET['category'];
-            $product_all = $this->products_model->get_all_products_index_filter($categories_id);
-            $products = $this->products_model->get_products_pag_index_filter($this->clang, $start, $this->per_page, $categories_id);
-            $count = count($product_all);
-        } else {
-            $product_all = $this->products_model->get_all_products_brands($brand->id);
-            $products = $this->products_model->get_products_pag_brands($this->clang, $brand->id, $start, $this->per_page);
-            $count = count($product_all);
-        }
+        $this->validatePaginationPage($pagination_nr, $count);
 
         $uri_parts = explode('?', $_SERVER['REQUEST_URI'], 2);
-        $string = '';
-        $urlPattern = $uri_parts[0] . '?' . $string . 'page=(:num)';
+        $paginationQuery = $_GET;
+        unset($paginationQuery['page'], $paginationQuery['filter_count']);
+        $paginationQueryString = http_build_query($paginationQuery);
+        $urlPattern = $uri_parts[0] . '?'
+            . ($paginationQueryString !== '' ? $paginationQueryString . '&' : '')
+            . 'page=(:num)';
         $paginator = new Paginator(
             $count,
             $this->per_page,
@@ -571,18 +958,52 @@ class Catalog extends FrontEndController
         $price_min = $this->products_model->get_all_brand_products_price_min($brand->id);
         $this->data['price_min'] = $price_min->price;
 
-        $product_all = $this->products_model->get_all_products_brands($brand->id);
         $cat_ids = array();
         foreach ($product_all as $value) {
             $cat_ids[$value->category_id] = $value->category_id;
         }
         $this->data['categoryes_filter'] = $this->categories_model->get_category_ids($this->clang, $brand->id, $cat_ids);
+        $this->data['filter_price_min'] = isset($_GET['price_min'])
+            ? (float) $_GET['price_min']
+            : (float) $this->data['price_min'];
+        $this->data['filter_price_max'] = isset($_GET['price_max'])
+            ? (float) $_GET['price_max']
+            : (float) $this->data['price_max'];
         //                Features END
 
 
         $this->data['lang_urls'] = array(
             'ro' => '/' . $page->uriRO . '/' . $brand->uri,
             'ru' => '/' . $page->uriRU . '/' . $brand->uri,
+        );
+        $brandLanguage = $this->uri1 === 'ro' ? 'ro' : 'ru';
+        $brandCatalogUri = $brandLanguage === 'ro'
+            ? $page->uriRO
+            : $page->uriRU;
+        $brandBasePath = '/' . $brandLanguage . '/'
+            . trim((string) $brandCatalogUri, '/') . '/'
+            . trim((string) $brand->uri, '/');
+        $brandPageSuffix = '';
+        $brandPageNumber = isset($_GET['page'])
+            ? filter_var($_GET['page'], FILTER_VALIDATE_INT)
+            : false;
+        $brandHasOnlyPagination = empty(
+            array_diff(array_keys($_GET), array('page'))
+        );
+        if (
+            $brandHasOnlyPagination
+            && $brandPageNumber !== false
+            && $brandPageNumber > 1
+        ) {
+            $brandPageSuffix = '?page=' . $brandPageNumber;
+        }
+        $this->data['canonical_url'] = $this->site_url
+            . $brandBasePath . $brandPageSuffix;
+        $this->data['hreflang_urls'] = array(
+            'ro' => $this->site_url . '/ro/' . trim((string) $page->uriRO, '/')
+                . '/' . trim((string) $brand->uri, '/') . $brandPageSuffix,
+            'ru' => $this->site_url . '/ru/' . trim((string) $page->uriRU, '/')
+                . '/' . trim((string) $brand->uri, '/') . $brandPageSuffix,
         );
         $this->data['inner_view'] = 'pages/catalog/brand';
         $this->loadOGImgData($brand, 'brands');
@@ -607,7 +1028,8 @@ class Catalog extends FrontEndController
             );
 
     if (empty($page)) {
-        throw_on_404();
+        $this->_render_not_found_page();
+        return;
     }
 
     $category =
@@ -618,7 +1040,8 @@ class Catalog extends FrontEndController
             );
 
     if (empty($category)) {
-        throw_on_404();
+        $this->_render_not_found_page();
+        return;
     }
 
     $this->data['category'] =
@@ -632,7 +1055,8 @@ class Catalog extends FrontEndController
             );
 
     if (empty($product)) {
-        throw_on_404();
+        $this->_render_not_found_page();
+        return;
     }
 
     /*
@@ -661,6 +1085,15 @@ class Catalog extends FrontEndController
             ->get_product_img(
                 $product->id
             );
+
+    $this->data['meta_robots'] =
+        $this->products_model->isSeoIndexable(
+            $product,
+            !empty($product->img),
+            $this->clang
+        )
+            ? 'index,follow'
+            : 'noindex,follow';
 
     $product->variable =
         $this->products_model

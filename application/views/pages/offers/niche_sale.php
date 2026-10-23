@@ -304,7 +304,8 @@ $buildFilterUrl = static function (
                                 $this->load->view(
                                     'layouts/pages/product_main',
                                     array(
-                                        'item' => $product
+                                        'item' => $product,
+                                        'enable_catalog_hover_gallery' => true
                                     )
                                 );
                                 ?>

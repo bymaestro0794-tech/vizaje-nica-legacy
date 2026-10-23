@@ -634,52 +634,20 @@ window.VNCheckoutScroll = function (element) {
 	   PHONE
 	   ====================================================================== */
 
-	function normalizeMoldovaPhone(value) {
-		let digits = String(value || '').replace(/\D/g, '')
+	function sanitizeCheckoutPhone(value) {
+		const raw = String(value || '')
+		const hasLeadingPlus = raw.trim().charAt(0) === '+'
+		const digits = raw.replace(/\D/g, '')
 
-		/*
-		 * Пользователь по привычке вводит 373,
-		 * хотя +373 уже показан отдельно.
-		 */
-		if (digits.indexOf('373') === 0) {
-			digits = digits.slice(3)
-		}
-
-		/*
-		 * Пользователь вводит:
-		 * 067...
-		 */
-		if (digits.charAt(0) === '0') {
-			digits = digits.slice(1)
-		}
-
-		return digits.slice(0, 8)
+		return (hasLeadingPlus ? '+' : '') + digits
 	}
 
-	function normalizeExistingPhone(value) {
-		let digits = String(value || '').replace(/\D/g, '')
-
-		if (digits.indexOf('373') === 0) {
-			digits = digits.slice(3)
-		}
-
-		if (digits.length === 9 && digits.charAt(0) === '0') {
-			digits = digits.slice(1)
-		}
-
-		return digits.slice(0, 8)
+	function getPhoneDigits(value) {
+		return String(value || '').replace(/\D/g, '')
 	}
 
-	function isValidMoldovaPhone(digits) {
-		return /^[67]\d{7}$/.test(String(digits || ''))
-	}
-
-	function formatMoldovaPhone(digits) {
-		const value = String(digits || '')
-
-		return [value.slice(0, 2), value.slice(2, 5), value.slice(5, 8)]
-			.filter(Boolean)
-			.join(' ')
+	function isValidCheckoutPhone(value) {
+		return getPhoneDigits(value).length >= 1
 	}
 
 	/* ======================================================================
@@ -709,7 +677,7 @@ window.VNCheckoutScroll = function (element) {
 
 		const email = getRecipientValue('email')
 
-		const phone = String(phoneHidden?.value || '').replace(/\D/g, '')
+		const phone = String(phoneHidden?.value || '')
 
 		const terms = Boolean(
 			recipientStep.querySelector('[name="checkbox"]')?.checked
@@ -717,7 +685,7 @@ window.VNCheckoutScroll = function (element) {
 
 		const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 
-		const phoneValid = /^373[67]\d{7}$/.test(phone)
+		const phoneValid = isValidCheckoutPhone(phone)
 
 		return (
 			name.length >= 2 &&
@@ -809,45 +777,16 @@ window.VNCheckoutScroll = function (element) {
 			return
 		}
 
-		const digits = normalizeMoldovaPhone(phoneInput.value)
+		const sanitizedPhone = sanitizeCheckoutPhone(phoneInput.value)
+		const valid = isValidCheckoutPhone(sanitizedPhone)
 
-		/*
-		 * Неверная первая цифра.
-		 */
-		if (
-			digits.length > 0 &&
-			digits.charAt(0) !== '6' &&
-			digits.charAt(0) !== '7'
-		) {
-			phoneHidden.value = ''
-
-			if (phoneConfirm) {
-				phoneConfirm.hidden = true
-			}
-
-			if (phoneError) {
-				phoneError.textContent =
-					lang === 'ro'
-						? 'Numărul mobil trebuie să înceapă cu 6 sau 7.'
-						: 'Мобильный номер должен начинаться с 6 или 7.'
-
-				phoneError.hidden = false
-			}
-
-			updateRecipientContinueState()
-
-			return
-		}
-
-		phoneInput.value = formatMoldovaPhone(digits)
-
-		const valid = isValidMoldovaPhone(digits)
+		phoneInput.value = sanitizedPhone
 
 		/*
 		 * Номер ещё просто не дописан.
 		 */
 		if (!valid) {
-			phoneHidden.value = ''
+			phoneHidden.value = sanitizedPhone
 
 			if (phoneConfirm) {
 				phoneConfirm.hidden = true
@@ -862,15 +801,12 @@ window.VNCheckoutScroll = function (element) {
 			return
 		}
 
-		const fullPhone = '+373' + digits
-
-		phoneHidden.value = fullPhone
+		phoneHidden.value = sanitizedPhone
 
 		if (phoneConfirm) {
 			phoneConfirm.textContent =
 				(lang === 'ro' ? 'Telefonul dvs.: ' : 'Ваш телефон: ') +
-				'+373 ' +
-				formatMoldovaPhone(digits)
+				sanitizedPhone
 
 			phoneConfirm.hidden = false
 		}
@@ -888,7 +824,11 @@ window.VNCheckoutScroll = function (element) {
 
 	if (phoneInput) {
 		phoneInput.addEventListener('blur', function () {
-			const digits = normalizeMoldovaPhone(phoneInput.value)
+			const sanitizedPhone = sanitizeCheckoutPhone(phoneInput.value)
+			const digits = getPhoneDigits(sanitizedPhone)
+
+			phoneInput.value = sanitizedPhone
+			phoneHidden.value = sanitizedPhone
 
 			if (!digits.length) {
 				if (phoneError) {
@@ -903,12 +843,12 @@ window.VNCheckoutScroll = function (element) {
 				return
 			}
 
-			if (!isValidMoldovaPhone(digits)) {
+			if (!isValidCheckoutPhone(sanitizedPhone)) {
 				if (phoneError) {
 					phoneError.textContent =
 						lang === 'ro'
-							? 'Introduceți numărul complet de telefon.'
-							: 'Введите полный номер телефона.'
+							? 'Introduceți cifre pentru numărul de telefon.'
+							: 'Введите цифры номера телефона.'
 
 					phoneError.hidden = false
 				}
@@ -1076,10 +1016,10 @@ window.VNCheckoutScroll = function (element) {
 	   ====================================================================== */
 
 	if (phoneInput && phoneHidden && phoneHidden.value) {
-		const existingDigits = normalizeExistingPhone(phoneHidden.value)
+		const existingPhone = sanitizeCheckoutPhone(phoneHidden.value)
 
-		if (isValidMoldovaPhone(existingDigits)) {
-			phoneInput.value = formatMoldovaPhone(existingDigits)
+		if (isValidCheckoutPhone(existingPhone)) {
+			phoneInput.value = existingPhone
 
 			updatePhoneState()
 		} else {
@@ -1124,7 +1064,7 @@ window.VNCheckoutScroll = function (element) {
 			String(nameInput?.value || '').trim().length >= 2 &&
 			String(surnameInput?.value || '').trim().length >= 2 &&
 			/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(getRecipientValue('email')) &&
-			/^373[67]\d{7}$/.test(String(phoneHidden?.value || '').replace(/\D/g, ''))
+			isValidCheckoutPhone(phoneHidden?.value || '')
 
 		if (otherFieldsValid && !termsInput.checked) {
 			termsError.textContent =
@@ -1452,6 +1392,16 @@ window.VNCheckoutScroll = function (element) {
 
 		if (rangeInput) {
 			rangeInput.value = String(amount)
+
+			const progress =
+				maxWriteOff > 0
+					? (amount / maxWriteOff) * 100
+					: 0
+
+			rangeInput.style.setProperty(
+				'--bonus-range-progress',
+				progress + '%'
+			)
 		}
 
 		root.dispatchEvent(
@@ -1828,9 +1778,9 @@ window.VNCheckoutScroll = function (element) {
 	}
 
 	function isValidPhone() {
-		const phone = getValue('phone').replace(/\D/g, '')
+		const phone = getValue('phone')
 
-		return /^373[67]\d{7}$/.test(phone)
+		return isValidCheckoutPhone(phone)
 	}
 
 	function scrollToStep(step) {
@@ -2376,7 +2326,7 @@ window.VNCheckoutScroll = function (element) {
 		}
 
 		if (getInput('newsletters')) {
-			getInput('newsletters').checked = draft.newsletters !== false
+			getInput('newsletters').checked = draft.newsletters === true
 		}
 
 		checkRadio('delivery', draft.delivery)
@@ -2411,20 +2361,15 @@ window.VNCheckoutScroll = function (element) {
 		const phoneInput = form.querySelector('[data-checkout-phone-input]')
 
 		if (phoneHidden && draft.phone) {
-			phoneHidden.value = draft.phone
+			const rawPhone = String(draft.phone || '')
+			const hasLeadingPlus = rawPhone.trim().charAt(0) === '+'
+			const digits = rawPhone.replace(/\D/g, '')
+			const phone = (hasLeadingPlus ? '+' : '') + digits
 
-			let digits = String(draft.phone).replace(/\D/g, '')
+			phoneHidden.value = phone
 
-			if (digits.indexOf('373') === 0) {
-				digits = digits.slice(3)
-			}
-
-			if (phoneInput && /^[67]\d{7}$/.test(digits)) {
-				phoneInput.value = [
-					digits.slice(0, 2),
-					digits.slice(2, 5),
-					digits.slice(5, 8)
-				].join(' ')
+			if (phoneInput) {
+				phoneInput.value = phone
 
 				phoneInput.dispatchEvent(
 					new Event('input', {

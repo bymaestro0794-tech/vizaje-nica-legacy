@@ -104,9 +104,10 @@
 	}
 
 	function isValidPhone() {
-		const phone = getValue('phone').replace(/\D/g, '')
+		const phone = getValue('phone')
+		const digits = phone.replace(/\D/g, '')
 
-		return /^373[67]\d{7}$/.test(phone)
+		return digits.length >= 1
 	}
 
 	function scrollToStep(step) {
@@ -187,14 +188,14 @@
 			return
 		}
 
-		if (!state.delivery) {
-			submitHint.textContent = text.delivery
+		if (!state.recipient) {
+			submitHint.textContent = text.recipient
 
 			return
 		}
 
-		if (!state.recipient) {
-			submitHint.textContent = text.recipient
+		if (!state.delivery) {
+			submitHint.textContent = text.delivery
 
 			return
 		}
@@ -315,27 +316,6 @@
 		updateSubmitState()
 	})
 
-	/*
-	 * После Continue состояние класса
-	 * is-complete меняется не в input/change,
-	 * поэтому сохраняем ещё и клики.
-	 */
-	form.addEventListener('click', function (event) {
-		if (
-			event.target.closest(
-				[
-					'[data-checkout-delivery-continue]',
-					'[data-checkout-recipient-continue]',
-					'[data-checkout-payment-continue]'
-				].join(',')
-			)
-		) {
-			window.setTimeout(function () {
-				updateSubmitState()
-			}, 30)
-		}
-	})
-
 	/* ======================================================================
 	   FINAL SUBMIT
 	   ====================================================================== */
@@ -346,28 +326,22 @@
 		if (!state.complete) {
 			event.preventDefault()
 
-			if (!state.delivery) {
-				openStep(deliveryStep)
-
-				scrollToStep(deliveryStep)
-
-				return
-			}
-
 			if (!state.recipient) {
 				validateEmail(true)
 				validateTerms(true)
-
-				openStep(recipientStep)
 
 				scrollToStep(recipientStep)
 
 				return
 			}
 
-			if (!state.payment) {
-				openStep(paymentStep)
+			if (!state.delivery) {
+				scrollToStep(deliveryStep)
 
+				return
+			}
+
+			if (!state.payment) {
 				scrollToStep(paymentStep)
 
 				return

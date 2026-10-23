@@ -6,6 +6,10 @@ if (!function_exists('newthumbs')) {
     {
 
         $timg = realpath('public/' . $dir) . '/' . $photo;
+		$extension = strtolower(pathinfo($photo, PATHINFO_EXTENSION));
+		if (in_array($extension, array('webp', 'avif'), true) && is_file($timg)) {
+			return '/public/' . trim($dir, '/') . '/' . $photo;
+		}
 
         if(in_array($dir, [ 'products', 'sliders']) and $version !== 'mobile' and
             is_file($timg)) {
@@ -109,6 +113,42 @@ if (!function_exists('newthumbs')) {
     }
 }
 
+if (!function_exists('extract_youtube_video_id')) {
+    function extract_youtube_video_id($url)
+    {
+        $url = trim((string) $url);
+        if ($url === '') {
+            return false;
+        }
+
+        if (!preg_match('~^https?://~i', $url)) {
+            $url = 'https://' . $url;
+        }
+
+        $parts = parse_url($url);
+        if (empty($parts['host'])) {
+            return false;
+        }
+
+        $host = strtolower($parts['host']);
+        $path = isset($parts['path']) ? trim($parts['path'], '/') : '';
+        $videoId = '';
+
+        if ($host === 'youtu.be' || $host === 'www.youtu.be') {
+            $videoId = explode('/', $path)[0];
+        } elseif (in_array($host, array('youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtube-nocookie.com', 'www.youtube-nocookie.com'), true)) {
+            parse_str(isset($parts['query']) ? $parts['query'] : '', $query);
+            if (!empty($query['v'])) {
+                $videoId = $query['v'];
+            } elseif (preg_match('~^(?:embed|shorts|live)/([^/?]+)~', $path, $matches)) {
+                $videoId = $matches[1];
+            }
+        }
+
+        return preg_match('/^[A-Za-z0-9_-]{11}$/', $videoId) ? $videoId : false;
+    }
+}
+
 if (!function_exists('createWebp')) {
     function createWebp($img, $dir, $removeSrc = false) {
         $pizza = explode('.', $img);
@@ -160,7 +200,7 @@ if(!function_exists('unlink_files')) {
 
 if (!function_exists('verify_img_extension')) {
     function verify_img_extension($ext) {
-        $file_types = array('.jpg', '.jpeg', '.gif', '.png', '.svg');
+        $file_types = array('.jpg', '.jpeg', '.gif', '.png', '.svg', '.webp', '.avif');
         if (in_array(strtolower($ext), $file_types)) {return true;} else {return false;}
     }
 }
@@ -184,13 +224,13 @@ if (!function_exists('createPath')) {
 }
 
 if (!function_exists('init_load_img')) {
-    function init_load_img($path, $first=true) {
+    function init_load_img($path, $first=true, $allowedTypes='jpg|jpeg|gif|png|svg') {
 
         $dir = createPath($path);
 
         $CI =& get_instance();
         $config['upload_path'] = realpath("public") . '/' . $dir;
-        $config['allowed_types'] = 'jpg|jpeg|gif|png|svg';
+        $config['allowed_types'] = $allowedTypes;
         $config['max_size'] = 2048;
         $config['encrypt_name'] = TRUE;
         if($first) {
@@ -1625,8 +1665,11 @@ if (!function_exists('siteMapGenerator')) {
         $news =
             $CI->news
                 ->getByField(
-                    'isShown',
-                    1,
+                    array(
+                        'isShown' => 1,
+                        'isBlog' => 0,
+                    ),
+                    null,
                     true,
                     'sorder'
                 );
@@ -1754,6 +1797,28 @@ if (!function_exists('siteMapGenerator')) {
             }
         }
 
+        /* Blog landing page and SEO article URLs. */
+        $blogPosts = $CI->db
+            ->where('isShown', 1)
+            ->where('isBlog', 1)
+            ->where('date <', date('Y-m-d', strtotime('+1 day')))
+            ->get('articles')
+            ->result();
+
+        foreach ($langs as $lang) {
+            $addUrl($urls, $host . '/' . $lang . '/blog');
+
+            foreach ($blogPosts as $blogPost) {
+                $slugField = 'uri' . strtoupper($lang);
+                $slug = trim((string) ($blogPost->{$slugField} ?? ''), '/');
+                if ($slug === '') {
+                    continue;
+                }
+
+                $addUrl($urls, $host . '/' . $lang . '/blog/' . $slug);
+            }
+        }
+
         /*
         |--------------------------------------------------------------------------
         | Products
@@ -1763,6 +1828,8 @@ if (!function_exists('siteMapGenerator')) {
         |
         | - только isShown = 1
         | - только товары с опубликованной категорией
+        | - только прошедшие авто-проверку качества SEO
+        |   либо вручную разрешённые в карточке товара
         |
         | Stock НЕ проверяем:
         | временно OutOfStock PDP остаются индексируемыми.
@@ -1778,6 +1845,28 @@ if (!function_exists('siteMapGenerator')) {
                     'sorder',
                     'ASC'
                 );
+
+        $imageProductIds = [];
+
+        if (!empty($products)) {
+            $productIds = array_map(
+                static function ($product) {
+                    return (int) $product->id;
+                },
+                $products
+            );
+
+            $imageRows = $CI->db
+                ->select('DISTINCT product_id', false)
+                ->where_in('product_id', $productIds)
+                ->where('img !=', '')
+                ->get('products_img')
+                ->result();
+
+            foreach ($imageRows as $imageRow) {
+                $imageProductIds[(int) $imageRow->product_id] = true;
+            }
+        }
 
         /*
          * Создаём map опубликованных категорий,
@@ -1822,6 +1911,14 @@ if (!function_exists('siteMapGenerator')) {
                 $langs
                 as $lang
             ) {
+                if (!$CI->products->isSeoIndexable(
+                    $product,
+                    isset($imageProductIds[(int) $product->id]),
+                    $lang
+                )) {
+                    continue;
+                }
+
                 $langUpper =
                     strtoupper(
                         $lang

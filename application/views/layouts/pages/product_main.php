@@ -82,6 +82,11 @@ $bonusAmount = $hasDiscount
     ? 0
     : $currentPrice * ($bonusPercent / 100);
 
+$useHomeProductCardStyle = !empty($is_home_product_card);
+$useCatalogEditorialCardStyle = !empty($is_catalog_editorial_card);
+$useWishlistProductCardStyle = !empty($is_wishlist_product_card);
+$useDiscountCatalogCardStyle = !empty($is_discount_catalog_card);
+
 $productUrl =
     '/' .
     $lclang .
@@ -99,6 +104,10 @@ $availableStock = $isB2B
     ? $displayWholesaleStock
     : $displayStock;
 
+$isInStock = isset($item->has_available_stock)
+    ? (int) $item->has_available_stock > 0
+    : $availableStock > 0;
+
 $productTitle = preg_replace(
     '/\s+/u',
     ' ',
@@ -111,7 +120,70 @@ $productTitle = preg_replace(
     )
 );
 
+$wishlistCategoryLabel = trim((string) ($item->cat_title ?? ''));
+$wishlistBrandTitle = trim((string) ($item->brand_title ?? ''));
+$wishlistDisplayTitle = $productTitle;
+
+if (
+    $useWishlistProductCardStyle
+    && $wishlistBrandTitle !== ''
+    && stripos($productTitle, $wishlistBrandTitle) === false
+) {
+    $wishlistDisplayTitle = $wishlistBrandTitle . ' ' . $productTitle;
+}
+
 $imageSrc = newthumbs($displayImage, 'products');
+$catalogHoverGalleryAttribute = '';
+
+if (!empty($enable_catalog_hover_gallery) && $imageSrc) {
+    $catalogHoverGallery = array($imageSrc);
+    $seenCatalogGalleryImages = array_filter(array(
+        trim(str_replace('\\', '/', (string) $displayImage), '/')
+    ));
+
+    foreach (explode('||', (string) ($item->gallery_images ?? '')) as $galleryImageName) {
+        $galleryImageName = trim(
+            str_replace('\\', '/', (string) $galleryImageName),
+            '/'
+        );
+        $pathSegments = explode('/', $galleryImageName);
+
+        if (
+            $galleryImageName === ''
+            || in_array('..', $pathSegments, true)
+            || in_array($galleryImageName, $seenCatalogGalleryImages, true)
+            || count($catalogHoverGallery) >= 4
+        ) {
+            continue;
+        }
+
+        $galleryImageUrl = '/public/products/' . implode(
+            '/',
+            array_map('rawurlencode', $pathSegments)
+        );
+
+        if ($galleryImageUrl === $imageSrc) {
+            continue;
+        }
+
+        $catalogHoverGallery[] = $galleryImageUrl;
+        $seenCatalogGalleryImages[] = $galleryImageName;
+    }
+
+    if (count($catalogHoverGallery) > 1) {
+        $catalogHoverGalleryAttribute = htmlspecialchars(
+            (string) json_encode(
+                $catalogHoverGallery,
+                JSON_UNESCAPED_SLASHES
+                    | JSON_UNESCAPED_UNICODE
+                    | JSON_INVALID_UTF8_SUBSTITUTE
+            ),
+            ENT_QUOTES,
+            'UTF-8'
+        );
+    }
+}
+
 $notificationPrice = $isB2B
     ? $displayWholesalePrice
     : $currentPrice;
@@ -129,8 +201,10 @@ $notificationPriceText =
 
 <div
     class="main-catalog__product product
+        <?= $useCatalogEditorialCardStyle ? 'product--editorial-card' : '' ?>
+        <?= $useWishlistProductCardStyle ? 'product--wishlist-editorial' : '' ?>
         <?= $isLiked ? '_liked' : '' ?>
-        <?= $availableStock <= 0 ? 'stock_off' : '' ?>"
+        <?= !$isInStock ? 'stock_off' : '' ?>"
     data-prod_id="<?= $productId ?>"
     data-product-image="<?= htmlspecialchars(
         $imageSrc,
@@ -158,6 +232,9 @@ $notificationPriceText =
     <a
         href="<?= $productUrl ?>"
         class="head-product__image"
+        <?php if ($catalogHoverGalleryAttribute !== '') : ?>
+            data-catalog-hover-gallery="<?= $catalogHoverGalleryAttribute ?>"
+        <?php endif; ?>
         aria-label="<?= htmlspecialchars(
             $productTitle,
             ENT_QUOTES,
@@ -179,9 +256,18 @@ $notificationPriceText =
                 ) ?>"
                 loading="lazy"
                 decoding="async"
+                <?php if ($catalogHoverGalleryAttribute !== '') : ?>
+                    data-catalog-hover-primary
+                <?php endif; ?>
             >
         </picture>
     </a>
+
+    <?php if ($useHomeProductCardStyle && !$isInStock) : ?>
+        <span class="catalog-product-stock-label" role="status">
+            <?= $lclang === 'ro' ? 'Indisponibil' : 'Нет в наличии' ?>
+        </span>
+    <?php endif; ?>
 
     <div class="head-product__modificator">
         <?php if (!empty($item->is_new)) { ?>
@@ -190,7 +276,7 @@ $notificationPriceText =
             </p>
         <?php } ?>
 
-        <?php if (!$isB2B && $hasDiscount) { ?>
+        <?php if (!$isB2B && $hasDiscount && !$useDiscountCatalogCardStyle) { ?>
             <p class="head-product__modificator_sale">
                 <?= PRODUCTS_SALE ?>
             </p>
@@ -209,7 +295,7 @@ $notificationPriceText =
         <?php } ?>
     </div>
 
-    <?php if ($availableStock > 0) { ?>
+    <?php if ($isInStock) { ?>
     <a
         href="javascript:;"
         class="
@@ -249,15 +335,23 @@ $notificationPriceText =
 
 <div class="product__body">
     <div class="product__info">
+        <?php if (!$useWishlistProductCardStyle) : ?>
+            <?php include APPPATH . 'views/layouts/pages/product-card-options.php'; ?>
+        <?php endif; ?>
+
         <p class="product__brand">
-            <?= $item->brand_title ?>
+            <?php if ($useWishlistProductCardStyle && $wishlistCategoryLabel !== '') : ?>
+                <?= htmlspecialchars($wishlistCategoryLabel, ENT_QUOTES, 'UTF-8') ?>
+            <?php else : ?>
+                <?= $item->brand_title ?>
+            <?php endif; ?>
         </p>
 
         <a
             href="<?= $productUrl ?>"
             class="product__name"
         >
-            <?= $productTitle ?>
+            <?= $useWishlistProductCardStyle ? $wishlistDisplayTitle : $productTitle ?>
         </a>
     </div>
 
@@ -292,6 +386,18 @@ $notificationPriceText =
                     </span>
                 </div>
             <?php } elseif ($hasDiscount) { ?>
+                <?php if ($useHomeProductCardStyle || $useDiscountCatalogCardStyle) { ?>
+                    <div class="price-product__discount-line">
+                        <span class="price-product__discount-label">
+                            <?= $lclang === 'ro' ? 'Cu reducere' : 'Со скидкой' ?>
+                            <?= $salePercent ?>%
+                        </span>
+                        <span class="price-product__old">
+                            <?= number_format($displayPrice, 0, '.', ' ') ?>
+                            <?= MDL ?>
+                        </span>
+                    </div>
+                <?php } ?>
                 <div class="price-product__prices">
                     <span class="price-product__value">
                         <?= number_format(
@@ -303,15 +409,12 @@ $notificationPriceText =
                         <?= MDL ?>
                     </span>
 
-                    <span class="price-product__old">
-                        <?= number_format(
-                            $displayPrice,
-                            0,
-                            '.',
-                            ' '
-                        ) ?>
-                        <?= MDL ?>
-                    </span>
+                    <?php if (!$useHomeProductCardStyle && !$useDiscountCatalogCardStyle) { ?>
+                        <span class="price-product__old">
+                            <?= number_format($displayPrice, 0, '.', ' ') ?>
+                            <?= MDL ?>
+                        </span>
+                    <?php } ?>
                 </div>
             <?php } else { ?>
                 <div class="price-product__prices">

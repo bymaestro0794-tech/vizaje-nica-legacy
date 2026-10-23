@@ -1,120 +1,40 @@
-/* =========================================================
-   Brands page
-   ========================================================= */
-
+/* Brand directory — restrained, mobile-first layout. */
 .brands {
-	padding: 28px 0 120px;
+	padding: 0 0 100px;
+	color: #111;
+}
+
+body._brands-page .breacrums {
+	display: none;
 }
 
 .brands__container {
 	position: relative;
 }
 
-/* =========================================================
-   Header
-   ========================================================= */
-
-.head-brands {
-	display: grid;
-	grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
-	align-items: end;
-	gap: 40px;
-}
-
-.head-brands__main {
-	display: flex;
-	align-items: baseline;
-	gap: 10px;
-	min-width: 0;
-}
-
-.head-brands__title {
-	margin: 0;
-	font-weight: 600;
-	font-size: 34px;
-	line-height: 1;
-	letter-spacing: -0.03em;
-	color: #111111;
-}
-
-.head-brands__counts {
-	font-weight: 400;
-	font-size: 14px;
-	line-height: 1;
-	color: #8b8b8b;
-}
-
-/* =========================================================
-   Search
-   ========================================================= */
-
-.search-head-brands {
-	display: flex;
-	align-items: center;
-	gap: 16px;
-	min-width: 0;
-	padding-bottom: 12px;
-	border-bottom: 1px solid #b8b8b8;
-	transition: border-color 0.2s ease;
-}
-
-.search-head-brands:focus-within {
-	border-color: #111111;
-}
-
-.search-head-brands__input {
-	flex: 1 1 auto;
-	width: 100%;
-	min-width: 0;
+.brands ._visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
 	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
 	border: 0;
-	outline: 0;
-	background: transparent;
-	font: inherit;
-	font-weight: 400;
-	font-size: 15px;
-	line-height: 1.4;
-	color: #111111;
 }
 
-.search-head-brands__input::placeholder {
-	color: #8e8e8e;
-}
-
-.search-head-brands__input::-webkit-search-cancel-button {
-	cursor: pointer;
-}
-
-.search-head-brands__btn {
-	flex: 0 0 22px;
-	width: 22px;
-	height: 22px;
-	padding: 0;
-	border: 0;
-	background: transparent;
-	cursor: pointer;
-}
-
-.search-head-brands__btn img {
-	display: block;
-	width: 100%;
-	height: 100%;
-	object-fit: contain;
-}
-
-/* =========================================================
-   Alphabet navigation
-   ========================================================= */
-
+/* Alphabet rail */
 .brand-letter {
 	position: sticky;
-	top: 70px;
+	top: 0;
 	z-index: 15;
-	margin-top: 14px;
-	padding: 10px 0;
-	border-bottom: 1px solid #ededed;
-	background: rgba(255, 255, 255, 0.96);
-	backdrop-filter: blur(12px);
+	width: 100vw;
+	margin: 0 0 0 calc((100% - 100vw) / 2);
+	padding: 12px max(24px, calc((100vw - 1440px) / 2));
+	border-top: 1px solid #ededed;
+	border-bottom: 1px solid #e5e5e5;
+	background: rgba(255, 255, 255, 0.98);
 }
 
 .brand-letter__content {
@@ -130,7 +50,8 @@
 .brand-letter__list {
 	display: flex;
 	align-items: center;
-	gap: 5px;
+	justify-content: center;
+	gap: clamp(12px, 2vw, 32px);
 	width: max-content;
 	min-width: 100%;
 }
@@ -139,98 +60,227 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-width: 28px;
-	height: 28px;
-	padding: 0 7px;
-	border: 1px solid transparent;
-	border-radius: 6px;
+	min-width: 16px;
+	min-height: 20px;
+	padding: 0;
+	font-size: 11px;
 	font-weight: 500;
-	font-size: 12px;
 	line-height: 1;
-	text-transform: uppercase;
-	color: #111111;
-	transition:
-		color 0.2s ease,
-		border-color 0.2s ease,
-		background-color 0.2s ease;
+	color: #222;
+	transition: color 160ms ease;
 }
 
-.brand-letter__link:hover {
-	border-color: #d4d4d4;
-	background: #f7f7f7;
-}
-
+.brand-letter__link:hover,
 .brand-letter__link._active {
-	border-color: #d3d3d3;
-	background: #f5f5f5;
-	color: #111111;
-	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+	color: #ac8e7a;
 }
 
-/* =========================================================
-   Brands list
-   ========================================================= */
+/* Directory and favorites */
+.brands__layout {
+	display: grid;
+	grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+	gap: clamp(36px, 7vw, 120px);
+	max-width: 1240px;
+	margin: 64px auto 0;
+}
 
+.brands__favorites {
+	min-width: 0;
+	padding: 115px 12px 0 0;
+	text-align: right;
+}
+
+.brands__favorites-title {
+	margin: 0 0 14px;
+	font-size: 48px;
+	font-weight: 600;
+	line-height: 1.2;
+}
+
+.brands__favorites-empty {
+	max-width: 310px;
+	margin: 0 0 0 auto;
+	color: #858585;
+	font-size: 14px;
+	line-height: 1.45;
+}
+
+.brands__favorites-list {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.brands__favorite-link {
+	color: #111;
+	font-size: 15px;
+	line-height: 1.4;
+}
+
+.brands__favorite-link:hover {
+	color: #ac8e7a;
+}
+
+.brands__favorites._has-favorites .brands__favorites-empty {
+	display: none;
+}
+
+/* Search */
+.brands__directory {
+	min-width: 0;
+}
+
+.head-brands {
+	width: min(100%, 540px);
+	margin: 0 auto 64px;
+}
+
+.search-head-brands {
+	display: flex;
+	align-items: center;
+	gap: 18px;
+	width: 100%;
+	padding: 0 0 16px;
+	border-bottom: 1px solid #dedede;
+	transition: border-color 180ms ease;
+}
+
+.search-head-brands:focus-within {
+	border-color: #1a1a1a;
+}
+
+.search-head-brands__input {
+	flex: 1 1 auto;
+	width: 100%;
+	min-width: 0;
+	padding: 0;
+	border: 0;
+	outline: 0;
+	background: transparent;
+	font: inherit;
+	font-size: clamp(28px, 3.2vw, 48px);
+	font-weight: 600;
+	line-height: 1.15;
+	letter-spacing: -0.035em;
+	color: #111;
+}
+
+.search-head-brands__input::placeholder {
+	color: #e5e5e5;
+	opacity: 1;
+}
+
+.search-head-brands__input::-webkit-search-cancel-button {
+	cursor: pointer;
+}
+
+.search-head-brands__btn {
+	display: grid;
+	flex: 0 0 28px;
+	place-items: center;
+	width: 28px;
+	height: 32px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	cursor: pointer;
+}
+
+.search-head-brands__btn img {
+	display: block;
+	width: 24px;
+	height: 24px;
+	object-fit: contain;
+}
+
+/* Brand rows */
 .brands__content {
 	width: 100%;
-	margin-top: 30px;
 }
 
 .brands__rows {
 	display: flex;
 	flex-direction: column;
+	gap: 36px;
 }
 
 .brands__row {
-	display: grid;
-	grid-template-columns: 70px minmax(0, 1fr);
-	gap: 25px;
-	padding: 30px 0;
-	border-bottom: 1px solid #e8e8e8;
-	scroll-margin-top: 145px;
-}
-
-.brands__row:first-child {
-	padding-top: 20px;
+	min-width: 0;
+	scroll-margin-top: 80px;
 }
 
 .brands__letter {
-	font-weight: 500;
-	font-size: 52px;
-	line-height: 1;
-	letter-spacing: -0.04em;
-	text-transform: uppercase;
-	color: #111111;
-}
-
-.brands__body {
-	min-width: 0;
+	margin: 0 0 24px;
+	font-size: 30px;
+	font-weight: 600;
+	line-height: 1.1;
+	letter-spacing: -0.035em;
 }
 
 .brands__column {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
-	column-gap: clamp(50px, 10vw, 180px);
-	row-gap: 10px;
+	column-gap: clamp(24px, 4vw, 72px);
+	row-gap: 14px;
 }
 
 .brands__item {
+	display: flex;
+	align-items: center;
+	gap: 12px;
 	min-width: 0;
 }
 
 .brands__link {
-	display: inline-block;
-	font-weight: 400;
+	flex: 1 1 auto;
+	min-width: 0;
+	color: #111;
 	font-size: 15px;
-	line-height: 1.4;
-	color: #111111;
-	transition:
-		opacity 0.2s ease,
-		transform 0.2s ease;
+	font-weight: 400;
+	line-height: 1.35;
+	transition: color 160ms ease;
 }
 
 .brands__link:hover {
-	opacity: 0.55;
+	color: #ac8e7a;
+}
+
+.brands__favorite-toggle {
+	display: grid;
+	flex: 0 0 22px;
+	place-items: center;
+	width: 22px;
+	height: 26px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: #b8b8b8;
+	cursor: pointer;
+	transition: color 160ms ease, transform 160ms ease;
+}
+
+.brands__favorite-toggle:hover {
+	color: #ac8e7a;
+	transform: scale(1.08);
+}
+
+.brands__favorite-toggle[aria-pressed='true'] {
+	color: #ac8e7a;
+}
+
+.brands__favorite-toggle svg {
+	display: block;
+	width: 19px;
+	height: 19px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.5;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.brands__favorite-toggle[aria-pressed='true'] svg {
+	fill: currentColor;
 }
 
 .brands__row[hidden],
@@ -239,365 +289,211 @@
 }
 
 .brands__empty {
-	margin: 60px 0 0;
-	font-size: 16px;
-	color: #777777;
+	margin: 32px 0 0;
+	color: #777;
+	font-size: 15px;
 }
 
-/* =========================================================
-   Active state буквенного блока
-   ========================================================= */
-
-.brands__row {
-	position: relative;
-	transition:
-		background-color 0.25s ease,
-		padding-left 0.25s ease,
-		padding-right 0.25s ease;
+.brands__empty[hidden] {
+	display: none;
 }
 
-.brands__row._active {
-	background-color: #f8f8f8;
-	padding-left: 18px;
-	padding-right: 18px;
-}
-
-.brands__row._active .brands__letter {
-	color: #000000;
-}
-
-.brands__row._search-active {
-	background-color: #fafafa;
-}
-
-/* =========================================================
-   Active state найденного бренда
-   ========================================================= */
-
-.brands__item {
-	border-radius: 4px;
-	transition:
-		background-color 0.2s ease,
-		padding-left 0.2s ease;
-}
-
-.brands__item._active {
-	padding-left: 8px;
-	background-color: #f1f1f1;
-}
-
-.brands__item._active .brands__link {
-	font-weight: 500;
-	color: #000000;
-}
-
-/* =========================================================
-   Tablet
-   ========================================================= */
-
-@media (max-width: 991px) {
-	.head-brands {
-		grid-template-columns: 180px minmax(0, 1fr);
-		gap: 25px;
+@media (max-width: 900px) {
+	.brands__layout {
+		gap: 32px;
 	}
 
-	.brands__column {
-		column-gap: 40px;
-	}
-}
-
-/* =========================================================
-   Mobile
-   ========================================================= */
-
-@media (max-width: 767px) {
-	.brands {
-		padding-top: 20px;
-		padding-bottom: 80px;
-	}
-
-	.head-brands {
-		display: flex;
-		flex-direction: column;
-		align-items: stretch;
-		gap: 24px;
-	}
-
-	.head-brands__title {
-		font-size: 30px;
-	}
-
-	.head-brands__search {
-		width: 100%;
-	}
-
-	.brand-letter {
-		top: 58px;
-		margin-right: calc(var(--container-padding, 16px) * -1);
-		margin-left: calc(var(--container-padding, 16px) * -1);
-		padding-right: var(--container-padding, 16px);
-		padding-left: var(--container-padding, 16px);
-	}
-
-	.brand-letter__list {
-		gap: 4px;
-	}
-
-	.brand-letter__link {
-		min-width: 30px;
-		height: 30px;
-		font-size: 12px;
-	}
-
-	.brands__content {
-		margin-top: 20px;
-	}
-
-	.brands__row {
-		grid-template-columns: 45px minmax(0, 1fr);
-		gap: 18px;
-		padding: 26px 0;
-		scroll-margin-top: 130px;
-	}
-
-	.brands__letter {
-		font-size: 38px;
+	.brands__favorites-title {
+		font-size: 24px;
 	}
 
 	.brands__column {
 		grid-template-columns: 1fr;
-		row-gap: 12px;
-	}
-
-	.brands__link {
-		font-size: 15px;
 	}
 }
 
-/* =========================================================
-   Brands page — mobile
-   ========================================================= */
+@media (min-width: 1279px) {
+	html body._brands-page {
+		padding-top: 0;
+	}
+}
 
 @media (max-width: 767px) {
 	.brands {
-		padding-top: 18px;
-		padding-bottom: 70px;
-		overflow: hidden;
+		padding: 0 0 84px;
+		overflow: clip;
 	}
 
 	.brands__container {
 		width: 100%;
-	}
-
-	/* -----------------------------
-     Заголовок и поиск
-     ----------------------------- */
-
-	.head-brands {
-		display: flex;
-		flex-direction: column;
-		align-items: stretch;
-		gap: 20px;
-	}
-
-	.head-brands__main {
-		display: flex;
-		align-items: baseline;
-		gap: 8px;
-		width: 100%;
-	}
-
-	.head-brands__title {
-		margin: 0;
-		font-size: 28px;
-		line-height: 1.15;
-		letter-spacing: -0.03em;
-	}
-
-	.head-brands__counts {
+		max-width: none;
 		padding: 0;
-		font-size: 13px;
-		line-height: 1;
-		color: #8d8d8d;
 	}
-
-	.head-brands__search {
-		order: 2;
-		width: 100%;
-	}
-
-	.search-head-brands {
-		padding-bottom: 10px;
-		gap: 12px;
-	}
-
-	.search-head-brands__input {
-		font-size: 15px;
-		line-height: 20px;
-	}
-
-	.search-head-brands__btn {
-		flex: 0 0 20px;
-		width: 20px;
-		height: 20px;
-	}
-
-	/* -----------------------------
-     Алфавит
-     ----------------------------- */
 
 	.brand-letter {
-		position: relative;
-		top: 48px;
+		position: fixed;
+		top: 50%;
+		right: 0;
 		left: auto;
-		right: auto;
-		z-index: 5;
-
-		width: 100%;
-		margin: 16px 0 0;
-		padding: 0 0 12px;
-
-		border-bottom: 1px solid #e7e7e7;
-		background: #ffffff;
-		backdrop-filter: none;
+		z-index: 30;
+		width: 22px;
+		max-height: min(68vh, 520px);
+		margin: 0;
+		padding: 0 4px;
+		transform: translateY(-50%);
+		border: 0;
+		background: rgba(255, 255, 255, 0.94);
+		backdrop-filter: blur(6px);
 	}
 
 	.brand-letter__content {
-		width: 100%;
-		padding: 0;
-		overflow-x: auto;
-		overflow-y: hidden;
-
-		scrollbar-width: none;
-		-webkit-overflow-scrolling: touch;
+		max-height: inherit;
+		overflow: auto;
 	}
 
-	.brand-letter__content::-webkit-scrollbar {
-		display: none;
-	}
-
-	.brand-letter__list {
+	.brands .brand-letter__list {
 		display: flex;
+		flex-direction: column;
 		justify-content: flex-start;
-		align-items: center;
-		gap: 6px;
-
-		width: max-content;
-		min-width: max-content;
-		padding-right: 16px;
-	}
-
-	.brand-letter__link {
-		flex: 0 0 auto;
-
-		min-width: 28px;
-		height: 28px;
-		padding: 0 7px;
-
-		border-radius: 6px;
-
-		font-size: 12px;
-		line-height: 1;
-	}
-
-	.brand-letter__link._active {
-		background: #f1f1f1;
-		border-color: #d5d5d5;
-		box-shadow: none;
-	}
-
-	/* -----------------------------
-     Список брендов
-     ----------------------------- */
-
-	.brands__content {
-		margin-top: 22px;
-	}
-
-	.brands__rows {
-		row-gap: 0;
-	}
-
-	.brands__row {
-		display: block;
-
-		padding: 28px 0;
-		border-bottom: 1px solid #e7e7e7;
-
-		scroll-margin-top: 80px;
-
-		background: transparent;
-	}
-
-	.brands__row:first-child {
-		padding-top: 18px;
-	}
-
-	.brands__row._active {
-		padding-right: 0;
-		padding-left: 0;
-		background: transparent;
-	}
-
-	.brands__row._search-active {
-		background: transparent;
-	}
-
-	.brands__letter {
-		display: block;
-
-		margin-bottom: 16px;
-
-		font-size: 34px;
-		line-height: 1;
-		font-weight: 500;
-		letter-spacing: -0.04em;
-	}
-
-	.brands__body {
+		gap: 3px;
 		width: 100%;
+		min-width: 0;
+		height: auto;
+		padding: 2px 0;
+		overflow: visible;
 	}
 
-	.brands__column {
+	.brands .brand-letter__link {
+		min-width: 14px;
+		min-height: 16px;
+		font-size: 10px;
+		font-weight: 500;
+	}
+
+	.brands__layout {
 		display: flex;
 		flex-direction: column;
 		gap: 0;
+		margin: 0;
+	}
 
+	.brands__directory {
+		display: contents;
+	}
+
+	.brands__favorites {
+		order: 0;
+		display: none;
+		padding: 25px 38px 0 20px;
+		text-align: left;
+	}
+
+	.brands__favorites._has-favorites {
+		display: block;
+	}
+
+	.brands__favorites-title {
+		margin-bottom: 12px;
+		font-size: 23px;
+	}
+
+	.brands__favorites-empty {
+		margin: 0;
+	}
+
+	.brands__favorites-list {
+		align-items: flex-start;
+	}
+
+	.brands__head {
+		order: -1;
 		width: 100%;
-		column-count: initial;
+		margin: 0;
+		padding: 10px 38px 11px 20px;
+		border-top: 1px solid #ededed;
+		border-bottom: 1px solid #e5e5e5;
+	}
+
+	.search-head-brands {
+		gap: 12px;
+		padding: 0;
+		border: 0;
+	}
+
+	.search-head-brands__input {
+		font-size: 25px;
+		line-height: 1.25;
+		letter-spacing: -0.035em;
+	}
+
+	.search-head-brands__btn {
+		flex-basis: 24px;
+		width: 24px;
+		height: 28px;
+	}
+
+	.search-head-brands__btn img {
+		width: 21px;
+		height: 21px;
+	}
+
+	.brands .brands__content {
+		order: 1;
+		margin-top: 0;
+		padding: 30px 38px 0 20px;
+	}
+
+	.brands__rows {
+		gap: 26px;
+	}
+
+	.brands__row {
+		scroll-margin-top: 24px;
+	}
+
+	.brands__letter {
+		margin-bottom: 22px;
+		font-size: 24px;
+		line-height: 1.15;
+	}
+
+	.brands__column {
+		grid-template-columns: 1fr;
+		row-gap: 10px;
 	}
 
 	.brands__item {
-		width: 100%;
-		margin: 0;
-		padding: 0;
-		border-radius: 0;
+		gap: 14px;
+		min-height: 34px;
 	}
 
-	.brands__item + .brands__item {
-		margin-top: 12px;
+	.brands__favorite-toggle {
+		flex-basis: 21px;
+		width: 21px;
+		height: 28px;
+		order: -1;
 	}
 
-	.brands__item._active {
-		padding-left: 0;
-		background: transparent;
-	}
-
-	.brands__item._active .brands__link {
-		font-weight: 500;
+	.brands__favorite-toggle svg {
+		width: 18px;
+		height: 18px;
 	}
 
 	.brands__link {
-		display: block;
-
-		width: 100%;
-
-		font-size: 17px;
-		line-height: 1.35;
+		font-size: 16px;
+		line-height: 1.3;
 	}
 
 	.brands__empty {
-		margin-top: 40px;
-		font-size: 15px;
+		margin-top: 25px;
+		font-size: 14px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.brand-letter__link,
+	.brands__link,
+	.brands__favorite-toggle {
+		transition-duration: 0.01ms;
 	}
 }

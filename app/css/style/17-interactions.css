@@ -134,8 +134,8 @@
     text-decoration: underline;
   }
 
-  .paggination-main-catalog__item:not(._active, ._more):hover {
-    border-color: #000;
+  .paggination-main-catalog__item:not(._active, ._more, ._disabled):hover {
+    background: #e9e9e9;
     color: #000;
   }
 

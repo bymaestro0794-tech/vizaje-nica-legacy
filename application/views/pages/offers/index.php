@@ -24,26 +24,31 @@
         <div class="stock__container _container">
 
             <header class="stock__header">
-                <div>
-                    <p class="stock__eyebrow">
-                        Vizaje-Nica
-                    </p>
+                <h1 class="stock__title">
+                    <?= htmlspecialchars($page_name, ENT_QUOTES, 'UTF-8') ?>
 
-                    <h1 class="stock__title">
-                        <?= $page_name ?>
-                    </h1>
-                </div>
-
-                <?php if (!empty($offers)) { ?>
-                    <p class="stock__count">
-                        <?= count($offers) ?>
-
-                        <?= $lclang === 'ro'
-                            ? 'promoții'
-                            : 'акций' ?>
-                    </p>
-                <?php } ?>
+                    <?php if (!empty($offers)) { ?>
+                        <span class="stock__title-count">
+                            / <?= count($offers) ?>
+                        </span>
+                    <?php } ?>
+                </h1>
             </header>
+
+            <?php if (!empty($client_info->id)) { ?>
+                <aside class="roulette-offer-entry" data-roulette-entry hidden>
+                    <div>
+                        <strong><?= $lclang === 'ro' ? 'Roata norocului' : 'Рулетка удачи' ?></strong>
+                        <p><?= $lclang === 'ro'
+                            ? 'Ai o comandă finalizată? Verifică dacă ai o rotire disponibilă.'
+                            : 'Есть завершённый заказ? Проверьте, доступно ли вам вращение.' ?></p>
+                    </div>
+                    <button type="button" data-roulette-open>
+                        <?= $lclang === 'ro' ? 'Deschide' : 'Открыть' ?>
+                        <span class="icon-arrow-right" aria-hidden="true"></span>
+                    </button>
+                </aside>
+            <?php } ?>
 
             <?php if (!empty($offers)) { ?>
                 <div class="stock__content">
@@ -65,7 +70,41 @@
                                 ? newthumbs($offer->img, 'offers')
                                 : '';
 
+                            $offerDescription = '';
+                            if (!empty($offer->desc)) {
+                                $descriptionText = preg_replace(
+                                    '/<\/?(?:p|div|h[1-6]|li|br|tr)[^>]*>/i',
+                                    ' ',
+                                    $offer->desc
+                                );
+                                $offerDescription = trim(preg_replace(
+                                    '/\s+/u',
+                                    ' ',
+                                    html_entity_decode(
+                                        strip_tags($descriptionText),
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    )
+                                ));
+
+                                if (preg_match('/^.{151}/us', $offerDescription)) {
+                                    $offerDescription = preg_replace(
+                                        '/^(.{0,150}).*$/us',
+                                        '$1…',
+                                        $offerDescription
+                                    );
+                                }
+                            }
+
                             $isAboveTheFold = $index < 3;
+                            $offerIsOnline = !isset($offer->is_online)
+                                || (int) $offer->is_online === 1;
+                            $offerBadgeText = $offerIsOnline
+                                ? 'ON<br>LINE'
+                                : 'OFF<br>LINE';
+                            $offerBadgeLabel = $offerIsOnline
+                                ? ($lclang === 'ro' ? 'Online' : 'Онлайн')
+                                : ($lclang === 'ro' ? 'Offline' : 'Офлайн');
                         ?>
 
                         <article class="stock__item stock__item--offer">
@@ -102,79 +141,24 @@
                                     </span>
                                 <?php } ?>
 
-                                <span class="stock__image-overlay"></span>
-
-                                <span class="stock__read-more">
-                                    <?= $lclang === 'ro'
-                                        ? 'Vezi promoția'
-                                        : 'Открыть акцию' ?>
-
-                                    <svg
-                                        width="17"
-                                        height="17"
-                                        viewBox="0 0 17 17"
-                                        fill="none"
-                                        aria-hidden="true"
-                                    >
-                                        <path
-                                            d="M3.5 8.5H13.5M9.5 4.5L13.5 8.5L9.5 12.5"
-                                            stroke="currentColor"
-                                            stroke-width="1.4"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        />
-                                    </svg>
+                                <span class="stock__offer-badge <?= $offerIsOnline ? 'stock__offer-badge--online' : 'stock__offer-badge--offline' ?>" aria-label="<?= $offerBadgeLabel ?>">
+                                    <?= $offerBadgeText ?>
                                 </span>
+
                             </a>
 
                             <div class="stock__body">
-                                <?php if (!empty($offer->date_to)) { ?>
-                                    <p class="stock__date stock__date--offer">
-                                        <span class="stock__date-label">
-                                            <?= BEFORE ?>
-                                        </span>
-
-                                        <time>
-                                            <?= transformDate(
-                                                $offer->date_to,
-                                                $lclang
-                                            ) ?>
-                                        </time>
-                                    </p>
-                                <?php } ?>
-
                                 <h2 class="stock__name">
-                                    <a href="<?= $offerUrl ?>">
-                                        <?= $offerTitle ?>
+                                    <a href="<?= htmlspecialchars($offerUrl, ENT_QUOTES, 'UTF-8') ?>">
+                                        <?= htmlspecialchars($offerTitle, ENT_QUOTES, 'UTF-8') ?>
                                     </a>
                                 </h2>
 
-                                <a
-                                    href="<?= $offerUrl ?>"
-                                    class="stock__link"
-                                >
-                                    <span>
-                                        <?= $lclang === 'ro'
-                                            ? 'Vezi promoția'
-                                            : 'Открыть акцию' ?>
-                                    </span>
-
-                                    <svg
-                                        width="18"
-                                        height="18"
-                                        viewBox="0 0 18 18"
-                                        fill="none"
-                                        aria-hidden="true"
-                                    >
-                                        <path
-                                            d="M4 9H14M10 5L14 9L10 13"
-                                            stroke="currentColor"
-                                            stroke-width="1.4"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        />
-                                    </svg>
-                                </a>
+                                <?php if ($offerDescription !== '') { ?>
+                                    <p class="stock__offer-description">
+                                        <?= htmlspecialchars($offerDescription, ENT_QUOTES, 'UTF-8') ?>
+                                    </p>
+                                <?php } ?>
                             </div>
                         </article>
                     <?php } ?>

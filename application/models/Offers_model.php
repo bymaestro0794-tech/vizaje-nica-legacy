@@ -127,7 +127,8 @@ class Offers_model extends BaseModel
             uri$lang as uri,
                      img$lang as img,
             imgB$lang as imgB,
-            view_home
+            view_home,
+            is_online
         ");
         $this->db->where('isShown', 1);
         $this->db->order_by('sorder ASC, date_to DESC, id DESC');

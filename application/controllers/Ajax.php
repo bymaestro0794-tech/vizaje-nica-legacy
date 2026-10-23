@@ -599,6 +599,18 @@ private function _cart_ui_state(
         'promo' =>
             $state['promo'],
 
+        'roulette' =>
+            $state['roulette'],
+
+        'discount_choice' =>
+            $state['discount_choice'],
+
+        'discount' =>
+            $state['discount'],
+
+        'discount_options' =>
+            $state['discount_options'],
+
         'shipping' =>
             $state['shipping'],
 
@@ -1385,7 +1397,8 @@ public function promo_apply()
         $this->cartcalculator
             ->calculate(
                 $lclang,
-                $code
+                $code,
+                'promo'
             );
 
     /*
@@ -1440,10 +1453,6 @@ public function promo_apply()
             )
         );
 
-        unset(
-            $_SESSION['cart_promo']
-        );
-
         return $this->output
             ->set_status_header(422)
             ->set_content_type(
@@ -1491,6 +1500,7 @@ public function promo_apply()
             'code' =>
                 $code,
         );
+    $_SESSION['cart_discount_choice'] = 'promo';
 
     /*
     |--------------------------------------------------------------------------
@@ -1650,9 +1660,21 @@ public function promo_remove()
             )
             : '';
 
+    if ($removedCode === 'WELCOME18') {
+        $_SESSION['welcome_offer_removed'] = 1;
+    }
+
     unset(
         $_SESSION['cart_promo']
     );
+
+    if (!empty($_SESSION['cart_discount_choice']) && $_SESSION['cart_discount_choice'] === 'promo') {
+        if (!empty($beforeState['roulette']['available'])) {
+            $_SESSION['cart_discount_choice'] = 'roulette';
+        } else {
+            unset($_SESSION['cart_discount_choice']);
+        }
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -1739,6 +1761,79 @@ public function promo_remove()
                 JSON_UNESCAPED_UNICODE
             )
         );
+}
+
+public function discount_choice()
+{
+    check_if_POST();
+
+    $this->load->library('cart');
+    $language = strtolower(trim((string) $this->input->post('lang', true)));
+    $language = in_array($language, array('ru', 'ro'), true) ? $language : 'ru';
+    $choice = strtolower(trim((string) $this->input->post('choice', true)));
+    if (!in_array($choice, array('promo', 'roulette'), true)) {
+        return $this->output->set_status_header(422)->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode(array('status' => 'error', 'code' => 'INVALID_DISCOUNT_CHOICE')));
+    }
+
+    $this->_define_constants($language);
+    $this->_is_logged_in();
+    $this->load->library('CartCalculator');
+
+    // A prize can be selected from the profile before the customer has put
+    // anything into the cart. Keep that choice for the next cart calculation
+    // while still requiring an active, unexpired server-side prize.
+    if ($choice === 'roulette' && empty($this->cart->contents())) {
+        $this->load->model('roulette_game_model');
+        $client = !empty($this->data['client_info'])
+            ? $this->data['client_info']
+            : null;
+        $rouletteState = $this->roulette_game_model->getState(
+            !empty($client->id) ? (int) $client->id : 0,
+            $language
+        );
+        if (!empty($client->id) && !empty($rouletteState['active_prize'])) {
+            $_SESSION['cart_discount_choice'] = 'roulette';
+            $emptyState = $this->_cart_ui_state($language);
+            return $this->output->set_content_type('application/json', 'utf-8')->set_output(json_encode(array(
+                'status' => 'ok',
+                'code' => 'DISCOUNT_CHOICE_UPDATED',
+                'discount_choice' => 'roulette',
+                'discount' => array(
+                    'source' => 'roulette',
+                    'code' => null,
+                    'label' => (string) ($rouletteState['active_prize']['title'] ?? ''),
+                    'discount' => 0,
+                    'expires_at' => $rouletteState['active_prize']['expires_at'] ?? null,
+                ),
+                'cart' => $emptyState['cart'],
+            ), JSON_UNESCAPED_UNICODE));
+        }
+    }
+
+    $state = $this->cartcalculator->calculate($language, null, $choice);
+
+    $available = $choice === 'promo'
+        ? !empty($state['discount_options']['promo']['available'])
+        : !empty($state['discount_options']['roulette']['available']);
+    if (!$available || $state['discount_choice'] !== $choice) {
+        return $this->output->set_status_header(409)->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode(array(
+                'status' => 'error',
+                'code' => $choice === 'promo' ? 'PROMO_NOT_APPLICABLE' : 'ROULETTE_PRIZE_UNAVAILABLE',
+            ), JSON_UNESCAPED_UNICODE));
+    }
+
+    $_SESSION['cart_discount_choice'] = $choice;
+    $state = $this->_cart_ui_state($language);
+
+    return $this->output->set_content_type('application/json', 'utf-8')->set_output(json_encode(array(
+        'status' => 'ok',
+        'code' => 'DISCOUNT_CHOICE_UPDATED',
+        'discount_choice' => $state['discount_choice'],
+        'discount' => $state['discount'],
+        'cart' => $state['cart'],
+    ), JSON_UNESCAPED_UNICODE));
 }
 
 public function product_quick_view()
@@ -2135,6 +2230,7 @@ public function product_quick_view()
                     'menu' => $menu,
                     'wishlist' => $wishlist,
                     'client_info' => $clientInfo,
+					'is_home_product_card' => true,
                 ),
                 true
             );
@@ -2409,6 +2505,18 @@ public function cart_drawer()
 
                 'promo' =>
                     $state['promo'],
+
+                'roulette' =>
+                    $state['roulette'],
+
+                'discount_choice' =>
+                    $state['discount_choice'],
+
+                'discount' =>
+                    $state['discount'],
+
+                'discount_options' =>
+                    $state['discount_options'],
 
                 /*
                 |--------------------------------------------------------------------------

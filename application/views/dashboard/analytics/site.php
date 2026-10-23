@@ -5,6 +5,11 @@ $siteAnalytics = isset($site_analytics) && is_array($site_analytics) ? $site_ana
 $summary = isset($siteAnalytics['summary']) && is_array($siteAnalytics['summary'])
     ? $siteAnalytics['summary']
     : array();
+$previousSiteAnalytics = isset($previous_site_analytics) && is_array($previous_site_analytics) ? $previous_site_analytics : array();
+$previousSummary = isset($previousSiteAnalytics['summary']) && is_array($previousSiteAnalytics['summary']) ? $previousSiteAnalytics['summary'] : array();
+$currentSessions = (int) ($summary['sessions'] ?? 0);
+$previousSessions = (int) ($previousSummary['sessions'] ?? 0);
+$sessionsChange = $previousSessions > 0 ? (($currentSessions - $previousSessions) / $previousSessions) * 100 : null;
 $checkout = isset($siteAnalytics['checkout']) && is_array($siteAnalytics['checkout'])
     ? $siteAnalytics['checkout']
     : array();
@@ -39,6 +44,11 @@ $percent = static function ($value) {
     return number_format((float) $value, 2, '.', ' ') . '%';
 };
 
+$dateLabel = static function ($value) {
+    $date = DateTime::createFromFormat('!Y-m-d', (string) $value);
+    return $date ? $date->format('d.m.Y') : (string) $value;
+};
+
 $monthNames = array(
     1 => 'Январь', 2 => 'Февраль', 3 => 'Март', 4 => 'Апрель',
     5 => 'Май', 6 => 'Июнь', 7 => 'Июль', 8 => 'Август',
@@ -57,6 +67,46 @@ $periodLabel = static function ($period, $groupBy, $monthNames) {
     }
 
     return $monthNames[(int) $date->format('n')] . ' ' . $date->format('Y');
+};
+
+$chartRowsByPeriod = array();
+foreach ($periods as $chartRow) {
+    $chartRowsByPeriod[(string) ($chartRow['period_key'] ?? '')] = $chartRow;
+}
+
+$chartLabels = array();
+$chartVisitors = array();
+$chartSessions = array();
+$chartDate = new DateTime($group_by === 'day' ? $date_from : (new DateTime($date_from))->modify('first day of this month')->format('Y-m-d'));
+$chartEndDate = new DateTime($group_by === 'day' ? $date_to : (new DateTime($date_to))->modify('first day of this month')->format('Y-m-d'));
+$chartStep = $group_by === 'day' ? '+1 day' : '+1 month';
+while ($chartDate <= $chartEndDate) {
+    $periodKey = $group_by === 'day' ? $chartDate->format('Y-m-d') : $chartDate->format('Y-m');
+    $chartRow = isset($chartRowsByPeriod[$periodKey]) ? $chartRowsByPeriod[$periodKey] : array();
+
+    if ($group_by === 'day') {
+        $chartLabels[] = $chartDate->format('d.m');
+    } else {
+        $chartLabels[] = $periodLabel($periodKey, $group_by, $monthNames);
+    }
+
+    $chartVisitors[] = (int) ($chartRow['visitors'] ?? 0);
+    $chartSessions[] = (int) ($chartRow['sessions'] ?? 0);
+    $chartDate->modify($chartStep);
+}
+$chartDataJson = json_encode(array(
+    'labels' => $chartLabels,
+    'visitors' => $chartVisitors,
+    'sessions' => $chartSessions,
+), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+
+$metricDelta = static function ($current, $previous) {
+    $previous = (float) $previous;
+    if ($previous <= 0) {
+        return null;
+    }
+
+    return (((float) $current - $previous) / $previous) * 100;
 };
 
 $funnelSteps = array(
@@ -94,6 +144,8 @@ $deviceNames = array(
 );
 
 $selectedSource = isset($traffic_source) ? (string) $traffic_source : '';
+$showAdvancedPanels = false;
+$activeFilterCount = (int) ($group_by === 'day') + (int) ($selectedSource !== '');
 $topPagesPagination = isset($siteAnalytics['top_pages_pagination']) && is_array($siteAnalytics['top_pages_pagination'])
     ? $siteAnalytics['top_pages_pagination']
     : array('page' => 1, 'per_page' => 20, 'total' => count($topPages), 'total_pages' => 1);
@@ -163,6 +215,7 @@ $renderPagination = static function ($pagination, $pageParameter, $buildPaginati
 };
 ?>
 
+<div class="analytics-dashboard analytics-dashboard-site">
 <div class="page-bar">
     <ul class="page-breadcrumb">
         <li><a href="/<?= ADM_CONTROLLER ?>/">Главная</a><i class="fa fa-circle"></i></li>
@@ -170,77 +223,125 @@ $renderPagination = static function ($pagination, $pageParameter, $buildPaginati
     </ul>
 </div>
 
-<h1 class="page-title">Аналитика сайта <small>first-party события</small></h1>
+<h1 class="page-title">Аналитика сайта <small>поведение посетителей</small></h1>
 
 <ul class="nav nav-tabs" style="margin-bottom:20px;">
-    <li><a href="/<?= ADM_CONTROLLER ?>/analytics">Аналитика продаж</a></li>
-    <li><a href="/<?= ADM_CONTROLLER ?>/analytics/funnel">Воронка продаж</a></li>
-    <li class="active"><a href="/<?= ADM_CONTROLLER ?>/analytics/site">Аналитика сайта</a></li>
+    <li class="active"><a href="/<?= ADM_CONTROLLER ?>/analytics/site">Сайт</a></li>
+    <li><a href="/<?= ADM_CONTROLLER ?>/analytics">Продажи</a></li>
 </ul>
 
-<form method="get" action="<?= html_escape(current_url()) ?>" class="form-inline" style="margin-bottom:20px;">
-    <div class="form-group">
-        <label for="site-date-from">С</label>
-        <input id="site-date-from" class="form-control" type="date" name="date_from" value="<?= html_escape($date_from) ?>">
+<form method="get" action="<?= html_escape(current_url()) ?>" class="analytics-filter-form" data-analytics-filter>
+    <div class="analytics-filter-toolbar">
+        <div class="analytics-filter-period-summary">
+            <span class="analytics-filter-eyebrow">Период отчёта</span>
+            <strong><i class="fa fa-calendar-o"></i> <span data-analytics-period-summary><?= html_escape($dateLabel($date_from)) ?> — <?= html_escape($dateLabel($date_to)) ?></span></strong>
+            <?php if ($selectedSource !== ''): ?><span class="analytics-filter-scope">Источник: <?= html_escape($sourceNames[$selectedSource] ?? ucfirst($selectedSource)) ?></span><?php endif; ?>
+        </div>
+        <button type="button" class="analytics-filter-open" data-analytics-filter-open aria-haspopup="dialog" aria-expanded="false">
+            <i class="fa fa-sliders"></i><span>Настроить отчёт</span>
+            <?php if ($activeFilterCount > 0): ?><span class="analytics-filter-count"><?= $activeFilterCount ?></span><?php endif; ?>
+        </button>
+        <span class="analytics-filter-caption">Период и детализация</span>
     </div>
-    <div class="form-group" style="margin-left:8px;">
-        <label for="site-date-to">По</label>
-        <input id="site-date-to" class="form-control" type="date" name="date_to" value="<?= html_escape($date_to) ?>">
-    </div>
-    <div class="form-group" style="margin-left:8px;">
-        <label for="site-group-by">Группировка</label>
-        <select id="site-group-by" class="form-control" name="group_by">
-            <option value="month" <?= $group_by === 'month' ? 'selected' : '' ?>>По месяцам</option>
-            <option value="day" <?= $group_by === 'day' ? 'selected' : '' ?>>По дням</option>
-        </select>
-    </div>
-    <div class="form-group" style="margin-left:8px;">
-        <label for="site-traffic-source">Источник</label>
-        <select id="site-traffic-source" class="form-control" name="traffic_source">
-            <option value="" <?= $selectedSource === '' ? 'selected' : '' ?>>Все источники</option>
-            <?php foreach ($sourceNames as $sourceKey => $sourceLabel): ?>
-                <?php if ($sourceKey === 'unknown') { continue; } ?>
-                <option value="<?= html_escape($sourceKey) ?>" <?= $selectedSource === $sourceKey ? 'selected' : '' ?>>
-                    <?= html_escape($sourceLabel) ?>
-                </option>
-            <?php endforeach; ?>
-            <option value="unknown" <?= $selectedSource === 'unknown' ? 'selected' : '' ?>>Не определён</option>
-        </select>
-    </div>
-    <button type="submit" class="btn blue" style="margin-left:8px;">Применить</button>
+
+    <div class="analytics-filter-backdrop" data-analytics-filter-close aria-hidden="true"></div>
+    <aside class="analytics-filter-drawer" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="analytics-filter-title-site">
+        <header class="analytics-filter-drawer__header">
+            <div><span class="analytics-filter-eyebrow">АНАЛИТИКА САЙТА</span><h2 id="analytics-filter-title-site">Настройки отчёта</h2></div>
+            <button type="button" class="analytics-filter-close" data-analytics-filter-close aria-label="Закрыть фильтры"><i class="fa fa-times"></i></button>
+        </header>
+
+        <div class="analytics-filter-drawer__content">
+            <section class="analytics-filter-section">
+                <h3><span>01</span> Период</h3>
+                <div class="analytics-filter-presets" aria-label="Быстрый выбор периода">
+                    <button type="button" data-analytics-range="7">7 дней</button>
+                    <button type="button" data-analytics-range="30">30 дней</button>
+                    <button type="button" data-analytics-range="90">90 дней</button>
+                    <button type="button" data-analytics-range="month">Этот месяц</button>
+                </div>
+                <div class="analytics-filter-date-grid">
+                    <label>С<input id="site-date-from" class="form-control" type="date" name="date_from" value="<?= html_escape($date_from) ?>"></label>
+                    <label>По<input id="site-date-to" class="form-control" type="date" name="date_to" value="<?= html_escape($date_to) ?>"></label>
+                </div>
+            </section>
+            <section class="analytics-filter-section">
+                <h3><span>02</span> Детализация</h3>
+                <label class="analytics-filter-field">Показывать данные
+                    <select id="site-group-by" class="form-control" name="group_by">
+                        <option value="month" <?= $group_by === 'month' ? 'selected' : '' ?>>По месяцам</option>
+                        <option value="day" <?= $group_by === 'day' ? 'selected' : '' ?>>По дням</option>
+                    </select>
+                </label>
+                <?php if ($selectedSource !== ''): ?>
+                    <input type="hidden" name="traffic_source" value="<?= html_escape($selectedSource) ?>">
+                    <p class="analytics-filter-help">Страницы ограничены выбранным источником трафика.</p>
+                <?php endif; ?>
+            </section>
+        </div>
+
+        <footer class="analytics-filter-drawer__footer">
+            <a href="/<?= ADM_CONTROLLER ?>/analytics/site">Сбросить</a>
+            <button type="submit" class="analytics-filter-apply"><i class="fa fa-check"></i> Показать отчёт</button>
+        </footer>
+    </aside>
 </form>
 
-<div class="note note-info">
-    Данные считаются по событиям с согласованной аналитикой. Посетители и сессии считаются уникально за выбранный период.
-</div>
+<?php if ($selectedSource === ''): ?>
+<section class="analytics-site-metrics" aria-label="Ключевые показатели">
+    <?php
+    $siteMetrics = array(
+        array('key' => 'visitors', 'label' => 'Посетители', 'help' => 'Уникальные браузеры, которые разрешили аналитику.'),
+        array('key' => 'sessions', 'label' => 'Сессии', 'help' => 'Уникальные сессии за период; одна сессия может включать несколько событий.'),
+        array('key' => 'purchases', 'label' => 'Покупки', 'help' => 'Заказы, для которых сайт получил событие покупки.'),
+        array('key' => 'conversion_rate', 'label' => 'Конверсия', 'help' => 'Покупки, поделённые на количество сессий.'),
+    );
+    foreach ($siteMetrics as $metric):
+        $currentValue = (float) ($summary[$metric['key']] ?? 0);
+        $previousValue = (float) ($previousSummary[$metric['key']] ?? 0);
+        $delta = $metricDelta($currentValue, $previousValue);
+        $formattedValue = $metric['key'] === 'conversion_rate' ? $percent($currentValue) : $number($currentValue);
+    ?>
+        <div class="analytics-site-metric">
+            <div class="analytics-site-metric__label" title="<?= html_escape($metric['help']) ?>"><?= html_escape($metric['label']) ?> <i class="fa fa-info-circle" aria-hidden="true"></i></div>
+            <strong class="analytics-site-metric__value"><?= $formattedValue ?></strong>
+            <?php if ($delta !== null): ?>
+                <span class="analytics-site-delta <?= $delta >= 0 ? 'is-positive' : 'is-negative' ?>">
+                    <?= $delta >= 0 ? '↗' : '↘' ?> <?= number_format(abs($delta), 1, '.', ' ') ?>% к предыдущему периоду
+                </span>
+            <?php endif; ?>
+        </div>
+    <?php endforeach; ?>
+</section>
 
-<div class="row">
-    <div class="col-md-3 col-sm-6">
-        <div class="dashboard-stat blue">
-            <div class="visual"><i class="fa fa-users"></i></div>
-            <div class="details"><div class="number"><?= $number($summary['visitors'] ?? 0) ?></div><div class="desc">Посетители</div></div>
-        </div>
-    </div>
-    <div class="col-md-3 col-sm-6">
-        <div class="dashboard-stat green">
-            <div class="visual"><i class="fa fa-refresh"></i></div>
-            <div class="details"><div class="number"><?= $number($summary['sessions'] ?? 0) ?></div><div class="desc">Сессии</div></div>
-        </div>
-    </div>
-    <div class="col-md-3 col-sm-6">
-        <div class="dashboard-stat purple">
-            <div class="visual"><i class="fa fa-shopping-bag"></i></div>
-            <div class="details"><div class="number"><?= $number($summary['purchases'] ?? 0) ?></div><div class="desc">Покупки</div></div>
-        </div>
-    </div>
-    <div class="col-md-3 col-sm-6">
-        <div class="dashboard-stat red">
-            <div class="visual"><i class="fa fa-line-chart"></i></div>
-            <div class="details"><div class="number"><?= $percent($summary['conversion_rate'] ?? 0) ?></div><div class="desc">Конверсия в покупку</div></div>
-        </div>
-    </div>
-</div>
+<div class="analytics-site-disclaimer"><i class="fa fa-info-circle" aria-hidden="true"></i> Учитываются посетители, согласившиеся на аналитические cookies; поэтому цифры могут быть ниже фактического трафика.</div>
 
+<section class="analytics-site-chart-card" aria-labelledby="analytics-site-chart-title">
+    <div class="analytics-site-section-heading">
+        <div><h2 id="analytics-site-chart-title">Посетители и сессии</h2><p>Динамика за выбранный период</p></div>
+        <div class="analytics-site-legend"><span><i class="is-visitors"></i> Посетители</span><span><i class="is-sessions"></i> Сессии</span></div>
+    </div>
+    <?php if (empty($chartLabels)): ?>
+        <div class="analytics-site-empty">За этот период пока нет данных для графика.</div>
+    <?php else: ?>
+        <div class="analytics-site-chart" data-analytics-site-chart data-chart="<?= html_escape($chartDataJson) ?>"></div>
+    <?php endif; ?>
+</section>
+
+<div class="analytics-site-insight <?= $sessionsChange !== null && $sessionsChange <= -15 ? 'is-warning' : 'is-neutral' ?>">
+    <i class="fa fa-lightbulb-o" aria-hidden="true"></i>
+    <span><strong>Что заметно:</strong>
+        <?php if ($sessionsChange === null): ?>Для сравнения пока недостаточно данных за предыдущий период.
+        <?php elseif ($sessionsChange <= -15): ?>Сессий стало меньше на <?= number_format(abs($sessionsChange), 1, '.', ' ') ?>% к предыдущему периоду.
+        <?php elseif ($sessionsChange >= 15): ?>Сессий стало больше на <?= number_format($sessionsChange, 1, '.', ' ') ?>% к предыдущему периоду.
+        <?php else: ?>Трафик существенно не изменился: количество сессий изменилось на <?= number_format(abs($sessionsChange), 1, '.', ' ') ?>%.
+        <?php endif; ?>
+        <small>Автоматическое сравнение метрик, не ИИ-анализ.</small>
+    </span>
+</div>
+<?php endif; ?>
+
+<?php if ($showAdvancedPanels): ?>
 <div class="portlet light bordered">
     <div class="portlet-title"><div class="caption"><i class="icon-check"></i> Потери на оформлении</div></div>
     <div class="portlet-body">
@@ -275,7 +376,9 @@ $renderPagination = static function ($pagination, $pageParameter, $buildPaginati
         </div>
     </div>
 </div>
+<?php endif; ?>
 
+<?php if ($showAdvancedPanels): ?>
 <div class="row">
     <div class="col-md-6">
         <div class="portlet light bordered">
@@ -313,29 +416,29 @@ $renderPagination = static function ($pagination, $pageParameter, $buildPaginati
         </div>
     </div>
 </div>
+<?php endif; ?>
 
-<div class="portlet light bordered">
-    <div class="portlet-title"><div class="caption"><i class="icon-share"></i> Источники трафика</div></div>
-    <div class="portlet-body table-responsive">
-        <div class="note note-info">
-            Instagram и Google определяются по UTM-меткам или домену перехода. Для точной рекламы используй ссылки с `utm_source`, `utm_medium` и `utm_campaign`.
-        </div>
-        <table class="table table-striped table-hover">
+<?php if ($selectedSource === ''): ?>
+<div class="analytics-site-lower-grid">
+<section class="analytics-site-data-card">
+    <div class="analytics-site-card-heading">
+        <div><h2>Источники трафика</h2><p>Нажмите на источник, чтобы увидеть до 15 популярных страниц.</p></div>
+        <span class="analytics-site-info" title="Прямой заход — браузер не передал источник. Переход по ссылке — переход с другого сайта. Для рекламы используйте UTM-метки." aria-label="Пояснение об источниках"><i class="fa fa-info-circle" aria-hidden="true"></i></span>
+    </div>
+        <div class="table-responsive">
+        <table class="table analytics-site-table">
             <thead>
                 <tr>
                     <th>Источник</th>
-                    <th>Канал</th>
-                    <th>Кампания</th>
                     <th>Посетители</th>
                     <th>Сессии</th>
                     <th>Покупки</th>
                     <th>Конверсия</th>
-                    <th>Выручка</th>
                 </tr>
             </thead>
             <tbody>
             <?php if (empty($sources)): ?>
-                <tr><td colspan="8" class="text-muted">Источников за выбранный период нет.</td></tr>
+                <tr><td colspan="5" class="text-muted">Источников за выбранный период нет.</td></tr>
             <?php else: ?>
                 <?php foreach ($sources as $source): ?>
                     <?php
@@ -346,77 +449,75 @@ $renderPagination = static function ($pagination, $pageParameter, $buildPaginati
                         ? ($sourcePurchases / $sourceSessions) * 100
                         : 0;
                     ?>
+                    <?php
+                    $sourceUrl = '/'. ADM_CONTROLLER . '/analytics/site?' . http_build_query(array(
+                        'date_from' => $date_from,
+                        'date_to' => $date_to,
+                        'group_by' => $group_by,
+                        'traffic_source' => $sourceKey,
+                    ));
+                    $mediumNames = array('referral' => 'Переход по ссылке', 'none' => 'Не размечено', 'organic' => 'Поиск', 'social' => 'Соцсети', 'paid' => 'Реклама', 'email' => 'Email');
+                    $sourceLabel = $sourceNames[$sourceKey] ?? ucfirst($sourceKey);
+                    $sourceMeta = $mediumNames[$source['traffic_medium']] ?? ($source['traffic_medium'] ?: 'Канал не определён');
+                    if (!empty($source['traffic_campaign'])) {
+                        $sourceMeta .= ' · ' . $source['traffic_campaign'];
+                    }
+                    ?>
                     <tr>
-                        <td><?= html_escape($sourceNames[$sourceKey] ?? ucfirst($sourceKey)) ?></td>
-                        <td><?= html_escape($source['traffic_medium'] ?: '—') ?></td>
-                        <td><?= html_escape($source['traffic_campaign'] ?: '—') ?></td>
+                        <td><a class="analytics-site-source-link" href="<?= html_escape($sourceUrl) ?>" title="Показать популярные страницы из источника"><?= html_escape($sourceLabel) ?></a><small><?= html_escape($sourceMeta) ?></small></td>
                         <td><?= $number($source['visitors']) ?></td>
                         <td><?= $number($sourceSessions) ?></td>
                         <td><?= $number($sourcePurchases) ?></td>
                         <td><?= $percent($sourceConversion) ?></td>
-                        <td><?= $money($source['purchase_revenue']) ?></td>
                     </tr>
                 <?php endforeach; ?>
             <?php endif; ?>
             </tbody>
         </table>
     </div>
-</div>
+</section>
 
-<div class="portlet light bordered">
-    <div class="portlet-title"><div class="caption"><i class="icon-screen-smartphone"></i> Устройства</div></div>
-    <div class="portlet-body table-responsive">
-        <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    <th>Устройство</th>
-                    <th>Посетители</th>
-                    <th>Сессии</th>
-                    <th>Просмотры товаров</th>
-                    <th>Покупки</th>
-                    <th>Конверсия</th>
-                    <th>Выручка</th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php if (empty($devices)): ?>
-                <tr><td colspan="7" class="text-muted">Данных об устройствах за выбранный период нет.</td></tr>
-            <?php else: ?>
-                <?php foreach ($devices as $device): ?>
-                    <?php
-                    $deviceKey = (string) ($device['device_type'] ?? 'unknown');
-                    $deviceSessions = (int) ($device['sessions'] ?? 0);
-                    $devicePurchases = (int) ($device['purchases'] ?? 0);
-                    $deviceConversion = $deviceSessions > 0
-                        ? ($devicePurchases / $deviceSessions) * 100
-                        : 0;
-                    ?>
-                    <tr>
-                        <td><?= html_escape($deviceNames[$deviceKey] ?? ucfirst($deviceKey)) ?></td>
-                        <td><?= $number($device['visitors']) ?></td>
-                        <td><?= $number($deviceSessions) ?></td>
-                        <td><?= $number($device['product_views']) ?></td>
-                        <td><?= $number($devicePurchases) ?></td>
-                        <td><?= $percent($deviceConversion) ?></td>
-                        <td><?= $money($device['purchase_revenue']) ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            <?php endif; ?>
-            </tbody>
-        </table>
+<section class="analytics-site-data-card analytics-site-devices">
+    <div class="analytics-site-card-heading"><div><h2>Устройства</h2><p>Посетители по типу устройства</p></div></div>
+    <?php if (empty($devices)): ?>
+        <div class="analytics-site-empty analytics-site-empty--compact">Данных об устройствах за этот период пока нет.</div>
+    <?php else: ?>
+        <div class="analytics-site-device-list">
+            <?php foreach ($devices as $device): ?>
+                <?php
+                $deviceKey = (string) ($device['device_type'] ?? 'unknown');
+                $deviceVisitors = (int) ($device['visitors'] ?? 0);
+                $deviceSessions = (int) ($device['sessions'] ?? 0);
+                $devicePurchases = (int) ($device['purchases'] ?? 0);
+                $deviceShare = (int) ($summary['visitors'] ?? 0) > 0
+                    ? min(100, ($deviceVisitors / (int) $summary['visitors']) * 100)
+                    : 0;
+                ?>
+                <div class="analytics-site-device">
+                    <div class="analytics-site-device__top"><span><?= html_escape($deviceNames[$deviceKey] ?? ucfirst($deviceKey)) ?></span><strong><?= $number($deviceVisitors) ?></strong></div>
+                    <div class="analytics-site-device__track" aria-label="<?= html_escape($deviceNames[$deviceKey] ?? ucfirst($deviceKey)) ?>: <?= number_format($deviceShare, 1, '.', ' ') ?>%"><span style="width:<?= number_format($deviceShare, 2, '.', '') ?>%"></span></div>
+                    <small><?= $number($deviceSessions) ?> сессий · <?= $number($devicePurchases) ?> покупок</small>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+</section>
+</div>
+<?php endif; ?>
+
+<?php if ($selectedSource !== ''): ?>
+<section class="analytics-site-data-card analytics-site-source-pages">
+    <div class="analytics-site-card-heading">
+        <div><h2>Популярные страницы</h2><p>Источник: <?= html_escape($sourceNames[$selectedSource] ?? ucfirst($selectedSource)) ?> · первые 15 страниц</p></div>
+        <a class="analytics-site-back-link" href="<?= html_escape('/'. ADM_CONTROLLER . '/analytics/site?' . http_build_query(array('date_from' => $date_from, 'date_to' => $date_to, 'group_by' => $group_by))) ?>"><i class="fa fa-arrow-left" aria-hidden="true"></i> Все источники</a>
     </div>
-</div>
-
-<div class="portlet light bordered">
-    <div class="portlet-title"><div class="caption"><i class="icon-globe"></i> Популярные страницы</div></div>
-    <div class="portlet-body table-responsive">
-        <table class="table table-striped table-hover">
+    <div class="table-responsive">
+        <table class="table analytics-site-table">
             <thead>
                 <tr>
                     <th>Страница</th>
                     <th>Посетители</th>
                     <th>Сессии</th>
-                    <th>События</th>
                     <th>Просмотры товаров</th>
                     <th>Добавления в корзину</th>
                     <th>Оформления</th>
@@ -424,14 +525,13 @@ $renderPagination = static function ($pagination, $pageParameter, $buildPaginati
             </thead>
             <tbody>
             <?php if (empty($topPages)): ?>
-                <tr><td colspan="7" class="text-muted">Страниц за выбранный период нет.</td></tr>
+                <tr><td colspan="6" class="text-muted">Страниц за выбранный период нет.</td></tr>
             <?php else: ?>
                 <?php foreach ($topPages as $page): ?>
                     <tr>
                         <td><code><?= html_escape($page['page_path']) ?></code></td>
                         <td><?= $number($page['visitors']) ?></td>
                         <td><?= $number($page['sessions']) ?></td>
-                        <td><?= $number($page['page_events']) ?></td>
                         <td><?= $number($page['product_views']) ?></td>
                         <td><?= $number($page['add_to_cart']) ?></td>
                         <td><?= $number($page['checkouts']) ?></td>
@@ -440,10 +540,11 @@ $renderPagination = static function ($pagination, $pageParameter, $buildPaginati
             <?php endif; ?>
             </tbody>
         </table>
-        <?php $renderPagination($topPagesPagination, 'top_pages_page', $buildPaginationUrl); ?>
     </div>
-</div>
+</section>
+<?php endif; ?>
 
+<?php if ($showAdvancedPanels): ?>
 <div class="portlet light bordered">
     <div class="portlet-title"><div class="caption"><i class="icon-login"></i> Страницы входа</div></div>
     <div class="portlet-body table-responsive">
@@ -526,3 +627,11 @@ $renderPagination = static function ($pagination, $pageParameter, $buildPaginati
         </table>
     </div>
 </div>
+<?php endif; ?>
+
+</div>
+<?php if ($selectedSource === '' && !empty($chartLabels)): ?>
+<script src="/static/assets/global/plugins/echarts/echarts.js"></script>
+<script src="/app/js/dashboard/analytics-site.js?v=<?= filemtime(FCPATH . 'app/js/dashboard/analytics-site.js') ?>"></script>
+<?php endif; ?>
+<script src="/app/js/dashboard/analytics-filters.js?v=<?= filemtime(FCPATH . 'app/js/dashboard/analytics-filters.js') ?>"></script>

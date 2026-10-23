@@ -94,6 +94,7 @@
                             <tr>
                                 <th width="120"> <?=lang('Date of creation')?></th>
                                 <th width="120"> <?=lang('Id order')?></th>
+                                <th width="70"> Канал</th>
                                 <th width="80"> <?=lang('Payment')?></th>
                                 <th width="60"> <?=lang('Client')?></th>
                                 <th width="60"> <?=lang('Number')?></th>
@@ -122,6 +123,22 @@
                                     </td>
                                     <td class="align-middle">
                                         <span><?=$item->order_id?></span>
+                                    </td>
+                                    <td class="align-middle">
+                                        <?php
+                                        $orderSource =
+                                            isset($item->order_source)
+                                                ? $item->order_source
+                                                : 'unknown';
+
+                                        if ($orderSource === 'app') {
+                                            echo '<span class="label label-sm label-info">APP</span>';
+                                        } elseif ($orderSource === 'web') {
+                                            echo '<span class="label label-sm label-success">WEB</span>';
+                                        } else {
+                                            echo '<span class="label label-sm label-default">—</span>';
+                                        }
+                                        ?>
                                     </td>
                                     <td class="align-middle"><?php if ($item->payment == 2 && $item->pay_success == 0){?><span class="label label-sm label-danger"> <?=lang('Payment error')?> </span><?php } else {?><?=$pay[$item->payment]?> <?php } ?></td>
                                     <td class="align-middle"><?=$item->name?> <?=$item->surname?></td>

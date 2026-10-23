@@ -138,11 +138,210 @@
 	transform: scale(1.025);
 }
 
+/* Promotions index: campaign banners, without catalog filter controls. */
+.offers-page.articles-page {
+	padding-top: 0;
+}
+
+.offers-page .breacrums {
+	display: none;
+}
+
+.offers-page .stock--offers {
+	padding: 0 0 100px;
+}
+
+.offers-page .stock--offers .stock__container {
+	width: min(100%, 1570px);
+	padding-right: 20px;
+	padding-left: 20px;
+}
+
+.offers-page .stock--offers .stock__header {
+	justify-content: center;
+	margin: 42px 0 48px;
+	text-align: center;
+}
+
+.offers-page .stock--offers .stock__title {
+	font-family: inherit;
+	font-size: clamp(44px, 4vw, 64px);
+	font-weight: 500;
+	line-height: 1;
+	letter-spacing: -0.04em;
+	text-transform: lowercase;
+}
+
+.offers-page .stock--offers .stock__title-count {
+	margin-left: 5px;
+	font-size: 0.42em;
+	font-weight: 400;
+	letter-spacing: -0.02em;
+	vertical-align: 0.12em;
+}
+
+.offers-page .stock--offers .stock__content {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	column-gap: clamp(28px, 4.7vw, 90px);
+	row-gap: 58px;
+	margin: 0;
+}
+
+.offers-page .stock--offers .stock__item {
+	min-width: 0;
+}
+
+.offers-page .stock--offers .stock__image {
+	flex: 0 0 auto;
+	aspect-ratio: 2.07 / 1;
+	padding: 0;
+	background: #f4f4f4;
+}
+
+.offers-page .stock--offers .stock__image::after {
+	content: none;
+}
+
+.offers-page .stock--offers .stock__image img {
+	transition: transform 0.45s ease;
+}
+
+.offers-page .stock--offers .stock__image:hover img {
+	transform: scale(1.015);
+	filter: none;
+}
+
+.offers-page .stock--offers .stock__offer-badge {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 2;
+	padding: 5px 6px 6px;
+	color: #fff;
+	background: #c51bd6;
+	font-size: 9px;
+	font-weight: 700;
+	line-height: 0.95;
+	letter-spacing: 0.02em;
+	text-align: center;
+}
+
+.offers-page .stock--offers .stock__offer-badge--offline {
+	background: #292929;
+}
+
+.offers-page .stock--offers .stock__date--offer {
+	position: absolute;
+	bottom: 18px;
+	left: 18px;
+	z-index: 2;
+	margin: 0;
+	color: #111;
+	font-size: 15px;
+	font-weight: 500;
+	line-height: 1.2;
+	text-shadow: 0 1px 8px rgba(255, 255, 255, 0.45);
+}
+
+.offers-page .stock--offers .stock__body {
+	position: relative;
+	z-index: 3;
+	gap: 10px;
+	padding: 0 0 0 46px;
+}
+
+.offers-page .stock--offers .stock__name {
+	order: 0;
+	display: block;
+	margin: -8px 0 0;
+	overflow: visible;
+	font-size: clamp(26px, 2.6vw, 42px);
+	font-weight: 600;
+	line-height: 1.04;
+	letter-spacing: -0.035em;
+	text-transform: uppercase;
+}
+
+.offers-page .stock--offers .stock__name a {
+	text-decoration: none;
+}
+
+.offers-page .stock--offers .stock__offer-description {
+	display: -webkit-box;
+	overflow: hidden;
+	max-width: 620px;
+	margin: 0;
+	color: #111;
+	font-size: 15px;
+	line-height: 1.45;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+}
+
 /* =========================================================
    Mobile
    ========================================================= */
 
 @media (max-width: 767.98px) {
+	.offers-page .stock--offers {
+		padding: 0 0 64px;
+	}
+
+	.offers-page .stock--offers .stock__container {
+		width: 100%;
+		padding-right: 18px;
+		padding-left: 18px;
+	}
+
+	.offers-page .stock--offers .stock__header {
+		justify-content: flex-start;
+		margin: 24px 0 30px;
+		text-align: left;
+	}
+
+	.offers-page .stock--offers .stock__title {
+		font-size: 42px;
+		line-height: 1.08;
+		letter-spacing: -0.035em;
+	}
+
+	.offers-page .stock--offers .stock__content {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 56px;
+	}
+
+	.offers-page .stock--offers .stock__image {
+		aspect-ratio: 1.82 / 1;
+	}
+
+	.offers-page .stock--offers .stock__offer-badge {
+		padding: 5px 6px;
+		font-size: 8px;
+	}
+
+	.offers-page .stock--offers .stock__date--offer {
+		bottom: 14px;
+		left: 15px;
+		font-size: 14px;
+	}
+
+	.offers-page .stock--offers .stock__body {
+		z-index: 3;
+		gap: 12px;
+		padding: 0 20px;
+	}
+
+	.offers-page .stock--offers .stock__name {
+		margin-top: -9px;
+		font-size: clamp(24px, 7vw, 32px);
+		line-height: 1.02;
+	}
+
+	.offers-page .stock--offers .stock__offer-description {
+		font-size: 14px;
+	}
+
 	.stock--offers .stock__date {
 		display: flex;
 		flex-wrap: wrap;

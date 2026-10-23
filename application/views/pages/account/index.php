@@ -1,4 +1,36 @@
-<main class="page">
+<?php
+$isAccountDashboard = !isset($_GET['bonus'])
+    && !isset($_GET['orders'])
+    && !isset($_GET['favorite'])
+    && !isset($_GET['notifications']);
+$accountUri = '/' . $lclang . '/' . $menu['all'][15]->uri;
+$accountSectionTitle = $page_name;
+$accountWheelEligible = !empty($client_info->id);
+
+if (isset($_GET['orders'])) {
+    $accountSectionTitle = $menu['all'][16]->title;
+} elseif (isset($_GET['favorite'])) {
+    $accountSectionTitle = $menu['all'][17]->title;
+} elseif (isset($_GET['bonus'])) {
+    $accountSectionTitle = $menu['all'][30]->title;
+}
+
+$giftCertificateUri = '';
+
+if (!empty($menu['top'])) {
+    foreach ($menu['top'] as $topItem) {
+        $topTitle = mb_strtolower(trim((string) ($topItem->title ?? '')), 'UTF-8');
+        if (
+            !empty($topItem->uri)
+            && (strpos($topTitle, 'сертифик') !== false || strpos($topTitle, 'certificat') !== false)
+        ) {
+            $giftCertificateUri = '/' . $lclang . '/' . $topItem->uri;
+            break;
+        }
+    }
+}
+?>
+<main class="page <?= $isAccountDashboard ? 'page--account-dashboard' : '' ?>">
     <section class="breacrums">
         <div class="breacrums__container _container">
             <ul class="breacrums__list">
@@ -11,10 +43,97 @@
             </ul>
         </div>
     </section>
-    <section class="account">
+    <section class="account <?= $isAccountDashboard ? 'account--dashboard' : '' ?>">
         <div class="account__container _container">
+            <?php if (!$isAccountDashboard) { ?>
+                <div class="account-mobile-heading">
+                    <a class="account-mobile-heading__back" href="<?= htmlspecialchars($accountUri, ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= $lclang === 'ro' ? 'Înapoi la contul meu' : 'Назад в личный кабинет' ?>">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6M9 12h12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </a>
+                    <h2 class="account-mobile-heading__title"><?= $accountSectionTitle ?></h2>
+                </div>
+            <?php } ?>
             <h2 class="account__title"><?= $page_name ?></h2>
-            <div class="account__content _tabs">
+            <div class="account__content _tabs <?= $isAccountDashboard ? 'account__content--dashboard' : '' ?>">
+                <section class="account-dashboard" aria-label="<?= $lclang === 'ro' ? 'Contul meu' : 'Мой кабинет' ?>">
+                    <h3 class="account-dashboard__title"><?= $lclang === 'ro' ? 'Contul meu' : 'Мой кабинет' ?></h3>
+                    <nav class="account-dashboard__links" aria-label="<?= $lclang === 'ro' ? 'Navigare cont' : 'Разделы кабинета' ?>">
+                        <a class="account-dashboard__link" href="<?= htmlspecialchars($accountUri, ENT_QUOTES, 'UTF-8') ?>" data-account-profile-open aria-controls="account-profile-dialog">
+                            <span class="account-dashboard__link-main">
+                                <span class="account-dashboard__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21c.7-4 3.2-6 7.5-6s6.8 2 7.5 6"/></svg></span>
+                                <span><?= $lclang === 'ro' ? 'Contul meu' : 'Личный кабинет' ?></span>
+                            </span>
+                            <img src="/app/img/icons/arrow-more.svg" alt="" aria-hidden="true">
+                        </a>
+                        <a class="account-dashboard__link" href="?orders">
+                            <span class="account-dashboard__link-main">
+                                <span class="account-dashboard__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="M4.5 7.8 12 12l7.5-4.2M12 12v9"/></svg></span>
+                                <span><?= $lclang === 'ro' ? 'Comenzile mele' : 'Мои покупки' ?></span>
+                            </span>
+                            <img src="/app/img/icons/arrow-more.svg" alt="" aria-hidden="true">
+                        </a>
+                        <a class="account-dashboard__link" href="?favorite">
+                            <span class="account-dashboard__link-main">
+                                <span class="account-dashboard__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.8 8.7c0 5.1-8.8 10.3-8.8 10.3S3.2 13.8 3.2 8.7A4.7 4.7 0 0 1 12 6.2a4.7 4.7 0 0 1 8.8 2.5Z"/></svg></span>
+                                <span><?= $lclang === 'ro' ? 'Favorite' : $menu['all'][17]->title ?></span>
+                            </span>
+                            <img src="/app/img/icons/arrow-more.svg" alt="" aria-hidden="true">
+                        </a>
+                        <?php if ($accountWheelEligible) { ?>
+                            <button
+                                class="account-dashboard__link account-dashboard__link--roulette"
+                                type="button"
+                                aria-haspopup="dialog"
+                                data-roulette-entry
+                                data-roulette-open
+                                hidden
+                            >
+                                <span class="account-dashboard__link-main">
+                                    <span class="account-dashboard__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg></span>
+                                    <span><?= $lclang === 'ro' ? 'Roata norocului' : 'Рулетка удачи' ?></span>
+                                </span>
+                                <img src="/app/img/icons/arrow-more.svg" alt="" aria-hidden="true">
+                            </button>
+                        <?php } ?>
+                        <?php if ($giftCertificateUri !== '') { ?>
+                            <a class="account-dashboard__link" href="<?= htmlspecialchars($giftCertificateUri, ENT_QUOTES, 'UTF-8') ?>">
+                                <span class="account-dashboard__link-main">
+                                    <span class="account-dashboard__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18M12 6v14M8.5 6c-1.7 0-3-1-3-2.2S6.5 2 8 2c2.2 0 4 4 4 4M15.5 6c1.7 0 3-1 3-2.2S17.5 2 16 2c-2.2 0-4 4-4 4"/></svg></span>
+                                    <span><?= $lclang === 'ro' ? 'Cumpără un card cadou' : 'Купить подарочную карту' ?></span>
+                                </span>
+                                <img src="/app/img/icons/arrow-more.svg" alt="" aria-hidden="true">
+                            </a>
+                        <?php } ?>
+                        <a class="account-dashboard__link" href="/<?= $lclang ?>/<?= $menu['all'][15]->uri ?>?bonus">
+                            <span class="account-dashboard__link-main">
+                                <span class="account-dashboard__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m12 7 1.5 3 3.3.5-2.4 2.3.6 3.2-3-1.6-3 1.6.6-3.2-2.4-2.3 3.3-.5z"/></svg></span>
+                                <span><?= $lclang === 'ro' ? 'Program de bonusuri' : 'Бонусная программа' ?></span>
+                            </span>
+                            <img src="/app/img/icons/arrow-more.svg" alt="" aria-hidden="true">
+                        </a>
+                        <?php if (!empty($telegram_support['enabled'])) : ?>
+                            <a
+                                class="account-dashboard__link account-dashboard__link--telegram"
+                                href="<?= htmlspecialchars((string) $telegram_support['url'], ENT_QUOTES, 'UTF-8') ?>"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <span class="account-dashboard__link-main">
+                                    <span class="account-dashboard__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m21 3-8.3 18-3.7-7L3 10z"/><path d="m9 14 4-4"/></svg></span>
+                                    <span><?= $lclang === 'ro' ? 'Suport pe Telegram' : 'Поддержка в Telegram' ?></span>
+                                </span>
+                                <img src="/app/img/icons/arrow-more.svg" alt="" aria-hidden="true">
+                            </a>
+                        <?php endif; ?>
+                        <a class="account-dashboard__link account-dashboard__link--logout" href="/<?= $lclang ?>/logout">
+                            <span class="account-dashboard__link-main">
+                                <span class="account-dashboard__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 4H5v16h5M14 8l4 4-4 4M7 12h11"/></svg></span>
+                                <span><?= $lclang === 'ro' ? 'Ieșire' : 'Выход' ?></span>
+                            </span>
+                            <img src="/app/img/icons/arrow-more.svg" alt="" aria-hidden="true">
+                        </a>
+                    </nav>
+                </section>
                 <div class="account__sidebar sidebar-account ">
                     <ul class="sidebar-account__list list-sidebar-account">
                         <li class="list-sidebar-account__item _tabs-item <?php if (!isset($_GET['bonus']) && !isset($_GET['orders']) && !isset($_GET['favorite'])) { ?>_active<?php } ?>" data-url="cabinet">
@@ -106,8 +225,12 @@
                         <p class="logout-sidebar-account__name"><?= LOGOUT ?></p>
                     </a>
                 </div>
-                <div class="account__main main-account">
+                <div class="account__main main-account" id="account-profile-dialog">
                     <div class="main-account__block _tabs-block <?php if (!isset($_GET['bonus']) && !isset($_GET['orders']) && !isset($_GET['favorite'])) { ?>_active<?php } ?>">
+                        <button class="account-profile-dialog__back" type="button" data-account-profile-close>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6M9 12h12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span><?= $lclang === 'ro' ? 'Înapoi' : 'Назад' ?></span>
+                        </button>
                         <div class="main-account__info info-main-account">
                             <div class="info-main-account__section">
                                 <h3 class="info-main-account__title"><?= $menu['all'][15]->title ?></h3>
@@ -153,7 +276,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="info-main-account__checks">
+                                    <div class="info-main-account__checks" id="account-subscriptions">
                                         <div class="info-main-account__check">
                                             <label class="checkbox">
                                                 <input class="checkbox__input" <?= $client_info->sms_subscribe == 1 ? 'checked' : '' ?>
@@ -174,6 +297,91 @@
                                     <button type="submit" class="info-main-account__btn"><?= CHANGE ?></button>
                                 </form>
                             </div>
+
+                            <?php
+                            $this->load->view(
+                                'partials/telegram-support',
+                                array('class' => 'vn-telegram-support--account')
+                            );
+                            ?>
+
+                            <div class="info-main-account__section account-privacy-request">
+                                <h3 class="info-main-account__title">
+                                    <?= $lclang === 'ro' ? 'Datele mele personale' : 'Мои персональные данные' ?>
+                                </h3>
+
+                                <p class="account-privacy-request__intro">
+                                    <?= $lclang === 'ro'
+                                        ? 'Puteți solicita o copie, corectarea, ștergerea sau limitarea prelucrării datelor. Vom examina cererea și vă vom răspunde, de regulă, în termen de o lună.'
+                                        : 'Вы можете запросить копию, исправление, удаление или ограничение обработки данных. Мы рассмотрим запрос и, как правило, ответим в течение одного месяца.' ?>
+                                </p>
+
+                                <?php if (!empty($privacy_request_success)) : ?>
+                                    <p class="account-privacy-request__status account-privacy-request__status--success" role="status">
+                                        <?= $lclang === 'ro'
+                                            ? 'Solicitarea a fost trimisă. Vă vom răspunde în termenul prevăzut.'
+                                            : 'Запрос отправлен. Мы ответим в установленный срок.' ?>
+                                    </p>
+                                <?php endif; ?>
+
+                                <?php if (!empty($privacy_request_error)) : ?>
+                                    <p class="account-privacy-request__status account-privacy-request__status--error" role="alert">
+                                        <?= htmlspecialchars($privacy_request_error, ENT_QUOTES, 'UTF-8') ?>
+                                    </p>
+                                <?php endif; ?>
+
+                                <form action="" method="post" class="info-main-account__body account-privacy-request__form">
+                                    <input type="hidden" name="personal_data_request" value="1">
+
+                                    <div class="info-main-account__row _item-input">
+                                        <label class="info-main-account__label" for="personal-data-request-type">
+                                            <?= $lclang === 'ro' ? 'Tipul solicitării' : 'Тип запроса' ?>
+                                        </label>
+                                        <div class="info-main-account__select">
+                                            <select
+                                                id="personal-data-request-type"
+                                                name="request_type"
+                                                class="form"
+                                                required
+                                            >
+                                                <option value="">
+                                                    <?= $lclang === 'ro' ? 'Alegeți' : 'Выберите' ?>
+                                                </option>
+                                                <option value="access"><?= $lclang === 'ro' ? 'Copie a datelor' : 'Получить копию данных' ?></option>
+                                                <option value="correction"><?= $lclang === 'ro' ? 'Corectarea datelor' : 'Исправить данные' ?></option>
+                                                <option value="erasure"><?= $lclang === 'ro' ? 'Ștergerea datelor' : 'Удалить данные' ?></option>
+                                                <option value="restriction"><?= $lclang === 'ro' ? 'Limitarea prelucrării' : 'Ограничить обработку' ?></option>
+                                                <option value="objection"><?= $lclang === 'ro' ? 'Opoziție față de marketing' : 'Возражение против маркетинга' ?></option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="info-main-account__row _item-input">
+                                        <label class="info-main-account__label" for="personal-data-request-details">
+                                            <?= $lclang === 'ro' ? 'Detalii' : 'Комментарий к запросу' ?>
+                                        </label>
+                                        <textarea
+                                            id="personal-data-request-details"
+                                            name="request_details"
+                                            class="info-main-account__input account-privacy-request__textarea"
+                                            maxlength="4000"
+                                            rows="4"
+                                            required
+                                        ></textarea>
+                                    </div>
+
+                                    <button type="submit" class="info-main-account__btn">
+                                        <?= $lclang === 'ro' ? 'Trimiteți solicitarea' : 'Отправить запрос' ?>
+                                    </button>
+                                </form>
+
+                                <p class="account-privacy-request__policy">
+                                    <a href="/<?= $lclang ?>/<?= htmlspecialchars($menu['all'][23]->uri, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">
+                                        <?= htmlspecialchars($menu['all'][23]->title, ENT_QUOTES, 'UTF-8') ?>
+                                    </a>
+                                </p>
+                            </div>
+
                             <?php if (!empty($pass_off)) { ?>
                                 <div class="info-main-account__section">
                                     <h3 class="info-main-account__title"><?= PASSWORD ?></h3>

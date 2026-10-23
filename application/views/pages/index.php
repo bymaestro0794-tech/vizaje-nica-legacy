@@ -12,9 +12,11 @@ $escapeMeta = static function ($value) {
 };
 
 $metaTitle =
-    !empty($page_title)
-        ? trim((string) $page_title)
-        : 'Vizaje-Nica';
+    !empty($meta_title)
+        ? trim((string) $meta_title)
+        : (!empty($page_title)
+            ? trim((string) $page_title)
+            : 'Vizaje-Nica');
 
 $metaDescription =
     !empty($description_for_layout)
@@ -105,6 +107,10 @@ if ($metaOgImage !== '') {
 ?>
 
     <meta charset="utf-8">
+
+    <?php if (!empty($meta_robots)) : ?>
+        <meta name="robots" content="<?= $escapeMeta($meta_robots) ?>">
+    <?php endif; ?>
 
     <title><?= $escapeMeta(
         $metaTitle
@@ -251,6 +257,24 @@ if ($metaOgImage !== '') {
     <?php endif; ?>
 
     <?php if (
+        !empty($breadcrumb_schema)
+        && is_array($breadcrumb_schema)
+    ) : ?>
+        <script type="application/ld+json">
+<?= json_encode(
+    $breadcrumb_schema,
+    JSON_UNESCAPED_UNICODE
+    | JSON_UNESCAPED_SLASHES
+    | JSON_PRETTY_PRINT
+    | JSON_HEX_TAG
+    | JSON_HEX_AMP
+    | JSON_HEX_APOS
+    | JSON_HEX_QUOT
+) ?>
+        </script>
+    <?php endif; ?>
+
+    <?php if (
     !empty($product_schema_graph)
     && is_array($product_schema_graph)
 ) : ?>
@@ -360,21 +384,35 @@ if (!function_exists('asset_url')) {
 /*
  * CSS, необходимый на каждой странице.
  */
-$globalCss = [
+$criticalCss = [
     'app/css/style/01-base.css',
-    'app/css/style/02-overlays-auth-map.css',
+    'app/css/style/31-product-card-options.css',
     'app/css/style/02-cookie.css',
     'app/css/style/03-header.css',
+    'static/assets/global/plugins/simple-line-icons/simple-line-icons.min.css',
     'app/css/style/04-footer.css',
     'app/css/style/05-breadcrumbs.css',
     'app/css/style/16-legacy-overrides.css',
     'app/css/style/17-interactions.css',
     'app/css/style/18-loader.css',
+    'app/css/style/37-seasonal-themes.css',
+];
+
+/*
+ * Стили скрытых drawer/modal/widget-компонентов не должны блокировать
+ * первый рендер. Они всё равно загружаются до взаимодействия пользователя.
+ */
+$deferredCss = [
+    'app/css/style/02-overlays-auth-map.css',
     'app/css/style/23-notifications.css',
     'app/css/style/24-cart-drawer.css',
     'app/css/style/25-auth-drawer.css',
     'app/css/style/26-cookie-consent-panel.css',
     'app/css/style/27-quick-view.css',
+    'app/css/style/32-welcome-offer.css',
+    'app/css/style/33-chat-widget.css',
+    'app/css/style/34-roulette-wheel.css',
+    'app/css/style/35-telegram-support.css',
     'app/css/style/site-feedback.css',
 ];
 
@@ -384,10 +422,21 @@ $globalCss = [
 $pageCss = [];
 
 $currentView = trim((string) ($inner_view ?? ''), '/');
+$rouletteExcludedViews = array(
+    'pages/cart/checkout',
+    'pages/cart/success',
+    'pages/cart/error',
+    'pages/account/login',
+    'pages/account/registration',
+    'pages/account/reset_password',
+);
+$rouletteShouldRender = !empty($client_info->id)
+    && !in_array($currentView, $rouletteExcludedViews, true);
 
 switch ($currentView) {
     case 'pages/main/index':
-        $pageCss[] = '/app/css/pages/home/home.css';
+	$pageCss[] = '/app/css/pages/home/home.css?v=20261022-catalog-cards';
+	$pageCss[] = '/app/css/pages/home/catalog-slider-card.css?v=20261022-catalog-cards';
         break;
     case 'pages/main/contacts':
         $pageCss[] = 'app/css/style/22-contactpage.css';
@@ -396,6 +445,9 @@ switch ($currentView) {
 	    $pageCss[] = 'app/css/style/19-articles.css';
 	    break;
     case 'pages/articles/items':
+	    $pageCss[] = 'app/css/style/19-articles.css';
+	    break;
+	case 'pages/articles/blog_item':
 	    $pageCss[] = 'app/css/style/19-articles.css';
 	    break;
 
@@ -412,6 +464,7 @@ switch ($currentView) {
     case 'pages/catalog/item':
         $pageCss[] = '/app/css/pages/home/product-card.css';
         $pageCss[] = '/app/css/pages/home/products.css';
+        $pageCss[] = '/app/css/pages/home/product-tabs.css';
         $pageCss[] = 'app/css/style/07-product-page.css';
         break;
     
@@ -439,12 +492,16 @@ switch ($currentView) {
         break;
 
     case 'pages/catalog/index':
+    case 'pages/catalog/mobile_categories':
     case 'pages/catalog/category':
     case 'pages/catalog/best_sellers':
     case 'pages/catalog/hits':
     case 'pages/catalog/new_products':
     case 'pages/catalog/search':
     case 'pages/catalog/brand':
+        if ($currentView === 'pages/catalog/best_sellers') {
+            $pageCss[] = '/app/css/pages/catalog/discount-cards.css?v=20261022-discount-cards';
+        }
         $pageCss[] = 'app/css/style/05-home.css';
         $pageCss[] = 'app/css/style/06-catalog.css';
         $pageCss[] = 'app/css/style/15-nouislider.css';
@@ -462,6 +519,7 @@ switch ($currentView) {
     case 'pages/main/promo_rules':
         $pageCss[] = 'app/css/style/30-promo-rules.css';
         break;
+
 }
 
 if (strpos($currentView, 'pages/account/') === 0) {
@@ -477,22 +535,31 @@ if (strpos($currentView, 'pages/offers/') === 0) {
     $pageCss[] = 'app/css/style/19-articles.css';
 }
 
+if (!empty($is_privacy_policy_page)) {
+    $pageCss[] = 'app/css/style/36-privacy-policy.css';
+}
+
 ?>
-<?php if ($currentView === 'pages/cart/checkout') : ?>
-
-	<link
-		rel="stylesheet"
-		href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css"
-	>
-
-<?php endif; ?>
-
-<!-- Глобальные стили -->
-<?php foreach ($globalCss as $cssFile) { ?>
+<!-- Критические глобальные стили -->
+<?php foreach ($criticalCss as $cssFile) { ?>
     <link
         rel="stylesheet"
         href="<?= asset_url($cssFile) ?>"
     >
+<?php } ?>
+
+<!-- Некритические стили drawer/modal/widget-компонентов -->
+<?php foreach ($deferredCss as $cssFile) { ?>
+    <?php $cssUrl = asset_url($cssFile); ?>
+    <link
+        rel="stylesheet"
+        href="<?= $cssUrl ?>"
+        media="print"
+        onload="this.onload=null;this.media='all'"
+    >
+    <noscript>
+        <link rel="stylesheet" href="<?= $cssUrl ?>">
+    </noscript>
 <?php } ?>
 
 <!-- Стили текущей страницы -->
@@ -557,8 +624,51 @@ if (strpos($currentView, 'pages/offers/') === 0) {
 <?php endif; ?>
 <?php if (!empty($consent['functional'])) : ?>
 
+    <!-- Jivo temporarily disabled; kept here for a quick rollback.
+    <script src="//code.jivo.ru/widget/NdUaPxVHnN" async></script>
+    -->
+
+    <?php
+    $chatIsRomanian = isset($lclang) && strtolower((string) $lclang) === 'ro';
+    $chatPrivacyUri = isset($menu['all'][23]->uri)
+        ? trim((string) $menu['all'][23]->uri, '/')
+        : '';
+    $chatPrivacyUrl = $chatPrivacyUri !== ''
+        ? rtrim((string) ($site_url ?? ''), '/')
+            . '/'
+            . trim((string) $lclang, '/')
+            . '/'
+            . $chatPrivacyUri
+        : '';
+    $chatTitle = $chatIsRomanian
+        ? 'Suport Vizaje-Nica'
+        : 'Поддержка Vizaje-Nica';
+    $chatAgent = $chatIsRomanian ? 'Suport' : 'Поддержка';
+    $chatGreeting = $chatIsRomanian
+        ? 'Bună! Cu ce vă putem ajuta?'
+        : 'Здравствуйте! Чем мы можем помочь?';
+    $chatSubtitle = $chatIsRomanian
+        ? 'Echipa noastră vă poate ajuta'
+        : 'Поможем с товарами и заказом';
+    $chatQuickReplies = $chatIsRomanian
+        ? 'Disponibilitatea produselor,Termenele de livrare,Cum plasez o comandă'
+        : 'Наличие товара,Сроки доставки,Как оформить заказ';
+    $chatPrivacyText = $chatIsRomanian
+        ? 'Politica de confidențialitate'
+        : 'Политикой конфиденциальности';
+    ?>
     <script
-        src="//code.jivo.ru/widget/NdUaPxVHnN"
+        src="https://chat.vizaje-nica.com/widget.js"
+        data-api="https://chat.vizaje-nica.com"
+        data-theme="light"
+        data-title="<?= $escapeMeta($chatTitle) ?>"
+        data-agent="<?= $escapeMeta($chatAgent) ?>"
+        data-lang="<?= $chatIsRomanian ? 'ro-RO' : 'ru-RU' ?>"
+        data-greeting="<?= $escapeMeta($chatGreeting) ?>"
+        data-subtitle="<?= $escapeMeta($chatSubtitle) ?>"
+        data-quick-replies="<?= $escapeMeta($chatQuickReplies) ?>"
+        data-privacy-url="<?= $escapeMeta($chatPrivacyUrl) ?>"
+        data-privacy-text="<?= $escapeMeta($chatPrivacyText) ?>"
         async
     ></script>
 
@@ -600,18 +710,24 @@ if (strpos($currentView, 'pages/offers/') === 0) {
     
 <?php endif; ?>
 <!-- inner_view: <?= htmlspecialchars($inner_view ?? '') ?> -->
+<?php if (!empty($consent['analytics'])) : ?>
+    <script src="https://analytics.ahrefs.com/analytics.js" data-key="nvlPHNwm72VusIwFpEwPKA" async></script>
+<?php endif; ?>
  <script
     src="<?= asset_url('app/js/components/loader.js') ?>"
     defer
 ></script>
 </head>
 
-<body class="_webp <?= !empty($body_class) ? $body_class : '' ?>">
+<body
+    class="_webp <?= !empty($body_class) ? $body_class : '' ?>"
+    data-site-theme="<?= htmlspecialchars((string) ($site_theme_key ?? 'default'), ENT_QUOTES, 'UTF-8') ?>"
+>
 
         <!-- App Loader -->
     <div class="app-loader" id="appLoader">
         <div class="app-loader__logo">
-            <img class="app-loader__img" src="/app/img/icons-2/logo-2.svg" alt="Vizaje-Nica">
+            <img class="app-loader__img" src="<?= ($site_theme_key ?? 'default') === 'halloween' ? '/app/img/hollow.svg' : '/app/img/icons-2/logo-2.svg' ?>" alt="Vizaje-Nica">
         </div>
 
         <div class="app-loader__line"></div>
@@ -638,6 +754,9 @@ if (strpos($currentView, 'pages/offers/') === 0) {
         } else {
             $this->load->view('/layouts/pages/header');
         } ?>
+        <?php if (!empty($welcome_offer_timer)) { ?>
+            <?php $this->load->view('layouts/pages/welcome-offer-countdown'); ?>
+        <?php } ?>
         <?php $this->load->view($inner_view); ?>
         <?php $this->load->view('/layouts/pages/footer'); ?>
     </div>
@@ -658,6 +777,12 @@ if (strpos($currentView, 'pages/offers/') === 0) {
         <?php $this->load->view('/layouts/pages/auth/drawer'); ?>
 
     <?php } ?>
+    <?php if (!empty($welcome_offer_prompt_enabled) && empty($client_info)) { ?>
+        <?php $this->load->view('layouts/pages/welcome-offer-modal'); ?>
+    <?php } ?>
+    <?php if ($rouletteShouldRender) { ?>
+        <?php $this->load->view('layouts/pages/roulette-modal'); ?>
+    <?php } ?>
     <div class="select_variation d_none">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M9 16.1698L4.83 11.9998L3.41 13.4098L9 18.9998L21 6.99984L19.59 5.58984L9 16.1698Z" fill="red" />
@@ -673,13 +798,17 @@ if (strpos($currentView, 'pages/offers/') === 0) {
         <div class="cookie_on" data-cookie-banner>
             <div class="wrapper">
                 <div class="cookie_content">
-                    <img class="cookie_icon" src="/app/img/icons-2/cookie/cookie-bite-solid-svgrepo-com.svg" alt="cookie_icon">
-                    <div class="cookie_text"><?= COOKIE_TEXT ?>
+                    <div class="cookie_text">
+                        <strong class="cookie_text__title"><?= $lclang === 'ro' ? 'Confidențialitatea ta contează' : 'Мы ценим вашу конфиденциальность' ?></strong>
+                        <span class="cookie_text__description"><?= COOKIE_TEXT ?>
                         <a href="/<?= $lclang ?>/<?= $menu['all'][23]->uri ?>"><?= $menu['all'][23]->title ?></a>
+                        </span>
                     </div>
                     <div class="cookie_actions">
-                        <button type="button" class="cookie_actions__settings" data-cookie-action="settings"><?= COOKIE_SETTINGS ?></button>
                         <button type="button" class="cookie_actions__button cookie_actions__button--secondary" data-cookie-action="reject"><?= COOKIE_REJECT ?></button>
+                        <button type="button" class="cookie_actions__settings" data-cookie-action="settings" aria-label="<?= COOKIE_SETTINGS ?>" title="<?= COOKIE_SETTINGS ?>">
+                            <span class="icon-equalizer" aria-hidden="true"></span>
+                        </button>
                         <button type="button" class="cookie_actions__button cookie_actions__button--primary" data-cookie-action="accept"><?= COOKIE_OK ?></button>
                     </div>
                 </div>
@@ -693,9 +822,9 @@ if (strpos($currentView, 'pages/offers/') === 0) {
         src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"
     ></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
-    <script src="/app/js/vendors.min.js"></script> 
-    <script src="/app/js/components/brands.js?v=1" defer></script>
-    <script src="/app/js/analytics/ga4-ecommerce.js"></script>
+    <script src="/app/js/vendors.min.js"></script>
+    <script src="/app/js/components/brands.js?v=2" defer></script>
+    <script src="/app/js/analytics/ga4-ecommerce.js" defer></script>
     <script>
         window.VN_ANALYTICS_CONSENT =
             <?= !empty($consent['analytics']) ? 'true' : 'false' ?>;
@@ -707,21 +836,26 @@ if (strpos($currentView, 'pages/offers/') === 0) {
         src="<?= asset_url('app/js/components/site-feedback.js') ?>"
         defer
     ></script> -->
-    <script src="/app/js/components/auth-drawer.js" defer></script>
+    <script src="/app/js/components/auth-drawer.js?v=20261019-bonus-register" defer></script>
+    <script src="/app/js/components/welcome-offer.js" defer></script>
+    <script src="<?= asset_url('app/js/components/header-promo-slider.js') ?>" defer></script>
+    <?php if ($rouletteShouldRender) { ?><script src="<?= asset_url('app/js/components/roulette-wheel.js') ?>" defer></script><?php } ?>
     <!-- APP JS START HERE -->
-     <script type="module" src="/app/js/pages/home/home.js"></script>
-    <script src="/app/js/app/01-dynamic-adapt.js"></script>
-    <script src="/app/js/app/02-sliders.js"></script>
-    <script src="/app/js/app/03-header-menu.js"></script>
-    <script src="/app/js/app/04-browser-detection.js"></script>
-    <script src="/app/js/app/05-ui-core.js"></script>
-    <script src="/app/js/app/06-forms.js"></script>
-    <script src="/app/js/app/07-selects.js"></script>
-    <script src="/app/js/app/08-inputs.js"></script>
-    <script src="/app/js/app/09-quantity-range.js"></script>
-    <script src="/app/js/app/10-scroll-navigation.js"></script>
-    <script src="/app/js/app/11-catalog-filters.js"></script>
-    
+     <script type="module" src="/app/js/pages/home/home.js?v=20261013-product-hover-gallery"></script>
+     <script src="/app/js/app/01-dynamic-adapt.js" defer></script>
+     <script src="/app/js/app/02-sliders.js" defer></script>
+     <script src="<?= asset_url('app/js/app/03-header-menu.js') ?>" defer></script>
+     <script src="/app/js/app/04-browser-detection.js" defer></script>
+     <script src="/app/js/app/05-ui-core.js?v=20261007-account-profile" defer></script>
+     <script src="/app/js/app/06-forms.js" defer></script>
+     <script src="/app/js/app/07-selects.js" defer></script>
+     <script src="/app/js/app/08-inputs.js" defer></script>
+     <script src="/app/js/app/09-quantity-range.js" defer></script>
+     <script src="/app/js/app/10-scroll-navigation.js" defer></script>
+     <script src="/app/js/app/11-catalog-filters.js" defer></script>
+     <?php if (in_array($currentView, array('pages/catalog/category', 'pages/catalog/brand', 'pages/catalog/best_sellers'), true)) { ?><script src="/app/js/app/12-category-filter-drawer.js?v=20261009-1" defer></script><?php } ?>
+    <?php if ($currentView === 'pages/catalog/mobile_categories') { ?><script src="<?= asset_url('app/js/app/13-collections-carousel.js') ?>" defer></script><?php } ?>
+
     <!-- APP JS END HERE -->
     <script
         src="<?= asset_url('app/js/components/cart-drawer.js') ?>"
@@ -740,22 +874,10 @@ if (strpos($currentView, 'pages/offers/') === 0) {
         defer
     ></script>
 <?php if ($currentView === 'pages/cart/checkout') : ?>
-
-	<script
-		src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"
-	></script>
-
-	<script
-		src="<?= asset_url(
-			'app/js/components/checkout-pickup.js'
-		) ?>"
-		defer
-	></script>
-
 	<script
         type="module"
 		src="<?= asset_url(
-			'app/js/components/checkout/checkout.js'
+			'app/js/components/checkout/checkout.js?v=20261022-phone'
 		) ?>"
 		defer
 	></script>
@@ -766,18 +888,22 @@ if (strpos($currentView, 'pages/offers/') === 0) {
         src="<?= asset_url('app/js/components/product.js') ?>"
         defer
     ></script>
+    <script
+        src="<?= asset_url('app/js/components/catalog-hover-gallery.js?v=20261013') ?>"
+        defer
+    ></script>
     <!-- MAIN JS START HERE -->
-    <script src="/app/js/main/01-catalog.js"></script>
-    <script src="/app/js/main/02-subscription.js"></script>
-    <script src="/app/js/main/03-wishlist.js"></script>
+    <script src="/app/js/main/01-catalog.js" defer></script>
+    <script src="/app/js/main/02-subscription.js" defer></script>
+    <script src="/app/js/main/03-wishlist.js" defer></script>
     <script
         src="<?= asset_url('app/js/main/04-cart.js') ?>"
         defer
     ></script> 
-    <script src="/app/js/main/05-checkout.js"></script>
-    <script src="/app/js/main/06-auth.js"></script>
+    <script src="/app/js/main/05-checkout.js" defer></script>
+    <script src="/app/js/main/06-auth.js" defer></script>
     
-    <script src="<?= asset_url('app/js/main/07-cookies.js?v=2') ?>"></script>
+    <script src="<?= asset_url('app/js/main/07-cookies.js?v=3') ?>" defer></script>
     <script
     src="<?= asset_url(
         'app/js/main/08-recently-viewed.js'
@@ -785,7 +911,7 @@ if (strpos($currentView, 'pages/offers/') === 0) {
     defer
 ></script>
     <!-- MAIN JS END HERE -->
-    <script src="/app/js/jquery.countdown.js"></script>
+    <script src="/app/js/jquery.countdown.js" defer></script>
 <?php if ($currentView === 'pages/main/stores') : ?>
 
 	<script
@@ -810,7 +936,12 @@ if (strpos($currentView, 'pages/offers/') === 0) {
    
     <script
         src="<?= asset_url('app/js/components/header.js') ?>"
+        defer
     ></script>
+
+    <?php if ($currentView === 'pages/articles/blog_item') { ?>
+        <script src="<?= asset_url('app/js/pages/article-detail.js') ?>" defer></script>
+    <?php } ?>
     
 
 

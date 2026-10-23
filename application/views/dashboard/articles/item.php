@@ -67,6 +67,16 @@
                                                    class="form-control" style="width: 140px;" required>
                                         </td>
                                     </tr>
+                                    <tr>
+                                        <td width="200">Блоговая статья</td>
+                                        <td>
+                                            <label class="mt-checkbox mt-checkbox-outline">
+                                                <input type="checkbox" name="isBlog" value="1" <?= !empty($item->isBlog) ? 'checked' : '' ?>>
+                                                Публиковать в блоге отдельно от новостей
+                                                <span></span>
+                                            </label>
+                                        </td>
+                                    </tr>
                                     <? foreach (language(true) as $lang) { ?>
                                         <tr>
                                             <td width="200"><?= lang('Title') ?> <?= strtoupper($lang) ?> *</td>
@@ -77,20 +87,56 @@
                                             </td>
                                         </tr>
                                     <? } ?>
-<!--                                    <?/* foreach (language(true) as $lang) { */?>
+                                    <? foreach (language(true) as $lang) { ?>
                                         <tr>
-                                            <td width="200"><?/*= lang('Description') */?> <?/*= strtoupper($lang) */?></td>
+                                            <td width="200"><?= lang('Description') ?> <?= strtoupper($lang) ?></td>
                                             <td>
-                                                <textarea name="desc<?/*= strtoupper($lang) */?>" cols="30" rows="3"
-                                                          class="form-control"><?/*= $item->{'desc' . strtoupper($lang)} */?></textarea>
+                                                <textarea name="desc<?= strtoupper($lang) ?>" cols="30" rows="3"
+                                                          class="form-control"><?= htmlspecialchars($item->{'desc' . strtoupper($lang)} ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
                                             </td>
                                         </tr>
-                                    --><?/* } */?>
+                                    <? } ?>
+                                    <? foreach (language(true) as $lang) { ?>
+                                        <tr>
+                                            <td width="200">Теги <?= strtoupper($lang) ?></td>
+                                            <td>
+                                                <input type="text" name="tags<?= strtoupper($lang) ?>"
+                                                       class="form-control"
+                                                       value="<?= htmlspecialchars($item->{'tags' . strtoupper($lang)} ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                                                       placeholder="уход, волосы, советы">
+                                            </td>
+                                        </tr>
+                                    <? } ?>
+                                    <tr>
+                                        <td width="200">Товары в тексте</td>
+                                        <td>
+                                            <div class="article-product-picker"
+                                                 data-endpoint="<?= $parent_url ?>product_lookup">
+                                                <div style="display:flex;gap:8px;max-width:760px;">
+                                                    <input type="search" class="form-control" data-product-search
+                                                           placeholder="Найти товар по названию, артикулу или ID">
+                                                    <select class="form-control" data-product-language style="width:100px;">
+                                                        <? foreach (language(true) as $lang) { ?>
+                                                            <option value="<?= strtoupper($lang) ?>"><?= strtoupper($lang) ?></option>
+                                                        <? } ?>
+                                                    </select>
+                                                </div>
+                                                <div class="article-product-picker__results" data-product-results
+                                                     style="max-width:760px;margin-top:6px;"></div>
+                                                <div style="margin-top:8px;">
+                                                    <button type="button" class="btn blue" data-insert-product disabled>
+                                                        Вставить выбранный товар в текст
+                                                    </button>
+                                                </div>
+                                                <p class="help-block">Товар вставится в позицию курсора в выбранном языковом редакторе.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
                                     <? foreach (language(true) as $lang) { ?>
                                         <tr>
                                             <td width="200"><?= lang('Text') ?> <?= strtoupper($lang) ?></td>
                                             <td>
-                                                <textarea name="text<?= strtoupper($lang) ?>" cols="30" rows="3"
+                                                <textarea id="text<?= strtoupper($lang) ?>" name="text<?= strtoupper($lang) ?>" cols="30" rows="3"
                                                           class="form-control ckeditor"><?= $item->{'text' . strtoupper($lang)} ?></textarea>
                                             </td>
                                         </tr>
@@ -195,3 +241,4 @@
         </div>
     </div>
 </div>
+<script src="/app/js/dashboard/articles-products.js?v=20261009-1"></script>

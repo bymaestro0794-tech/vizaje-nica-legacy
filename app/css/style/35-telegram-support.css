@@ -1,0 +1,83 @@
+.vn-telegram-support {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 100%;
+    color: #111;
+    text-decoration: none;
+    transition: opacity .2s ease;
+}
+
+.vn-telegram-support:hover,
+.vn-telegram-support:focus-visible {
+    opacity: .68;
+}
+
+.vn-telegram-support__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #2aabee;
+    color: #fff;
+}
+
+.vn-telegram-support__icon svg {
+    width: 17px;
+    height: 17px;
+}
+
+.vn-telegram-support__body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.25;
+}
+
+.vn-telegram-support__label {
+    font-size: 14px;
+}
+
+.vn-telegram-support__handle {
+    margin-top: 2px;
+    color: #707070;
+    font-size: 12px;
+}
+
+.vn-telegram-support__arrow {
+    margin-left: auto;
+    color: #777;
+    font-size: 18px;
+}
+
+.vn-telegram-support--footer {
+    margin-top: 18px;
+}
+
+.vn-telegram-support--contact {
+    margin-top: 28px;
+    padding: 14px 16px;
+    border: 1px solid #e1e1e1;
+    border-radius: 10px;
+}
+
+.vn-telegram-support--account,
+.vn-telegram-support--checkout,
+.vn-telegram-support--error {
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid #e4e4e4;
+}
+
+@media (max-width: 767px) {
+    .vn-telegram-support--contact {
+        margin-top: 20px;
+    }
+
+    .vn-telegram-support__label {
+        font-size: 13px;
+    }
+}

@@ -5,6 +5,21 @@ class Site_analytics_model extends CI_Model
 {
     public function insert_event(array $event)
     {
+        if (isset($event['event_name'], $event['order_id']) && $event['event_name'] === 'purchase' && $event['order_id']) {
+            $existingPurchase = $this->db
+                ->select('id')
+                ->from('analytics_events')
+                ->where('event_name', 'purchase')
+                ->where('order_id', $event['order_id'])
+                ->limit(1)
+                ->get()
+                ->row_array();
+
+            if ($existingPurchase) {
+                return true;
+            }
+        }
+
         return $this->db->insert('analytics_events', $event);
     }
 
@@ -12,25 +27,30 @@ class Site_analytics_model extends CI_Model
     {
         $groupBy = $groupBy === 'day' ? 'day' : 'month';
         $options = is_array($options) ? $options : array();
-        $pageSize = 20;
-        $topPagesPage = $this->normalise_page(isset($options['top_pages_page']) ? $options['top_pages_page'] : 1);
+        $pageSize = 15;
+        $topPagesPage = 1;
         $landingPagesPage = $this->normalise_page(isset($options['landing_pages_page']) ? $options['landing_pages_page'] : 1);
 
-        $topPages = $this->get_top_pages($fromDateTime, $toDateTime, $trafficSource, $topPagesPage, $pageSize);
-        $landingPages = $this->get_landing_pages($fromDateTime, $toDateTime, $trafficSource, $landingPagesPage, $pageSize);
+        $topPages = $trafficSource !== null
+            ? $this->get_top_pages($fromDateTime, $toDateTime, $trafficSource, $topPagesPage, $pageSize)
+            : array(
+                'rows' => array(),
+                'pagination' => $this->pagination_meta($topPagesPage, $pageSize, 0),
+            );
 
         return array(
-            'summary' => $this->get_summary($fromDateTime, $toDateTime, $trafficSource),
-            'checkout' => $this->get_checkout($fromDateTime, $toDateTime, $trafficSource),
-            'funnel' => $this->get_funnel($fromDateTime, $toDateTime, $trafficSource),
-            'sources' => $this->get_sources($fromDateTime, $toDateTime, $trafficSource),
-            'devices' => $this->get_devices($fromDateTime, $toDateTime, $trafficSource),
+            'summary' => $trafficSource === null ? $this->get_summary($fromDateTime, $toDateTime) : array(),
+            'periods' => $trafficSource === null ? $this->get_periods($fromDateTime, $toDateTime, $groupBy) : array(),
+            'sources' => $trafficSource === null ? $this->get_sources($fromDateTime, $toDateTime) : array(),
+            'devices' => $trafficSource === null ? $this->get_devices($fromDateTime, $toDateTime) : array(),
             'top_pages' => $topPages['rows'],
             'top_pages_pagination' => $topPages['pagination'],
-            'landing_pages' => $landingPages['rows'],
-            'landing_pages_pagination' => $landingPages['pagination'],
-            'periods' => $this->get_periods($fromDateTime, $toDateTime, $groupBy, $trafficSource),
         );
+    }
+
+    public function get_summary_for_range($fromDateTime, $toDateTime, $trafficSource = null)
+    {
+        return $this->get_summary($fromDateTime, $toDateTime, $trafficSource);
     }
 
     private function normalise_page($page)
@@ -155,6 +175,7 @@ class Site_analytics_model extends CI_Model
 
         $params = array($fromDateTime, $toDateTime);
         $sql .= $this->source_condition($trafficSource, $params);
+        $sql .= $this->purchase_dedupe_condition($fromDateTime, $toDateTime, $params);
         $sql .= " GROUP BY device_type
             ORDER BY sessions DESC, purchases DESC, device_type ASC";
 
@@ -240,6 +261,7 @@ class Site_analytics_model extends CI_Model
 
         $params = array($fromDateTime, $toDateTime);
         $sql .= $this->source_condition($trafficSource, $params);
+        $sql .= $this->purchase_dedupe_condition($fromDateTime, $toDateTime, $params);
         $sql .= " GROUP BY traffic_source, traffic_medium, traffic_campaign
             ORDER BY purchases DESC, sessions DESC, visitors DESC, traffic_source ASC";
 
@@ -262,6 +284,7 @@ class Site_analytics_model extends CI_Model
 
         $params = array($fromDateTime, $toDateTime);
         $sql .= $this->source_condition($trafficSource, $params);
+        $sql .= $this->purchase_dedupe_condition($fromDateTime, $toDateTime, $params);
         $summary = $this->db->query($sql, $params)->row_array();
         $summary = is_array($summary) ? $summary : array();
         $sessions = (int) ($summary['sessions'] ?? 0);
@@ -325,6 +348,7 @@ class Site_analytics_model extends CI_Model
 
         $params = array($fromDateTime, $toDateTime);
         $sql .= $this->source_condition($trafficSource, $params);
+        $sql .= $this->purchase_dedupe_condition($fromDateTime, $toDateTime, $params);
         $sql .= " GROUP BY period_key
             ORDER BY period_key DESC";
 
@@ -343,5 +367,20 @@ class Site_analytics_model extends CI_Model
 
         $params[] = $trafficSource;
         return " AND {$column} = ?";
+    }
+
+    private function purchase_dedupe_condition($fromDateTime, $toDateTime, array &$params)
+    {
+        $params[] = $fromDateTime;
+        $params[] = $toDateTime;
+
+        return " AND (event_name <> 'purchase' OR id = (
+            SELECT MIN(duplicate_purchase.id)
+            FROM analytics_events AS duplicate_purchase
+            WHERE duplicate_purchase.event_name = 'purchase'
+              AND duplicate_purchase.order_id = analytics_events.order_id
+              AND duplicate_purchase.created_at >= ?
+              AND duplicate_purchase.created_at < ?
+        ))";
     }
 }

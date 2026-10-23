@@ -21,7 +21,7 @@ body {
 	min-width: 320px;
 	color: var(--b2b-text);
 	background: #ffff;
-	font-family: 'Inter', Arial, sans-serif;
+	font-family: 'Geist';
 	-webkit-font-smoothing: antialiased;
 }
 
@@ -525,7 +525,7 @@ button {
 	align-items: baseline;
 
 	color: #050505;
-	font-family: 'Arial Narrow', 'Roboto Condensed', Impact, sans-serif;
+	font-family: 'Geist';
 	font-size: clamp(62px, 6vw, 100px);
 	font-weight: 800;
 	letter-spacing: -0.075em;

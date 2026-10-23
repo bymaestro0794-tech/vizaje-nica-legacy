@@ -117,13 +117,14 @@
                                             <tr>
                                                 <td width="200"><?= lang('Youtube') ?></td>
                                                 <td>
-                                                    <input type="text" name="youtube"  class="form-control" >
+                                                    <input type="url" name="youtube" class="form-control" placeholder="https://youtu.be/XXXXXXXXXXX">
+                                                    <p class="help-block">При нажатии на кнопку воспроизведения ролик откроется поверх слайда.</p>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td width="200"><?= lang('Photo') ?> *</td>
                                                 <td>
-                                                    <input type="file" name="img" id="file" class="form-control" required>
+                                                    <input type="file" name="img" id="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.svg,.webp,.avif,.mp4,video/mp4" required>
                                                     <div class="note note-warning"
                                                          style="margin-bottom: 0px; margin-top: 10px;">
                                                         <p>
@@ -135,7 +136,7 @@
                                             <tr>
                                                 <td width="200"><?= lang('Photo') ?> Mob *</td>
                                                 <td>
-                                                    <input type="file" name="imgMob" id="file" class="form-control" required>
+                                                    <input type="file" name="imgMob" id="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.svg,.webp,.avif,.mp4,video/mp4" required>
                                                     <div class="note note-warning"
                                                          style="margin-bottom: 0px; margin-top: 10px;">
                                                         <p>

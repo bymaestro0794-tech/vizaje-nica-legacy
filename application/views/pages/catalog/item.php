@@ -81,6 +81,26 @@ if (empty($productImages)) {
 	);
 }
 
+$productVideoMedia = null;
+$productYoutubeId = !empty($product->youtube_video_id)
+	? extract_youtube_video_id(
+		'https://youtu.be/' . trim((string) $product->youtube_video_id)
+	)
+	: false;
+
+if ($productYoutubeId !== false) {
+	$productVideoMedia = array(
+		'type' => 'youtube',
+		'videoId' => $productYoutubeId,
+		'src' => $productImages[0]['src'],
+		'alt' => $lclang === 'ro'
+			? 'Videoclip despre ' . $productTitle
+			: 'Видео о товаре ' . $productTitle,
+	);
+
+	$productImages[] = $productVideoMedia;
+}
+
 $productHasRealImage =
 	!empty($product->img);
 
@@ -450,6 +470,10 @@ if (!empty($initialVariation)) {
     }
 }
 
+if (!empty($productVideoMedia) && !empty($initialVariation['images'])) {
+	$initialImages[] = $productVideoMedia;
+}
+
 /*
 |--------------------------------------------------------------------------
 | Variation groups
@@ -470,9 +494,18 @@ foreach ($variationsData as $variation) {
 	}
 }
 
+$availableColorVariations = array_values(
+	array_filter(
+		$colorVariations,
+		static function ($variation) {
+			return !empty($variation['available']);
+		}
+	)
+);
+
 $initialColorVariation = null;
 
-foreach ($colorVariations as $variation) {
+foreach ($availableColorVariations as $variation) {
 	if (
 		(int) $variation['id']
 		=== (int) $initialVariationId
@@ -485,10 +518,10 @@ foreach ($colorVariations as $variation) {
 
 if (
 	empty($initialColorVariation)
-	&& !empty($colorVariations)
+	&& !empty($availableColorVariations)
 ) {
 	$initialColorVariation =
-		reset($colorVariations);
+		reset($availableColorVariations);
 }
 
 /*
@@ -503,6 +536,18 @@ $productInStock = $isB2B
 
 if (!empty($firstAvailableVariation)) {
 	$productInStock = true;
+}
+
+$hasProductBadge =
+	!empty($initialDiscountPrice)
+	|| !empty($product->is_new)
+	|| !empty($product->best_selling);
+
+foreach ($variationsData as $variation) {
+	if (!empty($variation['discountPrice'])) {
+		$hasProductBadge = true;
+		break;
+	}
 }
 
 /*
@@ -558,6 +603,8 @@ $productPageData = array(
 			: '',
 
 		'images' => $productImages,
+
+		'videoMedia' => $productVideoMedia,
 	),
 
 	'initial' => array(
@@ -675,6 +722,66 @@ $buildVariantSwatch = static function ($colors) {
 		. ')';
 };
 
+$productPageColorSwatches = array();
+foreach ($availableColorVariations as $variation) {
+	$variationSwatch = $buildVariantSwatch(
+		$variation['colors'] ?? array()
+	);
+
+	if ($variationSwatch === '') {
+		continue;
+	}
+
+	$variationLabel = !empty($variation['color'])
+		? (string) $variation['color']
+		: (string) ($variation['title'] ?? '');
+
+	$productPageColorSwatches[] = array(
+		'variationId' => (int) $variation['id'],
+		'label' => trim($variationLabel),
+		'background' => $variationSwatch,
+		'isSelected' => (int) $variation['id'] === (int) $initialVariationId,
+	);
+}
+
+$productPageColorSwatchCount = count($productPageColorSwatches);
+$productPageAvailableColorCount = count($availableColorVariations);
+$productPageVisibleColorSwatches = array_slice(
+	$productPageColorSwatches,
+	0,
+	3
+);
+$productPageDesktopColorSwatches = array_slice(
+	$productPageColorSwatches,
+	0,
+	9
+);
+
+$desktopColorSwatchIds = array_map(
+	static function ($swatch) {
+		return (int) $swatch['variationId'];
+	},
+	$productPageDesktopColorSwatches
+);
+
+if (
+	!empty($productPageColorSwatches)
+	&& !in_array((int) $initialVariationId, $desktopColorSwatchIds, true)
+) {
+	foreach ($productPageColorSwatches as $colorSwatch) {
+		if ((int) $colorSwatch['variationId'] !== (int) $initialVariationId) {
+			continue;
+		}
+
+		if (count($productPageDesktopColorSwatches) >= 9) {
+			array_pop($productPageDesktopColorSwatches);
+		}
+
+		$productPageDesktopColorSwatches[] = $colorSwatch;
+		break;
+	}
+}
+
 /*
 |--------------------------------------------------------------------------
 | Other content
@@ -736,6 +843,7 @@ $hasBrandDescription = !empty(
 							$category->uri
 						) ?>"
 						class="breacrums__name"
+						aria-current="page"
 					>
 						<?= $escape(
 							!empty(
@@ -746,18 +854,6 @@ $hasBrandDescription = !empty(
 						) ?>
 					</a>
 				</li>
-
-				<li
-						class="breacrums__item breacrums__item--current"
-						aria-current="page"
-				>
-						<span class="breacrums__name breacrums__name--current">
-								<?= $escape(
-										$productTitle
-								) ?>
-						</span>
-				</li>
-
 			</ul>
 		</div>
 	</section>
@@ -772,24 +868,30 @@ $hasBrandDescription = !empty(
 		data-product-id="<?= (int) $product->id ?>"
 		data-selected-variation="<?= (int) $initialVariationId ?>"
 	>
-		<div class="product-page__container _container">
-            <a
-	href="/<?= $escape($lclang) ?>/<?= $escape($menu['all'][3]->uri) ?>/<?= $escape($category->uri) ?>"
-	class="product-mobile-back"
->
-	<img
-								src="/app/img/icons-2/arrow-left.svg"
-								alt=""
-							>
+		<?php if (($site_theme_key ?? 'default') === 'halloween') : ?>
+			<span
+				class="product-page__halloween-decoration product-page__halloween-web product-page__halloween-web--left"
+				aria-hidden="true"
+			></span>
+			<span
+				class="product-page__halloween-decoration product-page__halloween-web product-page__halloween-web--right"
+				aria-hidden="true"
+			></span>
+			<span
+				class="product-page__halloween-decoration product-page__halloween-web product-page__halloween-web--lower"
+				aria-hidden="true"
+			></span>
+			<span
+				class="product-page__halloween-decoration product-page__halloween-bat product-page__halloween-bat--one"
+				aria-hidden="true"
+			></span>
+			<span
+				class="product-page__halloween-decoration product-page__halloween-bat product-page__halloween-bat--two"
+				aria-hidden="true"
+			></span>
+		<?php endif; ?>
 
-	<span>
-		<?= $escape(
-			!empty($category->breadcrumb_title)
-				? $category->breadcrumb_title
-				: $category->title
-		) ?>
-	</span>
-</a>
+		<div class="product-page__container _container">
 			<div class="product-page__layout">
 
 				<!-- ====================================================
@@ -817,12 +919,14 @@ $hasBrandDescription = !empty(
 								type="button"
 								class="
 									product-gallery__thumb
+									<?= ($image['type'] ?? '') === 'youtube' ? 'product-gallery__thumb--video' : '' ?>
 									<?= $index === 0
 										? 'product-gallery__thumb--active'
 										: '' ?>
 								"
 								data-gallery-thumb
 								data-gallery-index="<?= (int) $index ?>"
+								data-gallery-media-type="<?= $escape($image['type'] ?? 'image') ?>"
 								aria-label="<?= $escape(
 									$image['alt']
 								) ?>"
@@ -837,53 +941,25 @@ $hasBrandDescription = !empty(
 										: 'lazy' ?>"
 									decoding="async"
 								>
+								<?php if (($image['type'] ?? '') === 'youtube') : ?>
+									<span class="product-gallery__thumb-play" aria-hidden="true">
+										<svg viewBox="0 0 24 24" fill="none"><path d="M9 6.75v10.5L17.25 12 9 6.75Z" fill="currentColor"/></svg>
+									</span>
+								<?php endif; ?>
 							</button>
 
 						<?php endforeach; ?>
 					</div>
 
 					<div class="product-gallery__stage">
-
-						<!-- Badges -->
-
-						<div class="product-gallery__badges">
-
-							<?php if (
-								!empty(
-									$product->discount_price
-								)
-								&& !empty(
-									$product->sale_percent
-								)
-							) : ?>
-								<span class="product-gallery__badge">
-									-<?= (int) $product->sale_percent ?>%
-								</span>
-							<?php endif; ?>
-
-							<?php if (
-								!empty($product->is_new)
-							) : ?>
-								<span class="product-gallery__badge">
-									<?= $escape(
-										PRODUCTS_NEW
-									) ?>
-								</span>
-							<?php endif; ?>
-
-							<?php if (
-								!empty(
-									$product->best_selling
-								)
-							) : ?>
-								<span class="product-gallery__badge">
-									<?= $escape(
-										PRODUCTS_HIT
-									) ?>
-								</span>
-							<?php endif; ?>
-
-						</div>
+						<a
+							href="/<?= $escape($lclang) ?>/<?= $escape($menu['all'][3]->uri) ?>/<?= $escape($category->uri) ?>"
+							class="product-mobile-back"
+							data-product-back
+							aria-label="<?= $lclang === 'ro' ? 'Înapoi la categorie' : 'Назад в категорию' ?>"
+						>
+							<img src="/app/img/icons-2/arrow-left.svg" alt="" aria-hidden="true">
+						</a>
 
 						<!-- Wishlist -->
 
@@ -941,6 +1017,38 @@ $hasBrandDescription = !empty(
 								/>
 							</svg>
 						</button>
+
+						<?php if (!empty($productPageColorSwatches)) : ?>
+							<button
+								type="button"
+								class="product-page-color-options"
+								data-product-page-color-options
+								data-product-page-color-trigger
+								aria-expanded="false"
+								aria-haspopup="dialog"
+								aria-label="<?= $lclang === 'ro' ? 'Alegeți nuanța' : 'Выберите оттенок' ?>"
+							>
+								<span class="product-page-color-options__list">
+									<?php foreach ($productPageVisibleColorSwatches as $colorSwatch) : ?>
+										<span
+											class="product-page-color-options__swatch<?= $colorSwatch['isSelected'] ? ' product-page-color-options__swatch--selected' : '' ?>"
+											data-product-page-color-option
+											data-variation-id="<?= (int) $colorSwatch['variationId'] ?>"
+											role="img"
+											aria-label="<?= $escape($colorSwatch['label']) ?>"
+											title="<?= $escape($colorSwatch['label']) ?>"
+											style="--product-page-swatch: <?= $escape($colorSwatch['background']) ?>;"
+										></span>
+									<?php endforeach; ?>
+
+									<?php if ($productPageColorSwatchCount > 3) : ?>
+										<span class="product-page-color-options__more">
+											+<?= $productPageColorSwatchCount - 3 ?>
+										</span>
+									<?php endif; ?>
+								</span>
+							</button>
+						<?php endif; ?>
 
 						<!-- Previous -->
 
@@ -1024,6 +1132,29 @@ $hasBrandDescription = !empty(
 								</span>
 							<?php endif; ?>
 						</button>
+
+						<button
+							type="button"
+							class="product-gallery__video-play"
+							data-gallery-video-play
+							hidden
+							aria-label="<?= $lclang === 'ro' ? 'Redă videoclipul' : 'Смотреть видео' ?>"
+						>
+							<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6.75v10.5L17.25 12 9 6.75Z" fill="currentColor"/></svg>
+						</button>
+
+		<div class="product-gallery__video-player" data-gallery-video-player hidden></div>
+		<button
+			type="button"
+			class="product-gallery__video-close"
+			data-gallery-video-close
+			hidden
+		>
+			<span class="product-gallery__video-close-icon" aria-hidden="true">
+				<img src="/app/img/icons-2/arrow-left.svg" alt="">
+			</span>
+			<span><?= $lclang === 'ro' ? 'Înapoi la galerie' : 'Назад к фото' ?></span>
+		</button>
 
 						<!-- Next -->
 
@@ -1196,7 +1327,42 @@ $hasBrandDescription = !empty(
 
 							<?php endif; ?>
 
+							<div
+								class="product-summary__badges"
+								aria-label="<?= $lclang === 'ro' ? 'Etichete produs' : 'Метки товара' ?>"
+								<?= !$hasProductBadge ? 'hidden' : '' ?>
+							>
+								<span
+									class="product-summary__badge product-summary__badge--sale"
+									data-product-sale-badge
+									<?= empty($initialDiscountPrice) ? 'hidden' : '' ?>
+								>
+									-<?= (int) (
+										!empty($initialDiscountPrice)
+										&& $initialPrice > $initialDiscountPrice
+										? round((1 - ($initialDiscountPrice / $initialPrice)) * 100)
+										: (!empty($product->sale_percent) ? $product->sale_percent : 0)
+									) ?>%
+								</span>
+								<?php if (!empty($product->is_new)) : ?>
+									<span class="product-summary__badge"><?= $escape(PRODUCTS_NEW) ?></span>
+								<?php endif; ?>
+								<?php if (!empty($product->best_selling)) : ?>
+									<span class="product-summary__badge"><?= $escape(PRODUCTS_HIT) ?></span>
+								<?php endif; ?>
+							</div>
+
 						</div>
+
+						<?php if ($productInStock) : ?>
+							<button
+								type="button"
+								class="product-actions__button product-actions__button--primary product-actions__button--top add_cart"
+								data-product-add-top
+							>
+								<?= $escape(ADD_TO_CART) ?>
+							</button>
+						<?php endif; ?>
 
 						<!-- Bonus -->
 <!-- Bonus -->
@@ -1287,11 +1453,11 @@ $hasBrandDescription = !empty(
 						     ================================================= -->
 
 						<?php if (
-							!empty($colorVariations)
+							!empty($availableColorVariations)
 						) : ?>
 
 							<div
-								class="product-options"
+								class="product-options product-options--color"
 								data-color-select
 							>
 
@@ -1354,22 +1520,17 @@ $hasBrandDescription = !empty(
 													$initialColorVariation['title'];
 											}
 
-											if (
-												!empty(
-													$initialColorVariation['volume']
-												)
-											) {
-												$initialColorLabel .=
-													$initialColorLabel !== ''
-														? ' · '
-															. $initialColorVariation['volume']
-														: $initialColorVariation['volume'];
-											}
 											?>
 
 											<?= $escape(
 												$initialColorLabel
 											) ?>
+										</span>
+
+										<span class="product-color-select__all">
+											<?= $lclang === 'ro'
+												? 'Toate cele ' . $productPageAvailableColorCount . ' nuanțe'
+												: 'Все ' . $productPageAvailableColorCount . ' цветов' ?>
 										</span>
 
 										<span
@@ -1385,13 +1546,60 @@ $hasBrandDescription = !empty(
 									</button>
 
 									<div
+										class="product-color-select__desktop-options"
+										aria-label="<?= $lclang === 'ro' ? 'Nuanțe disponibile' : 'Доступные оттенки' ?>"
+									>
+										<?php foreach ($productPageDesktopColorSwatches as $colorSwatch) : ?>
+											<button
+												type="button"
+												class="product-color-select__desktop-option<?= $colorSwatch['isSelected'] ? ' product-color-select__option--selected' : '' ?>"
+												data-variation-option
+												data-color-variation-option
+												data-variation-id="<?= (int) $colorSwatch['variationId'] ?>"
+												aria-label="<?= $escape($colorSwatch['label']) ?>"
+												title="<?= $escape($colorSwatch['label']) ?>"
+											>
+												<span
+													class="product-color-select__desktop-swatch"
+													style="--product-swatch: <?= $escape($colorSwatch['background']) ?>;"
+												></span>
+											</button>
+										<?php endforeach; ?>
+									</div>
+
+									<div
 										class="product-color-select__dropdown"
 										data-color-select-dropdown
+						tabindex="-1"
 										hidden
 									>
+						<div class="product-color-sheet__header">
+							<button
+								type="button"
+								class="product-color-sheet__back"
+								data-color-select-close
+								aria-label="<?= $lclang === 'ro' ? 'Înapoi' : 'Назад' ?>"
+							>
+								<img src="/app/img/icons-2/arrow-left.svg" alt="">
+							</button>
+							<strong class="product-color-sheet__title">
+								<?= $lclang === 'ro' ? 'alegeți nuanța' : 'выберите оттенок' ?>
+							</strong>
+						</div>
+						<label class="product-color-sheet__search">
+							<input
+								type="search"
+								data-color-select-search
+								placeholder="<?= $lclang === 'ro' ? 'denumirea nuanței' : 'название оттенка' ?>"
+								aria-label="<?= $lclang === 'ro' ? 'Căutați nuanța' : 'Поиск оттенка' ?>"
+								autocomplete="off"
+							>
+							<img src="/app/img/icons/search.svg" alt="">
+						</label>
+						<div class="product-color-select__options" data-color-select-options>
 
 										<?php foreach (
-											$colorVariations
+							$availableColorVariations
 											as $variation
 										) : ?>
 
@@ -1418,23 +1626,18 @@ $hasBrandDescription = !empty(
 													$variation['title'];
 											}
 
-											if (
-												!empty(
-													$variation['volume']
-												)
-											) {
-												$variationLabel .=
-													$variationLabel !== ''
-														? ' · '
-															. $variation['volume']
-														: $variation['volume'];
-											}
+												$variationSwatch = $buildVariantSwatch(
+													$variation['colors']
+												);
 											?>
 
 											<button
 												type="button"
 												class="
 													product-color-select__option
+									<?= $variationSwatch === ''
+										? 'product-color-select__option--text'
+										: '' ?>
 													<?= $isSelected
 														? 'product-color-select__option--selected'
 														: '' ?>
@@ -1445,6 +1648,7 @@ $hasBrandDescription = !empty(
 														: '' ?>
 												"
 												data-variation-option
+								data-color-variation-option
 												data-variation-id="<?= (int) $variation['id'] ?>"
 												<?= empty(
 													$variation['available']
@@ -1452,13 +1656,6 @@ $hasBrandDescription = !empty(
 													? 'disabled'
 													: '' ?>
 											>
-
-												<?php
-												$variationSwatch =
-													$buildVariantSwatch(
-														$variation['colors']
-													);
-												?>
 
 												<?php if (
 													$variationSwatch !== ''
@@ -1492,8 +1689,15 @@ $hasBrandDescription = !empty(
 											</button>
 
 										<?php endforeach; ?>
-
+						</div>
 									</div>
+					<button
+						type="button"
+						class="product-color-select__backdrop"
+						data-color-select-backdrop
+						aria-label="<?= $lclang === 'ro' ? 'Închideți alegerea nuanței' : 'Закрыть выбор оттенка' ?>"
+						hidden
+					></button>
 								</div>
 							</div>
 
@@ -2164,6 +2368,8 @@ $hasBrandDescription = !empty(
 
             'section_url' => '',
 
+			'is_product_recommendation' => true,
+
             'lclang' => $lclang,
         )
     );
@@ -2179,6 +2385,7 @@ $hasBrandDescription = !empty(
 								'lclang' => $lclang,
 								'current_product_id' =>
 										(int) $product->id,
+								'is_home_product_card' => true,
 						)
 				);
 			?>

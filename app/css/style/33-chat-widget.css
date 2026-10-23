@@ -1,0 +1,24 @@
+/* Keep the custom chat launcher clear of fixed site overlays. */
+body.cart-drawer-lock #vizaje-chat-host,
+body.product-quick-view-open #vizaje-chat-host,
+body:is(
+	.product-color-sheet-open,
+	.product-reading-drawer-open,
+	.product-lightbox-open,
+	.product-availability-drawer-open
+) #vizaje-chat-host,
+body.niche-sale-drawer-open #vizaje-chat-host,
+body.checkout-pickup-open #vizaje-chat-host {
+	display: none !important;
+}
+
+/* The mobile tab bar is fixed to the viewport bottom (72px + safe area). */
+@media (max-width: 991px) {
+	#vizaje-chat-host {
+		--vz-offset-y: calc(
+			var(--mobile-tabbar-height, 72px)
+			+ env(safe-area-inset-bottom, 0px)
+			+ 12px
+		) !important;
+	}
+}

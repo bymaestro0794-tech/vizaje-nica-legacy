@@ -31,15 +31,41 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 			<h2 class="auth-drawer__title">
 				<?= $isRomanian
-					? 'Succes!'
-					: 'Успешно!' ?>
+					? 'Bine ai venit'
+					: 'Добро пожаловать' ?>
 			</h2>
 
 			<p class="auth-drawer__description">
 				<?= $isRomanian
-					? 'Contul dvs. a fost creat cu succes.'
-					: 'Ваш аккаунт успешно создан.' ?>
+					? 'Contul tău Vizaje‑Nica a fost creat cu succes. Ești gata să continui.'
+					: 'Аккаунт Vizaje‑Nica успешно создан. Можно продолжать.' ?>
 			</p>
+
+			<div class="auth-drawer__benefits">
+				<span><?= $isRomanian ? 'Acum poți' : 'Теперь вы можете' ?></span>
+				<p><?= $isRomanian
+					? 'salva favorite · folosi bonusuri · urmări comenzile'
+					: 'сохранять избранное · использовать бонусы · следить за заказами' ?></p>
+			</div>
+
+			<div
+				class="welcome-offer-success"
+				data-welcome-success-countdown
+				data-language="<?= $isRomanian ? 'ro' : 'ru' ?>"
+				hidden
+			>
+				<strong><?= $isRomanian
+					? 'Ai 18% reducere la prima comandă'
+					: 'Вам доступна скидка 18% на первый заказ' ?></strong>
+				<span><?= $isRomanian
+					? 'Expiră în'
+					: 'До окончания скидки' ?>:
+					<time data-welcome-countdown-value></time>
+				</span>
+				<small><?= $isRomanian
+					? 'Cu excepția SHIK, MAC și Anastasia Beverly Hills. Reducerea se aplică automat în coș.'
+					: 'Кроме SHIK, MAC и Anastasia Beverly Hills. Скидка применится в корзине автоматически.' ?></small>
+			</div>
 
 		<a
         	href="/<?= htmlspecialchars(

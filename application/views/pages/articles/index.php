@@ -1,186 +1,171 @@
-<main class="page articles-page">
-    <section class="breacrums">
-        <div class="breacrums__container _container">
-            <ul class="breacrums__list">
-                <li class="breacrums__item">
-                    <a
-                        href="/<?= $lclang ?>"
-                        class="breadcrums__link"
-                    >
-                        <?= $home_bc_title ?>
-                    </a>
-                </li>
-
-                <li class="breacrums__item">
-                    <span class="breacrums__name">
-                        <?= $page_name ?>
-                    </span>
-                </li>
-            </ul>
-        </div>
-    </section>
-
-    <section class="stock">
-        <div class="stock__container _container">
-
-            <header class="stock__header">
-                <div>
-                    <p class="stock__eyebrow">
-                        <?= $lclang === 'ro'
-                            ? 'Vizaje-Nica'
-                            : 'Vizaje-Nica' ?>
-                    </p>
-
-                    <h1 class="stock__title">
-                        <?= $page_name ?>
-                    </h1>
-                </div>
-
-                <?php if (!empty($articles)) { ?>
-                    <p class="stock__count">
-                        <?= count($articles) ?>
-
-                        <?= $lclang === 'ro'
-                            ? 'articole'
-                            : 'материалов' ?>
-                    </p>
-                <?php } ?>
+<main class="page articles-page articles-page--editorial">
+    <?php
+        $articleBasePath = !empty($articles_base_path)
+            ? $articles_base_path
+            : '/' . $lclang . '/' . $menu['all'][37]->uri;
+    ?>
+    <section class="articles-feed">
+        <div class="articles-feed__container _container">
+            <header class="articles-feed__header">
+                <h1 class="articles-feed__masthead">
+                    <?= htmlspecialchars($page_name, ENT_QUOTES, 'UTF-8') ?>
+                </h1>
             </header>
 
             <?php if (!empty($articles)) { ?>
-                <div class="stock__content">
-                    <?php foreach ($articles as $article) { ?>
+                <div class="articles-feed__grid">
+                    <?php foreach ($articles as $index => $article) { ?>
                         <?php
-                            $articleUrl =
-                                '/'
-                                . $lclang
-                                . '/'
-                                . $menu['all'][37]->uri
-                                . '/'
-                                . $article->uri;
+                            $articleUrl = $articleBasePath . '/' . $article->uri;
 
                             $articleTitle = !empty($article->title)
                                 ? $article->title
                                 : '';
 
-                            $src = !empty($article->img)
+                            $articleImage = !empty($article->img)
                                 ? newthumbs($article->img, 'articles')
                                 : '';
+
+                            $articleExcerpt = '';
+                            if (!empty($article->desc)) {
+                                $plainDescription = preg_replace(
+                                    '/<\/?(?:p|div|h[1-6]|li|br|tr)[^>]*>/i',
+                                    ' ',
+                                    $article->desc
+                                );
+                                $articleExcerpt = trim(preg_replace(
+                                    '/\s+/u',
+                                    ' ',
+                                    html_entity_decode(
+                                        strip_tags($plainDescription),
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    )
+                                ));
+
+                                if (preg_match('/^.{181}/us', $articleExcerpt)) {
+                                    $articleExcerpt = preg_replace(
+                                        '/^(.{0,180}).*$/us',
+                                        '$1…',
+                                        $articleExcerpt
+                                    );
+                                }
+                            }
+
+                            $articleDate = '';
+                            $articleDateTime = '';
+                            if (!empty($article->date)) {
+                                $timestamp = strtotime($article->date);
+                                if ($timestamp) {
+                                    $articleDateTime = date('Y-m-d', $timestamp);
+                                    $monthIndex = (int) date('n', $timestamp);
+                                    $monthNames = $lclang === 'ro'
+                                        ? array(
+                                            1 => 'ianuarie', 2 => 'februarie',
+                                            3 => 'martie', 4 => 'aprilie',
+                                            5 => 'mai', 6 => 'iunie',
+                                            7 => 'iulie', 8 => 'august',
+                                            9 => 'septembrie', 10 => 'octombrie',
+                                            11 => 'noiembrie', 12 => 'decembrie',
+                                        )
+                                        : array(
+                                            1 => 'января', 2 => 'февраля',
+                                            3 => 'марта', 4 => 'апреля',
+                                            5 => 'мая', 6 => 'июня',
+                                            7 => 'июля', 8 => 'августа',
+                                            9 => 'сентября', 10 => 'октября',
+                                            11 => 'ноября', 12 => 'декабря',
+                                        );
+
+                                    $articleDate = date('j', $timestamp)
+                                        . ' ' . $monthNames[$monthIndex]
+                                        . ' ' . date('Y', $timestamp);
+                                }
+                            }
+
+                            $isWideCard = $index === 0
+                                || ($index >= 3 && $index < 5);
                         ?>
 
-                        <article class="stock__item">
+                        <article class="articles-feed__item <?= $isWideCard ? 'articles-feed__item--wide' : '' ?>">
                             <a
-                                href="<?= $articleUrl ?>"
-                                class="stock__image"
-                                aria-label="<?= htmlspecialchars(
-                                    $articleTitle,
-                                    ENT_QUOTES,
-                                    'UTF-8'
-                                ) ?>"
+                                class="articles-feed__card"
+                                href="<?= htmlspecialchars($articleUrl, ENT_QUOTES, 'UTF-8') ?>"
+                                aria-label="<?= htmlspecialchars($articleTitle, ENT_QUOTES, 'UTF-8') ?>"
                             >
-                                <?php if (!empty($src)) { ?>
-                                    <picture>
-                                        <source
-                                            srcset="<?= $src ?>"
-                                            type="image/webp"
-                                        >
-
+                                <?php if ($articleImage !== '') { ?>
+                                    <picture class="articles-feed__picture">
                                         <img
-                                            src="<?= $src ?>"
-                                            alt="<?= htmlspecialchars(
-                                                $articleTitle,
-                                                ENT_QUOTES,
-                                                'UTF-8'
-                                            ) ?>"
-                                            loading="lazy"
+                                            src="<?= htmlspecialchars($articleImage, ENT_QUOTES, 'UTF-8') ?>"
+                                            alt="<?= htmlspecialchars($articleTitle, ENT_QUOTES, 'UTF-8') ?>"
+                                            loading="<?= $index < 3 ? 'eager' : 'lazy' ?>"
                                             decoding="async"
                                         >
                                     </picture>
                                 <?php } else { ?>
-                                    <span class="stock__image-placeholder">
+                                    <span class="articles-feed__picture articles-feed__picture--empty">
                                         Vizaje-Nica
                                     </span>
                                 <?php } ?>
 
-                                <span class="stock__image-overlay"></span>
+                                <span class="articles-feed__shade" aria-hidden="true"></span>
 
-                                <span class="stock__read-more">
-                                    <?= $lclang === 'ro'
-                                        ? 'Citește'
-                                        : 'Читать' ?>
-
-                                    <svg
-                                        width="17"
-                                        height="17"
-                                        viewBox="0 0 17 17"
-                                        fill="none"
-                                        aria-hidden="true"
+                                <?php if ($articleDate !== '') { ?>
+                                    <time
+                                        class="articles-feed__date"
+                                        datetime="<?= $articleDateTime ?>"
                                     >
-                                        <path
-                                            d="M3.5 8.5H13.5M9.5 4.5L13.5 8.5L9.5 12.5"
-                                            stroke="currentColor"
-                                            stroke-width="1.4"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        />
-                                    </svg>
-                                </span>
-                            </a>
-
-                            <div class="stock__body">
-                                <?php if (!empty($article->date)) { ?>
-                                    <time class="stock__date">
-                                        <?= transformDate(
-                                            $article->date,
-                                            $lclang
-                                        ) ?>
+                                        <?= htmlspecialchars($articleDate, ENT_QUOTES, 'UTF-8') ?>
                                     </time>
                                 <?php } ?>
 
-                                <h2 class="stock__name">
-                                    <a href="<?= $articleUrl ?>">
-                                        <?= $articleTitle ?>
-                                    </a>
-                                </h2>
-
-                                <a
-                                    href="<?= $articleUrl ?>"
-                                    class="stock__link"
-                                >
-                                    <span>
-                                        <?= $lclang === 'ro'
-                                            ? 'Vezi articolul'
-                                            : 'Открыть статью' ?>
+                                <span class="articles-feed__copy">
+                                    <span class="articles-feed__kind">
+                                        <?= $lclang === 'ro' ? '#ARTICOL' : '#СТАТЬЯ' ?>
                                     </span>
 
-                                    <svg
-                                        width="18"
-                                        height="18"
-                                        viewBox="0 0 18 18"
-                                        fill="none"
-                                        aria-hidden="true"
-                                    >
-                                        <path
-                                            d="M4 9H14M10 5L14 9L10 13"
-                                            stroke="currentColor"
-                                            stroke-width="1.4"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        />
-                                    </svg>
-                                </a>
-                            </div>
+                                    <span class="articles-feed__title">
+                                        <?= htmlspecialchars($articleTitle, ENT_QUOTES, 'UTF-8') ?>
+                                    </span>
+
+                                    <?php if ($articleExcerpt !== '') { ?>
+                                        <span class="articles-feed__excerpt">
+                                            <?= htmlspecialchars($articleExcerpt, ENT_QUOTES, 'UTF-8') ?>
+                                        </span>
+                                    <?php } ?>
+                                </span>
+                            </a>
                         </article>
                     <?php } ?>
                 </div>
+                <?php if (!empty($paginator) && $paginator->getNumPages() > 1) { ?>
+                    <nav class="articles-feed__pagination" aria-label="<?= $lclang === 'ro' ? 'Paginare' : 'Страницы блога' ?>">
+                        <?php if ($paginator->getPrevUrl()) { ?>
+                            <a href="<?= htmlspecialchars($paginator->getPrevUrl(), ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= $lclang === 'ro' ? 'Pagina precedentă' : 'Предыдущая страница' ?>">←</a>
+                        <?php } ?>
+                        <?php foreach ($paginator->getPages() as $pageLink) { ?>
+                            <?php if ($pageLink['url'] === null) { ?>
+                                <span class="is-ellipsis">…</span>
+                            <?php } else { ?>
+                                <a href="<?= htmlspecialchars($pageLink['url'], ENT_QUOTES, 'UTF-8') ?>"
+                                   class="<?= !empty($pageLink['isCurrent']) ? 'is-current' : '' ?>"
+                                   <?= !empty($pageLink['isCurrent']) ? 'aria-current="page"' : '' ?>>
+                                    <?= htmlspecialchars((string) $pageLink['num'], ENT_QUOTES, 'UTF-8') ?>
+                                </a>
+                            <?php } ?>
+                        <?php } ?>
+                        <?php if ($paginator->getNextUrl()) { ?>
+                            <a href="<?= htmlspecialchars($paginator->getNextUrl(), ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= $lclang === 'ro' ? 'Pagina următoare' : 'Следующая страница' ?>">→</a>
+                        <?php } ?>
+                    </nav>
+                <?php } ?>
             <?php } else { ?>
-                <div class="stock__empty">
+                <div class="articles-feed__empty">
                     <?= $lclang === 'ro'
                         ? 'Momentan nu există articole.'
                         : 'Пока нет опубликованных новостей.' ?>
                 </div>
             <?php } ?>
-
         </div>
     </section>
 </main>

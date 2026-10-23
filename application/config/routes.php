@@ -56,7 +56,7 @@ $langs = '(' . implode('|', $langs_array) . ')';
 
 $route['default_controller'] = 'pages';
 
-$route['404_override'] = 'custom404/index';
+$route['404_override'] = 'pages/not_found';
 $route['translate_uri_dashes'] = FALSE;
 $route['sitemapGenerator'] = "pages/sitemapGenerator";
 
@@ -109,7 +109,13 @@ $route['product/quick-view'] =
     'ajax/product_quick_view';
 
 /* Frontend */
+$route['get-app'] = 'frontend/app_download/index';
 $route[$langs] = "pages/index";
+$route[$langs . '/roulette/state'] = 'frontend/roulette/state';
+$route[$langs . '/roulette/spin'] = 'frontend/roulette/spin';
+// Local-only, unlinked UI playground; the controller additionally checks the host.
+$route['dev/design-lab'] = 'design_lab/index';
+$route['dev/design-lab/catalog'] = 'design_lab/catalog';
 // $route['b2b'] = 'frontend/b2b/index';
 $route['(ro|ru)/b2b'] = 'frontend/b2b/index/$1';
 $route[$langs.'/(certificat-cadou|podarochnyie-sertifikatyi)'] = "frontend/certificat/index";
@@ -133,15 +139,22 @@ $route[$langs.'/(brendyi|brands)'] = "frontend/brands/index";
 $route[$langs.'/(aktsii|promotii)'] = "frontend/offers/index";
 $route[$langs.'/(aktsii|promotii)/:any'] = "frontend/offers/items";
 
+$route[$langs.'/blog/like/(:num)'] = 'frontend/articles/blog_like/$2';
+$route[$langs.'/blog'] = 'frontend/articles/blog_index';
+$route[$langs.'/blog/(:any)'] = 'frontend/articles/blog_item';
+
 $route[$langs.'/(noutati|novosti)'] = "frontend/articles/index";
 $route[$langs.'/(noutati|novosti)/:any'] = "frontend/articles/items";
 
+$route[$langs.'/(katalog-categories|catalog-categories)'] = "frontend/catalog/index";
+$route[$langs.'/(katalog-collections|catalog-collections)'] = "frontend/catalog/mobile_categories";
 $route[$langs.'/(katalog|catalog|catalog)'] = "frontend/catalog/index";
 $route[$langs.'/(katalog|catalog|catalog)/(:any)'] = "frontend/catalog/category";
 $route[$langs.'/(katalog|catalog|catalog)/(:any)/(:any)'] = "frontend/catalog/item";
 
 $route[$langs.'/(novinki|nou|new)'] = "frontend/catalog/new_products";
 $route[$langs.'/(skidki|reduceri|sale)'] = "frontend/catalog/best_sellers";
+$route[$langs.'/(top-prodaz|top-prodaj|top-prodazh|top-vanzari|cele-mai-vandute)'] = "frontend/catalog/hits";
 
 $route[$langs.'/products/filter_category'] = "frontend/catalog/filter_category";
 
@@ -222,6 +235,16 @@ $route['cp/delete_img_row'] = "backend/dashboard/delete_img_row";
 $route['cp/delete_file'] = "backend/dashboard/delete_file";
 $route['cp/change_select'] = "backend/dashboard/change_select";
 $route['cp/change_check'] = "backend/dashboard/change_check";
+
+// Seasonal storefront theme settings.
+$route['cp/site_themes'] = "backend/site_themes/index";
+$route['cp/site_themes/'] = "backend/site_themes/index";
+$route['cp/site_themes/save'] = "backend/site_themes/save";
+$route['cp/site_themes/save/'] = "backend/site_themes/save";
+$route['cp/site_support'] = "backend/site_support/index";
+$route['cp/site_support/'] = "backend/site_support/index";
+$route['cp/site_support/save'] = "backend/site_support/save";
+$route['cp/site_support/save/'] = "backend/site_support/save";
 
 $route['cp/(:any)'] = "backend/$1";
 $route['cp/(:any)/(:any)'] = "backend/$1/$2";

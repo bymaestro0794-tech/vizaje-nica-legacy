@@ -590,6 +590,19 @@ class Home_brand_sections_model extends CI_Model
 			) AS img,
 
 			(
+				SELECT GROUP_CONCAT(
+					products_img.img
+					ORDER BY
+						products_img.sorder ASC,
+						products_img.id DESC
+					SEPARATOR '||'
+				)
+				FROM products_img
+				WHERE products_img.product_id =
+					products.id
+			) AS gallery_images,
+
+			(
 				SELECT brands.title
 				FROM brands
 				WHERE brands.id =

@@ -335,7 +335,7 @@ window.onload = function () {
 		}
 	}
 
-	// const searchInput = document.querySelector('#head_search')
+	const searchInput = document.querySelector('#head_search')
 
 	const searchHeaderForm = document.querySelector(
 		'.header-search .form-header-search'

@@ -37,6 +37,17 @@ $summaryBonusEarn =
 $summaryBonusWriteOff =
 	0;
 
+$discountChoice = isset($discountChoice) ? (string) $discountChoice : 'none';
+$discountOptions = isset($discountOptions) && is_array($discountOptions) ? $discountOptions : array();
+$selectedDiscount = isset($selectedDiscount) && is_array($selectedDiscount) ? $selectedDiscount : array();
+$discountSource = !empty($selectedDiscount['source']) ? (string) $selectedDiscount['source'] : 'none';
+$selectedDiscountCode = !empty($selectedDiscount['label']) ? (string) $selectedDiscount['label'] : $promoCode;
+$promoChoiceAvailable = !empty($discountOptions['promo']['available']);
+$rouletteChoiceAvailable = !empty($discountOptions['roulette']['available']);
+$showDiscountChoice = ($promoChoiceAvailable && $rouletteChoiceAvailable)
+	|| ($promoChoiceAvailable && $discountChoice !== 'promo')
+	|| ($rouletteChoiceAvailable && $discountChoice !== 'roulette');
+
 if (
 	!empty($client_info)
 	&& empty($_SESSION['isb2b'])
@@ -158,10 +169,7 @@ if (
 
 			<?php endif; ?>
 
-			<?php if (
-				$promoApplied
-				&& $summaryPromoDiscount > 0
-			) : ?>
+			<?php if ($summaryPromoDiscount > 0 && $discountSource !== 'none') : ?>
 
 				<div
 					class="
@@ -171,14 +179,14 @@ if (
 				>
 					<span class="vn-checkout-summary__name">
 						<span>
-							<?= $isRomanian
-								? 'Cod promoțional'
-								: 'Промокод' ?>
+							<?= $discountSource === 'roulette'
+								? ($isRomanian ? 'Reducere la ruletă' : 'Скидка рулетки')
+								: ($isRomanian ? 'Cod promoțional' : 'Промокод') ?>
 						</span>
 
 						<strong>
 							<?= htmlspecialchars(
-								$promoCode,
+								$selectedDiscountCode,
 								ENT_QUOTES,
 								'UTF-8'
 							) ?>
@@ -196,6 +204,28 @@ if (
 					</span>
 				</div>
 
+			<?php endif; ?>
+
+			<?php if ($showDiscountChoice) : ?>
+				<div class="vn-checkout-discount-choice" role="group" aria-label="<?= $isRomanian ? 'Alegeți o singură reducere' : 'Выберите одну скидку' ?>">
+					<p class="vn-checkout-discount-choice__title"><?= $isRomanian ? 'Alegeți o singură reducere' : 'Выберите одну скидку' ?></p>
+					<?php if ($promoChoiceAvailable) : ?>
+						<button type="button" class="vn-checkout-discount-choice__option<?= $discountChoice === 'promo' ? ' is-selected' : '' ?>" data-checkout-discount-choice="promo">
+							<span><?= htmlspecialchars((string) $discountOptions['promo']['code'], ENT_QUOTES, 'UTF-8') ?></span>
+							<strong>−<?= number_format((float) $discountOptions['promo']['discount'], 0, '.', ' ') ?> <?= MDL ?></strong>
+						</button>
+					<?php endif; ?>
+					<?php if ($rouletteChoiceAvailable) : ?>
+						<button type="button" class="vn-checkout-discount-choice__option<?= $discountChoice === 'roulette' ? ' is-selected' : '' ?>" data-checkout-discount-choice="roulette">
+							<span><?= htmlspecialchars((string) $discountOptions['roulette']['title'], ENT_QUOTES, 'UTF-8') ?></span>
+							<strong><?= !empty($discountOptions['roulette']['free_shipping'])
+								? ($isRomanian ? 'Livrare gratuită' : 'Бесплатная доставка')
+								: '−' . number_format((float) $discountOptions['roulette']['discount'], 0, '.', ' ') . ' ' . MDL ?></strong>
+						</button>
+					<?php endif; ?>
+					<p class="vn-checkout-discount-choice__note"><?= $isRomanian ? 'Reducerile nu se cumulează.' : 'Скидки не суммируются.' ?></p>
+					<p class="vn-checkout-discount-choice__error" data-checkout-discount-error hidden></p>
+				</div>
 			<?php endif; ?>
 
 			<div

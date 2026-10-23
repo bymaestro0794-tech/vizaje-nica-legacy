@@ -37,6 +37,19 @@ $promoCode =
         ? (string) $promo['code']
         : '';
 
+$discountChoice = isset($discount_choice)
+    ? (string) $discount_choice
+    : 'none';
+$discountOptions = isset($discount_options) && is_array($discount_options)
+    ? $discount_options
+    : array();
+$selectedDiscount = isset($discount) && is_array($discount)
+    ? $discount
+    : array();
+$roulette = isset($roulette) && is_array($roulette)
+    ? $roulette
+    : array();
+
 
 $bonusTotal =
     isset($bonus_total)
@@ -71,16 +84,75 @@ $showBonusSection =
     empty($_SESSION['isb2b'])
     && !empty($client_info);
 
+$checkoutErrorMessage = !empty($_SESSION['checkout_error'])
+    ? (string) $_SESSION['checkout_error']
+    : '';
+$promoCheckoutError = !empty($_SESSION['checkout_promo_error']);
+unset($_SESSION['checkout_error']);
+unset($_SESSION['checkout_promo_error']);
+
+if ($checkoutErrorMessage === '' && $promoCheckoutError) {
+    $checkoutErrorMessage = $lclang === 'ro'
+        ? 'Codul promoțional nu mai poate fi aplicat. Alegeți reducerea disponibilă.'
+        : 'Промокод больше нельзя применить. Выберите доступную скидку.';
+}
+
 ?>
 
 
 <main class="page">
     <section class="order">
+        <?php if (($site_theme_key ?? 'default') === 'halloween') : ?>
+            <span
+                class="order__halloween-decoration order__halloween-web order__halloween-web--top"
+                aria-hidden="true"
+            ></span>
+            <span
+                class="order__halloween-decoration order__halloween-web order__halloween-web--bottom"
+                aria-hidden="true"
+            ></span>
+            <span
+                class="order__halloween-decoration order__halloween-bat order__halloween-bat--top"
+                aria-hidden="true"
+            ></span>
+            <span
+                class="order__halloween-decoration order__halloween-bat order__halloween-bat--bottom"
+                aria-hidden="true"
+            ></span>
+            <span
+                class="order__halloween-decoration order__halloween-pumpkin"
+                aria-hidden="true"
+            ></span>
+        <?php endif; ?>
+
         <div class="order__container _container-mini">
             <h2 class="order__title"><?= $page_title ?></h2>
             <form action="/<?= $lclang ?>/<?= $uri2 ?>" class="order__body" method="post" data-checkout>
+                <?php if ($checkoutErrorMessage !== '') : ?>
+                    <p class="vn-checkout-error" role="alert">
+                        <?= htmlspecialchars($checkoutErrorMessage, ENT_QUOTES, 'UTF-8') ?>
+                    </p>
+                <?php endif; ?>
                 <div class="order__main main-order">
-                   <?php
+                    <?php
+                        $this->load->view(
+                            'layouts/pages/checkout/recipient',
+                            array(
+                                'lclang' =>
+                                    $lclang,
+
+                                'client_info' =>
+                                    $client_info,
+
+                                'privacy_url' =>
+                                    '/' . $lclang . '/' . $menu['all'][23]->uri,
+
+                                'privacy_title' =>
+                                    $menu['all'][23]->title,
+                            )
+                        );
+                    ?>
+                    <?php
                     $this->load->view(
                         'layouts/pages/checkout/delivery',
                         array(
@@ -95,18 +167,6 @@ $showBonusSection =
                         )
                     );
                     ?>
-                    <?php
-                        $this->load->view(
-                            'layouts/pages/checkout/recipient',
-                            array(
-                                'lclang' =>
-                                    $lclang,
-
-                                'client_info' =>
-                                    $client_info,
-                            )
-                        );
-                        ?>
                     <?php
                     $this->load->view(
                         'layouts/pages/checkout/payment',
@@ -171,6 +231,18 @@ $showBonusSection =
 
                         'promoCode' =>
                             $promoCode,
+
+                        'discountChoice' =>
+                            $discountChoice,
+
+                        'discountOptions' =>
+                            $discountOptions,
+
+                        'selectedDiscount' =>
+                            $selectedDiscount,
+
+                        'roulette' =>
+                            $roulette,
 
                         'delivery_price' =>
                             $delivery_price,

@@ -31,6 +31,8 @@
 
 			imageIndex: 0,
 
+			galleryReturnIndex: null,
+
 			isSubmitting: false,
 
 			availabilityController: null,
@@ -47,6 +49,7 @@
 		}
 
 		initGallery()
+		initBackNavigation()
 		initLightbox()
 		initColorSelect()
 		initVariationOptions()
@@ -56,6 +59,46 @@
 		initReadingDrawer()
 		initCartActions()
 		initStickyCart()
+
+		/* ======================================================================
+	   BACK NAVIGATION
+	   ====================================================================== */
+
+		function initBackNavigation() {
+			const backLink = page.querySelector('[data-product-back]')
+
+			if (!backLink) {
+				return
+			}
+
+			backLink.addEventListener('click', function (event) {
+				if (
+					event.defaultPrevented ||
+					event.button !== 0 ||
+					event.metaKey ||
+					event.ctrlKey ||
+					event.shiftKey ||
+					event.altKey
+				) {
+					return
+				}
+
+				let sameOriginReferrer = false
+
+				try {
+					sameOriginReferrer =
+						Boolean(document.referrer) &&
+						new URL(document.referrer).origin === window.location.origin
+				} catch (error) {
+					sameOriginReferrer = false
+				}
+
+				if (sameOriginReferrer && window.history.length > 1) {
+					event.preventDefault()
+					window.history.back()
+				}
+			})
+		}
 
 		/* ======================================================================
 	   GALLERY
@@ -80,6 +123,43 @@
 				.querySelector('[data-gallery-next]')
 				?.addEventListener('click', function () {
 					showImage(state.imageIndex + 1)
+				})
+
+			gallery
+				.querySelector('[data-gallery-video-play]')
+				?.addEventListener('click', function () {
+					const selected = state.images[state.imageIndex]
+					const player = gallery.querySelector('[data-gallery-video-player]')
+					const viewport = gallery.querySelector('[data-gallery-viewport]')
+
+					if (!selected || selected.type !== 'youtube' || !player || !/^[A-Za-z0-9_-]{11}$/.test(selected.videoId || '')) {
+						return
+					}
+
+					const iframe = document.createElement('iframe')
+					iframe.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(selected.videoId) + '?autoplay=1&rel=0'
+					iframe.title = selected.alt || data.product.title
+					iframe.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'
+					iframe.allowFullscreen = true
+					iframe.referrerPolicy = 'strict-origin-when-cross-origin'
+
+					player.replaceChildren(iframe)
+					player.hidden = false
+					if (viewport) viewport.hidden = true
+					gallery.querySelector('[data-gallery-video-close]')?.removeAttribute('hidden')
+					gallery.querySelector('.product-gallery__stage')?.classList.add('is-video-playing')
+					this.hidden = true
+				})
+
+			gallery
+				.querySelector('[data-gallery-video-close]')
+				?.addEventListener('click', function () {
+					const firstImageIndex = state.images.findIndex(image => image.type !== 'youtube')
+					const returnIndex = Number.isInteger(state.galleryReturnIndex)
+						? state.galleryReturnIndex
+						: Math.max(firstImageIndex, 0)
+
+					showImage(returnIndex)
 				})
 
 			gallery.addEventListener('click', function (event) {
@@ -213,6 +293,12 @@
 
 				button.dataset.galleryIndex = String(index)
 
+				button.dataset.galleryMediaType = image.type || 'image'
+
+				if (image.type === 'youtube') {
+					button.classList.add('product-gallery__thumb--video')
+				}
+
 				button.setAttribute('aria-label', image.alt || data.product.title)
 
 				const img = document.createElement('img')
@@ -225,6 +311,14 @@
 				img.decoding = 'async'
 
 				button.appendChild(img)
+
+				if (image.type === 'youtube') {
+					const play = document.createElement('span')
+					play.className = 'product-gallery__thumb-play'
+					play.setAttribute('aria-hidden', 'true')
+					play.innerHTML = '<svg viewBox="0 0 24 24" fill="none"><path d="M9 6.75v10.5L17.25 12 9 6.75Z" fill="currentColor"/></svg>'
+					button.appendChild(play)
+				}
 
 				thumbs.appendChild(button)
 			})
@@ -243,6 +337,13 @@
 
 			if (index >= state.images.length) {
 				index = 0
+			}
+
+			if (
+				state.images[index]?.type === 'youtube' &&
+				state.images[state.imageIndex]?.type !== 'youtube'
+			) {
+				state.galleryReturnIndex = state.imageIndex
 			}
 
 			state.imageIndex = index
@@ -266,6 +367,21 @@
 			if (!image || !selected) {
 				return
 			}
+
+			const playButton = page.querySelector('[data-gallery-video-play]')
+			const player = page.querySelector('[data-gallery-video-player]')
+			const viewport = page.querySelector('[data-gallery-viewport]')
+			const stage = page.querySelector('.product-gallery__stage')
+			const closeVideoButton = page.querySelector('[data-gallery-video-close]')
+
+			if (player) {
+				player.replaceChildren()
+				player.hidden = true
+			}
+			if (viewport) viewport.hidden = false
+			if (playButton) playButton.hidden = selected.type !== 'youtube'
+			if (closeVideoButton) closeVideoButton.hidden = true
+			if (stage) stage.classList.remove('is-video-playing')
 
 			image.classList.add('product-gallery__image--changing')
 
@@ -321,6 +437,11 @@
 			page
 				.querySelector('[data-gallery-viewport]')
 				?.addEventListener('click', function (event) {
+					if (state.images[state.imageIndex]?.type === 'youtube') {
+						event.preventDefault()
+						return
+					}
+
 					const distance = Number(
 						event.currentTarget.dataset.swipeDistance || 0
 					)
@@ -661,6 +782,12 @@
 				index = 0
 			}
 
+			if (state.images[index]?.type === 'youtube') {
+				closeLightbox()
+				showImage(index)
+				return
+			}
+
 			state.imageIndex = index
 
 			resetLightboxZoom()
@@ -745,35 +872,212 @@
 			const trigger = select.querySelector('[data-color-select-trigger]')
 
 			const dropdown = select.querySelector('[data-color-select-dropdown]')
+			const backdrop = select.querySelector('[data-color-select-backdrop]')
+			const closeButton = select.querySelector('[data-color-select-close]')
+			const searchInput = select.querySelector('[data-color-select-search]')
+			const pageColorTrigger = page.querySelector('[data-product-page-color-trigger]')
+			const mobileMedia = window.matchMedia('(max-width: 767px)')
+			const dropdownParent = dropdown.parentNode
+			const backdropParent = backdrop?.parentNode
+			const dropdownPlaceholder = document.createComment('product-color-dropdown')
+			const backdropPlaceholder = document.createComment('product-color-backdrop')
+			let lastOpenTrigger = trigger
+
+			dropdownParent?.insertBefore(dropdownPlaceholder, dropdown)
+			backdropParent?.insertBefore(backdropPlaceholder, backdrop)
 
 			if (!trigger || !dropdown) {
 				return
 			}
 
+			function focusWithoutScroll(element) {
+				if (!element) {
+					return
+				}
+
+				try {
+					element.focus({ preventScroll: true })
+				} catch (error) {
+					element.focus()
+				}
+			}
+
 			trigger.addEventListener('click', function () {
 				const isOpen = trigger.getAttribute('aria-expanded') === 'true'
-
+				lastOpenTrigger = trigger
 				setColorSelectOpen(!isOpen)
 			})
 
+			pageColorTrigger?.addEventListener('click', function () {
+				lastOpenTrigger = pageColorTrigger
+				setColorSelectOpen(true)
+			})
+
+			dropdown.addEventListener('click', function (event) {
+				const option = event.target.closest('[data-color-variation-option]')
+
+				if (!option || !mobileMedia.matches) {
+					return
+				}
+
+				event.preventDefault()
+				event.stopPropagation()
+				if (option.disabled) {
+					return
+				}
+
+				selectVariation(Number(option.dataset.variationId))
+				setColorSelectOpen(false)
+				focusWithoutScroll(lastOpenTrigger || trigger)
+			})
+
+			closeButton?.addEventListener('click', function () {
+				setColorSelectOpen(false)
+				focusWithoutScroll(lastOpenTrigger || trigger)
+			})
+
+			function filterColorOptions() {
+				const query = (searchInput?.value || '').trim().toLocaleLowerCase()
+
+				dropdown
+					.querySelectorAll('[data-color-variation-option]')
+					.forEach(function (option) {
+						const label = option
+							.querySelector('.product-color-select__option-label')
+							?.textContent
+							.trim()
+							.toLocaleLowerCase() || ''
+
+						option.hidden = query !== '' && !label.startsWith(query)
+					})
+			}
+
+			searchInput?.addEventListener('input', filterColorOptions)
+			searchInput?.addEventListener('search', filterColorOptions)
+			searchInput?.addEventListener('change', filterColorOptions)
+
+			backdrop?.addEventListener('click', function () {
+				setColorSelectOpen(false)
+				focusWithoutScroll(lastOpenTrigger || trigger)
+			})
+
 			document.addEventListener('pointerdown', function (event) {
-				if (!select.contains(event.target)) {
+				if (
+					!select.contains(event.target)
+					&& !dropdown.contains(event.target)
+					&& !backdrop?.contains(event.target)
+				) {
 					setColorSelectOpen(false)
 				}
 			})
 
 			document.addEventListener('keydown', function (event) {
-				if (event.key === 'Escape') {
-					setColorSelectOpen(false)
+				const isMobileSheetOpen =
+					mobileMedia.matches &&
+					trigger.getAttribute('aria-expanded') === 'true'
 
-					trigger.focus()
+				if (event.key === 'Escape' && trigger.getAttribute('aria-expanded') === 'true') {
+					setColorSelectOpen(false)
+					focusWithoutScroll(lastOpenTrigger || trigger)
+					return
+				}
+
+				if (event.key !== 'Tab' || !isMobileSheetOpen) {
+					return
+				}
+
+				const options = Array.from(
+					dropdown.querySelectorAll(
+						'[data-color-variation-option]:not(:disabled):not([hidden])'
+					)
+					)
+
+				if (!options.length) {
+					event.preventDefault()
+					focusWithoutScroll(dropdown)
+					return
+				}
+
+				const firstOption = options[0]
+				const lastOption = options[options.length - 1]
+
+				if (
+					event.shiftKey &&
+					(document.activeElement === firstOption ||
+						document.activeElement === dropdown)
+				) {
+					event.preventDefault()
+					focusWithoutScroll(lastOption)
+				} else if (
+					!event.shiftKey &&
+					document.activeElement === lastOption
+				) {
+					event.preventDefault()
+					focusWithoutScroll(firstOption)
 				}
 			})
 
 			function setColorSelectOpen(isOpen) {
+				if (isOpen && mobileMedia.matches) {
+					document.body.append(dropdown)
+					if (backdrop) {
+						document.body.append(backdrop)
+					}
+				}
+
 				trigger.setAttribute('aria-expanded', String(isOpen))
+				pageColorTrigger?.setAttribute('aria-expanded', String(isOpen))
 
 				dropdown.hidden = !isOpen
+
+				if (!isOpen && searchInput) {
+					searchInput.value = ''
+					filterColorOptions()
+				}
+
+				if (!isOpen) {
+					if (dropdownPlaceholder.parentNode) {
+						dropdownPlaceholder.parentNode.insertBefore(
+							dropdown,
+							dropdownPlaceholder.nextSibling
+						)
+					}
+
+					if (backdrop && backdropPlaceholder.parentNode) {
+						backdropPlaceholder.parentNode.insertBefore(
+							backdrop,
+							backdropPlaceholder.nextSibling
+						)
+					}
+				}
+
+				if (backdrop) {
+					backdrop.hidden = !isOpen
+				}
+
+				document.body.classList.toggle(
+					'product-color-sheet-open',
+					isOpen && mobileMedia.matches
+				)
+
+				if (mobileMedia.matches && isOpen) {
+					dropdown.setAttribute('role', 'dialog')
+					dropdown.setAttribute('aria-modal', 'true')
+					dropdown.setAttribute(
+						'aria-label',
+						data.language === 'ro' ? 'Alegeți nuanța' : 'Выберите оттенок'
+					)
+					requestAnimationFrame(function () {
+						const firstOption = dropdown.querySelector(
+							'[data-color-variation-option]:not(:disabled):not([hidden])'
+						)
+						focusWithoutScroll(firstOption || dropdown)
+					})
+				} else {
+					dropdown.removeAttribute('role')
+					dropdown.removeAttribute('aria-modal')
+					dropdown.removeAttribute('aria-label')
+				}
 			}
 		}
 
@@ -782,6 +1086,13 @@
 				const option = event.target.closest('[data-variation-option]')
 
 				if (!option || option.disabled) {
+					return
+				}
+
+				if (
+					option.hasAttribute('data-color-variation-option') &&
+					window.matchMedia('(max-width: 767px)').matches
+				) {
 					return
 				}
 
@@ -803,10 +1114,19 @@
 			state.selectedVariationId = variationId
 
 			state.imageIndex = 0
+			state.galleryReturnIndex = null
 
-			state.images = variation.images.length
+			const variationImages = variation.images.length
 				? variation.images
 				: data.product.images
+
+			state.images = variationImages.filter(function (image) {
+				return image.type !== 'youtube'
+			})
+
+			if (data.product.videoMedia) {
+				state.images.push(data.product.videoMedia)
+			}
 
 			page.dataset.selectedVariation = String(variationId)
 
@@ -831,8 +1151,50 @@
 			)
 		}
 
+		function syncDesktopColorOption(variation) {
+			const optionsContainer = page.querySelector(
+				'.product-color-select__desktop-options'
+			)
+
+			const swatchBackground = getVariationSwatch(variation)
+
+			if (!optionsContainer || !swatchBackground) {
+				return
+			}
+
+			const variationId = String(variation.id)
+			const options = Array.from(
+				optionsContainer.querySelectorAll('[data-color-variation-option]')
+			)
+
+			let option = options.find(function (item) {
+				return item.dataset.variationId === variationId
+			})
+
+			if (!option) {
+				option = options[options.length - 1]
+			}
+
+			if (!option) {
+				return
+			}
+
+			const label = formatVariationLabel(variation)
+			const swatch = option.querySelector('.product-color-select__desktop-swatch')
+
+			option.dataset.variationId = variationId
+			option.setAttribute('aria-label', label)
+			option.setAttribute('title', label)
+
+			if (swatch) {
+				swatch.style.setProperty('--product-swatch', swatchBackground)
+			}
+		}
+
 		function updateSelectedOptions(variation) {
-			page
+			syncDesktopColorOption(variation)
+
+			document
 				.querySelectorAll('[data-variation-option]')
 				.forEach(function (option) {
 					const selected =
@@ -846,6 +1208,15 @@
 					option.classList.toggle(
 						'product-volume-list__option--selected',
 						selected
+					)
+				})
+
+			page
+				.querySelectorAll('[data-product-page-color-option]')
+				.forEach(function (option) {
+					option.classList.toggle(
+						'product-page-color-options__swatch--selected',
+						Number(option.dataset.variationId) === Number(variation.id)
 					)
 				})
 
@@ -879,6 +1250,17 @@
 				trigger.setAttribute('aria-expanded', 'false')
 
 				dropdown.hidden = true
+
+				const backdrop = page.querySelector('[data-color-select-backdrop]')
+
+				if (backdrop) {
+					backdrop.hidden = true
+				}
+
+				dropdown.removeAttribute('role')
+				dropdown.removeAttribute('aria-modal')
+				dropdown.removeAttribute('aria-label')
+				document.body.classList.remove('product-color-sheet-open')
 			}
 		}
 
@@ -912,6 +1294,28 @@
 				}
 			}
 
+			const saleBadge = page.querySelector('[data-product-sale-badge]')
+			const badges = page.querySelector('.product-summary__badges')
+
+			if (saleBadge) {
+				if (discountPrice && Number(basePrice) > Number(discountPrice)) {
+					const discountPercent = Math.round(
+						(1 - Number(discountPrice) / Number(basePrice)) * 100
+					)
+					saleBadge.hidden = false
+					saleBadge.textContent = '-' + discountPercent + '%'
+				} else {
+					saleBadge.hidden = true
+				}
+			}
+
+			if (badges) {
+				const hasStaticBadges = Boolean(
+					badges.querySelector('.product-summary__badge:not([data-product-sale-badge])')
+				)
+				badges.hidden = !discountPrice && !hasStaticBadges
+			}
+
 			if (sku) {
 				sku.textContent = variation.sku || ''
 			}
@@ -943,24 +1347,7 @@
 			}
 		}
 		function formatVariationLabel(variation) {
-			const mainLabel = variation.color || variation.title || ''
-
-			const volume = variation.volume || ''
-
-			if (mainLabel && volume) {
-				/*
-				 * Не дублируем объём,
-				 * если он уже находится
-				 * в названии варианта.
-				 */
-				if (mainLabel.toLowerCase().includes(volume.toLowerCase())) {
-					return mainLabel
-				}
-
-				return mainLabel + ' · ' + volume
-			}
-
-			return mainLabel || volume || ''
+			return variation.color || variation.title || ''
 		}
 
 		function getVariationSwatch(variation) {
@@ -1294,7 +1681,30 @@
 
 			let previousActiveElement = null
 
-			openButton.addEventListener('click', function () {
+			page.addEventListener(
+				'click',
+				function (event) {
+				const trigger = event.target.closest('[data-product-accordion-trigger]')
+				const content = trigger?.nextElementSibling
+
+				if (
+					!trigger ||
+					!window.matchMedia('(max-width: 767px)').matches ||
+					!content?.querySelector('[data-reading-drawer-open]')
+				) {
+					return
+				}
+
+				event.preventDefault()
+				event.stopImmediatePropagation()
+				openReadingDrawer()
+				},
+				true
+			)
+
+			openButton.addEventListener('click', openReadingDrawer)
+
+			function openReadingDrawer() {
 				previousActiveElement = document.activeElement
 
 				drawer.classList.add('is-open')
@@ -1306,7 +1716,7 @@
 				requestAnimationFrame(function () {
 					drawer.querySelector('.product-reading-drawer__close')?.focus()
 				})
-			})
+			}
 
 			closeButtons.forEach(function (button) {
 				button.addEventListener('click', closeReadingDrawer)
@@ -1611,6 +2021,12 @@
 				?.addEventListener('click', function () {
 					addCurrentProduct(false)
 				})
+
+			page
+				.querySelector('[data-product-add-top]')
+				?.addEventListener('click', function () {
+					addCurrentProduct(false)
+				})
 		}
 
 		function addCurrentProduct(redirectToCheckout, checkoutUrl) {
@@ -1764,7 +2180,10 @@
 
 		function setButtonsLoading(isLoading) {
 			page
-				.querySelectorAll('[data-product-add], ' + '[data-product-buy-now]')
+				.querySelectorAll(
+					'[data-product-add], [data-product-add-top], ' +
+						'[data-product-buy-now]'
+				)
 				.forEach(function (button) {
 					button.disabled = isLoading
 
@@ -1791,7 +2210,9 @@
 
 			const stickyPrice = document.querySelector('[data-product-sticky-price]')
 
-			const originalButton = page.querySelector('[data-product-add]')
+			const originalButton =
+				page.querySelector('[data-product-add-top]') ||
+				page.querySelector('[data-product-add]')
 
 			if (!stickyBar || !stickyButton || !originalButton) {
 				console.warn('Product sticky cart: элементы не найдены', {

@@ -236,6 +236,36 @@ public function addProduct($sectionKey, $productId)
 			) AS has_variable
 		";
 
+	$hasAvailableStockField = !empty($_SESSION['isb2b'])
+		? "
+			CASE
+				WHEN products.on_stockWH > 0 THEN 1
+				WHEN EXISTS (
+					SELECT 1
+					FROM products_variable pv
+					WHERE pv.product_id = products.id
+					  AND pv.isShown = 1
+					  AND pv.priceWH > 0
+					  AND pv.qtyWH > 0
+				) THEN 1
+				ELSE 0
+			END AS has_available_stock
+		"
+		: "
+			CASE
+				WHEN products.on_stock > 0 THEN 1
+				WHEN EXISTS (
+					SELECT 1
+					FROM products_variable pv
+					WHERE pv.product_id = products.id
+					  AND pv.isShown = 1
+					  AND pv.price > 0
+					  AND pv.qty > 0
+				) THEN 1
+				ELSE 0
+			END AS has_available_stock
+		";
+
 	$this->db->select("
 		  products.id,
     products.SKU,
@@ -259,6 +289,7 @@ public function addProduct($sectionKey, $productId)
     products.is_new,
     products.best_selling,
 		{$hasVariableField},
+		{$hasAvailableStockField},
 
     home_items.sorder AS home_sorder,
 
@@ -271,6 +302,18 @@ public function addProduct($sectionKey, $productId)
 				products_img.id DESC
 			LIMIT 1
 		) AS img,
+
+		(
+			SELECT GROUP_CONCAT(
+				products_img.img
+				ORDER BY
+					products_img.sorder ASC,
+					products_img.id DESC
+				SEPARATOR '||'
+			)
+			FROM products_img
+			WHERE products_img.product_id = products.id
+		) AS gallery_images,
 
 		(
 			SELECT brands.title

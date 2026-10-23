@@ -14,7 +14,12 @@
 	var SAVE_URL = '/cookie_consent'
 
 	function lockScroll(lock) {
-		document.documentElement.classList.toggle('cookie-panel-lock', lock)
+		/*
+		 * The settings view is a fixed drawer, not a modal. Keep the page
+		 * scrollable and only hide the compact banner while the drawer is open.
+		 */
+		document.documentElement.classList.toggle('cookie-panel-lock', false)
+		document.documentElement.classList.toggle('cookie-panel-open', lock)
 	}
 
 	function openPanel(panel) {

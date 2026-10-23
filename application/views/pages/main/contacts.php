@@ -231,6 +231,13 @@
                         </div>
                     </section>
 
+                    <?php
+                    $this->load->view(
+                        'partials/telegram-support',
+                        array('class' => 'vn-telegram-support--contact')
+                    );
+                    ?>
+
                     <section class="contacts__form-section">
                         <div class="contacts__section-head">
                             <p class="contacts__section-eyebrow">

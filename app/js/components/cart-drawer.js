@@ -1861,6 +1861,40 @@
 		})
 	}
 
+	function selectDiscountChoice(button) {
+		const choice = String(button.dataset.cartDiscountChoice || '')
+		if (!['promo', 'roulette'].includes(choice)) return
+
+		button.disabled = true
+		button.classList.add('is-loading')
+
+		$.ajax({
+			url: '/ajax/discount_choice',
+			type: 'POST',
+			dataType: 'json',
+			data: {
+				choice: choice,
+				lang: getLanguage()
+			},
+			success: function (response) {
+				if (response && response.status === 'ok') {
+					load({ skeleton: false })
+				}
+			},
+			error: function () {
+				showError(
+					getLanguage() === 'ro'
+						? 'Reducerea selectată nu mai este disponibilă.'
+						: 'Выбранная скидка больше недоступна.'
+				)
+			},
+			complete: function () {
+				button.disabled = false
+				button.classList.remove('is-loading')
+			}
+		})
+	}
+
 	/*
 	|--------------------------------------------------------------------------
 	| Delegated events
@@ -2020,6 +2054,14 @@
 			return
 		}
 
+		const discountChoice = event.target.closest('[data-cart-discount-choice]')
+
+		if (discountChoice && drawer.contains(discountChoice)) {
+			event.preventDefault()
+			selectDiscountChoice(discountChoice)
+			return
+		}
+
 		const sheetMinus = event.target.closest('[data-cart-sheet-minus]')
 
 		if (sheetMinus && activeActionRow) {
@@ -2077,6 +2119,10 @@
 		if (event.key === 'Escape' && isOpen) {
 			close()
 		}
+	})
+
+	document.addEventListener('vn:roulette:expired', function () {
+		if (isOpen) load({ skeleton: false })
 	})
 
 	/*

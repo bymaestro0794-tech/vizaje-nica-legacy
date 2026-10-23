@@ -42,6 +42,7 @@ class Categories_model extends BaseModel
             step as step,
             title$lang as title,
             uri$lang as uri,
+            img as img,
             imgNav as imgNav,  
             imgNavHover as imgNavHover,
             (SELECT products.id FROM products JOIN products_img ON products_img.product_id = products.id WHERE products.category_id=$this->tblname.id AND products.isShown = 1 AND products.price > 0 ORDER BY id DESC LIMIT 1) as products,
@@ -268,6 +269,7 @@ class Categories_model extends BaseModel
         id AS id,
         uri{$lang} AS uri,
         title{$lang} AS title,
+        img AS img,
         (
             SELECT COUNT(p.id)
             FROM products p

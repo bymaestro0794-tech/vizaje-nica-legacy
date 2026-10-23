@@ -27,12 +27,12 @@
                         <div class="login__check">
                             <label class="checkbox _focus">
                                 <input class="checkbox__input _focus" type="checkbox" value="1" name="register_check" required>
-                                <span class="checkbox__text"><span><?=AGREE_WITH?> <a href="/<?=$lclang?>/<?=$menu['all'][22]->uri?>" target="_blank"><?=$menu['all'][22]->title?></a>.</span></span>
+                                <span class="checkbox__text"><span><?=AGREE_WITH?> <a href="/<?=$lclang?>/<?=$menu['all'][23]->uri?>" target="_blank"><?=$menu['all'][23]->title?></a>.</span></span>
                             </label>
                         </div>
                         <div class="login__check">
                             <label class="checkbox _focus">
-                                <input class="checkbox__input _focus" type="checkbox" value="1" checked name="register_newsletters">
+                                <input class="checkbox__input _focus" type="checkbox" value="1" name="register_newsletters">
                                 <span class="checkbox__text"><span><?=RECEIVE_PROMO_REG?></span></span>
                             </label>
                         </div>

@@ -19,7 +19,9 @@ document.addEventListener('DOMContentLoaded', function () {
 	)
 
 	const emptyMessage = brandsPage.querySelector('.brands__empty')
-	const alphabet = brandsPage.querySelector('.brand-letter')
+	const favoritesPanel = brandsPage.querySelector('.brands__favorites')
+	const favoritesList = brandsPage.querySelector('[data-favorites-list]')
+	const favoriteStorageKey = 'vizaje-nica:favorite-brands:v1'
 	/**
 	 * Задержка поиска после завершения печати.
 	 */
@@ -27,6 +29,106 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	let searchTimer = null
 	let isLetterNavigation = false
+	let favorites = []
+
+	try {
+		const storedFavorites = JSON.parse(
+			window.localStorage.getItem(favoriteStorageKey) || '[]'
+		)
+
+		if (Array.isArray(storedFavorites)) {
+			favorites = storedFavorites.filter(function (favorite) {
+				return (
+					favorite
+					&& favorite.id
+					&& favorite.title
+					&& typeof favorite.href === 'string'
+					&& favorite.href.charAt(0) === '/'
+					&& favorite.href.charAt(1) !== '/'
+				)
+			})
+		}
+	} catch (error) {
+		favorites = []
+	}
+
+	function syncFavorites() {
+		const favoriteIds = new Set(
+			favorites.map(function (favorite) {
+				return favorite.id
+			})
+		)
+
+		brandItems.forEach(function (item) {
+			const button = item.querySelector('[data-brand-favorite]')
+			const isFavorite = favoriteIds.has(item.dataset.brandId)
+
+			item.classList.toggle('_favorite', isFavorite)
+
+			if (button) {
+				button.setAttribute('aria-pressed', String(isFavorite))
+				button.setAttribute(
+					'aria-label',
+					isFavorite
+						? button.dataset.labelRemove || 'Remove from favorites'
+						: button.dataset.labelAdd || 'Add to favorites'
+				)
+			}
+		})
+
+		if (!favoritesPanel || !favoritesList) {
+			return
+		}
+
+		favoritesPanel.classList.toggle('_has-favorites', favorites.length > 0)
+		favoritesList.replaceChildren()
+
+		favorites.forEach(function (favorite) {
+			const link = document.createElement('a')
+			link.className = 'brands__favorite-link'
+			link.href = favorite.href
+			link.textContent = favorite.title
+			favoritesList.appendChild(link)
+		})
+
+		try {
+			window.localStorage.setItem(favoriteStorageKey, JSON.stringify(favorites))
+		} catch (error) {
+			// Keep the current-page state usable if storage is unavailable.
+		}
+	}
+
+	brandsPage.addEventListener('click', function (event) {
+		const button = event.target.closest('[data-brand-favorite]')
+
+		if (!button) {
+			return
+		}
+
+		const item = button.closest('.brands__item')
+
+		if (!item || !item.dataset.brandId) {
+			return
+		}
+
+		const favoriteIndex = favorites.findIndex(function (favorite) {
+			return favorite.id === item.dataset.brandId
+		})
+
+		if (favoriteIndex >= 0) {
+			favorites.splice(favoriteIndex, 1)
+		} else {
+			favorites.push({
+				id: item.dataset.brandId,
+				title: item.dataset.brandTitle || item.textContent.trim(),
+				href: item.dataset.brandHref || '#'
+			})
+		}
+
+		syncFavorites()
+	})
+
+	syncFavorites()
 
 	/**
 	 * Нормализация текста для поиска.
@@ -294,7 +396,10 @@ document.addEventListener('DOMContentLoaded', function () {
 				setActiveLetter(currentSection.dataset.brandSection)
 			},
 			{
-				rootMargin: '-145px 0px -65% 0px',
+			rootMargin:
+					window.innerWidth <= 767
+						? '-100px 0px -65% 0px'
+						: '-145px 0px -65% 0px',
 				threshold: 0
 			}
 		)
@@ -311,26 +416,4 @@ document.addEventListener('DOMContentLoaded', function () {
 		setActiveLetter(letterLinks[0].dataset.brandLetter)
 	}
 
-	function updateMobileAlphabetState() {
-		if (!alphabet) {
-			return
-		}
-
-		if (window.innerWidth > 767) {
-			alphabet.classList.remove('_mobile-sticky')
-			return
-		}
-
-		const brandsTop = brandsPage.getBoundingClientRect().top
-
-		alphabet.classList.toggle('_mobile-sticky', brandsTop <= -70)
-	}
-
-	window.addEventListener('scroll', updateMobileAlphabetState, {
-		passive: true
-	})
-
-	window.addEventListener('resize', updateMobileAlphabetState)
-
-	updateMobileAlphabetState()
 })

@@ -1,0 +1,7 @@
+/* Keep the discount catalog cards aligned with the editorial catalog card layout. */
+.catalog-discounts-page
+	.products_catalog
+	.product--editorial-card
+	.head-product__cart {
+	bottom: auto !important;
+}

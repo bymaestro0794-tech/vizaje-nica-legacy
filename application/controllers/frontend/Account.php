@@ -51,12 +51,111 @@ class Account extends FrontEndController
         $orders = $this->orders_model->get_client_orders($this->data['client_info']->id, $this->clang);
         $this->data['orders'] = $orders;
 
+        $this->data['privacy_request_success'] = false;
+        $this->data['privacy_request_error'] = '';
+
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $post = array();
             foreach ($_POST as $index => $item) {
                 $post[$index] = $this->input->post($index);
             }
 
-            if (!empty($post['password'])) {
+            if (!empty($post['personal_data_request'])) {
+                $requestType = trim((string) ($post['request_type'] ?? ''));
+                $requestDetails = trim((string) ($post['request_details'] ?? ''));
+                $allowedRequestTypes = array('access', 'correction', 'erasure', 'restriction', 'objection');
+
+                if (!in_array($requestType, $allowedRequestTypes, true)) {
+                    $this->data['privacy_request_error'] = $this->lclang === 'ro'
+                        ? 'Selectați tipul solicitării.'
+                        : 'Выберите тип запроса.';
+                } elseif ($requestDetails === '' || mb_strlen($requestDetails, 'UTF-8') > 4000) {
+                    $this->data['privacy_request_error'] = $this->lclang === 'ro'
+                        ? 'Descrieți solicitarea în maximum 4000 de caractere.'
+                        : 'Опишите запрос не более чем в 4000 символах.';
+                } else {
+                    $typeLabels = array(
+                        'access' => $this->lclang === 'ro' ? 'Copie a datelor' : 'Копия данных',
+                        'correction' => $this->lclang === 'ro' ? 'Corectarea datelor' : 'Исправление данных',
+                        'erasure' => $this->lclang === 'ro' ? 'Ștergerea datelor' : 'Удаление данных',
+                        'restriction' => $this->lclang === 'ro' ? 'Limitarea prelucrării' : 'Ограничение обработки',
+                        'objection' => $this->lclang === 'ro' ? 'Opoziție față de marketing' : 'Возражение против маркетинга',
+                    );
+                    $requestSaved = false;
+                    $feedbackSaved = false;
+
+                    if ($this->db->table_exists('personal_data_requests')) {
+                        $requestSaved = $this->db->insert('personal_data_requests', array(
+                            'client_id' => (int) $this->data['client_info']->id,
+                            'request_type' => $requestType,
+                            'details' => $requestDetails,
+                            'source' => 'account',
+                            'status' => 'new',
+                            'identity_verified' => 1,
+                            'created_at' => date('Y-m-d H:i:s'),
+                            'updated_at' => date('Y-m-d H:i:s'),
+                        ));
+                    }
+
+                    if ($this->db->table_exists('site_feedback')) {
+                        $this->load->model('site_feedback_model');
+                        $feedbackMessage = ($this->lclang === 'ro'
+                            ? "Solicitare din contul personal\n"
+                            : "Запрос из личного кабинета\n")
+                            . "Client ID: " . (int) $this->data['client_info']->id . "\n"
+                            . "Email: " . (string) $this->data['client_info']->email . "\n"
+                            . "Telefon: " . (string) $this->data['client_info']->phone . "\n"
+                            . "Tip: " . $typeLabels[$requestType] . "\n\n"
+                            . $requestDetails;
+
+                        $feedbackSaved = $this->site_feedback_model->insert_feedback(array(
+                            'feedback_type' => 'question',
+                            'message' => mb_substr($feedbackMessage, 0, 5000, 'UTF-8'),
+                            'page_path' => parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/',
+                            'locale' => strtolower((string) $this->lclang),
+                            'status' => 'new',
+                            'created_at' => date('Y-m-d H:i:s'),
+                        ));
+
+                        if (!$feedbackSaved) {
+                            log_message('error', 'Privacy request could not be copied to site feedback: ' . json_encode($this->db->error()));
+                        }
+                    }
+
+                    $this->load->library('email');
+                    $emailConfig = config_smtp();
+                    $this->email->initialize($emailConfig);
+                    $this->email->from('noreply@' . $_SERVER['HTTP_HOST'], $_SERVER['HTTP_HOST']);
+                    $privacyRequestEmail = defined('PERSONAL_DATA_REQUEST_EMAIL')
+                        ? trim((string) PERSONAL_DATA_REQUEST_EMAIL)
+                        : '';
+                    if ($privacyRequestEmail !== '') {
+                        $this->email->to($privacyRequestEmail);
+                    }
+                    $this->email->subject(
+                        $this->lclang === 'ro'
+                            ? 'Solicitare privind datele personale'
+                            : 'Запрос по персональным данным'
+                    );
+                    $this->email->message(
+                        "Client ID: " . (int) $this->data['client_info']->id . "\n"
+                        . "Email: " . (string) $this->data['client_info']->email . "\n"
+                        . "Telefon: " . (string) $this->data['client_info']->phone . "\n"
+                        . "Tip: " . $typeLabels[$requestType] . "\n\n"
+                        . $requestDetails
+                    );
+                    $emailSent = $privacyRequestEmail !== ''
+                        && $this->email->send();
+
+                    if ($requestSaved || $emailSent || $feedbackSaved) {
+                        $this->data['privacy_request_success'] = true;
+                    } else {
+                        $this->data['privacy_request_error'] = $this->lclang === 'ro'
+                            ? 'Solicitarea nu a putut fi trimisă. Încercați din nou sau scrieți-ne la adresa de contact.'
+                            : 'Не удалось отправить запрос. Попробуйте ещё раз или напишите нам по контактному адресу.';
+                    }
+                }
+            } elseif (!empty($post['password'])) {
                 $user = $this->clients_model->login($this->data['client_info']->phone, sha1($post["password"]));
 
                 if (!empty($user)) {
@@ -79,6 +178,28 @@ class Account extends FrontEndController
                 if (empty($post['mail_subscribe'])) $post['mail_subscribe'] = 0;
                 $this->clients_model->update($post, $this->data['client_info']->id);
                 $this->workappPost($post);
+
+                $consentText = $this->lclang === 'ro'
+                    ? 'Preferința pentru comunicări comerciale selectată în cont.'
+                    : 'Настройка маркетинговых коммуникаций, выбранная в личном кабинете.';
+                $this->record_consent_event(
+                    $this->data['client_info']->id,
+                    'sms_marketing',
+                    !empty($post['sms_subscribe']),
+                    'account',
+                    $consentText,
+                    $this->data['client_info']->email,
+                    $this->data['client_info']->phone
+                );
+                $this->record_consent_event(
+                    $this->data['client_info']->id,
+                    'email_marketing',
+                    !empty($post['mail_subscribe']),
+                    'account',
+                    $consentText,
+                    $this->data['client_info']->email,
+                    $this->data['client_info']->phone
+                );
             }
         }
 
@@ -87,6 +208,9 @@ class Account extends FrontEndController
 
         $this->data['inner_view'] = 'pages/account/index';
         $this->data['class_page'] = '';
+        $this->data['body_class'] = trim(
+            (string) ($this->data['body_class'] ?? '') . ' account-page'
+        );
         $query = explode('?', $_SERVER['REQUEST_URI']);
         $this->data['lang_urls'] = array(
             'ru' => '' . $page->uriRU . '?' . $query[1],
@@ -413,10 +537,29 @@ class Account extends FrontEndController
                 } else {
                     $post["password"] = sha1($post["password"]);
                     unset($post['password_check']);
+                    $post['mail_subscribe'] = !empty($post['register_newsletters']) ? 1 : 0;
+                    unset($post['register_check'], $post['register_newsletters']);
 
                     if ($this->db->insert('clients', $post)) {
+                        $registeredClientId = $this->db->insert_id();
+                        $this->record_consent_event(
+                            $registeredClientId,
+                            'email_marketing',
+                            !empty($post['mail_subscribe']),
+                            'registration',
+                            $this->lclang === 'ro'
+                                ? 'Preferința pentru comunicări comerciale selectată la înregistrare.'
+                                : 'Настройка маркетинговых коммуникаций, выбранная при регистрации.',
+                            $post['email'],
+                            $post['number']
+                        );
                         $this->email_registration($post);
-                        $this->workappPost(['phone' => $post['number'], 'name' => $post['name'], 'surname' => $post['surname'], 'birthday' => $post['birthday']]);
+                        $this->workappPost(array(
+                            'phone' => $post['number'],
+                            'name' => !empty($post['name']) ? $post['name'] : '',
+                            'surname' => !empty($post['surname']) ? $post['surname'] : '',
+                            'birthday' => !empty($post['birthday']) ? $post['birthday'] : '',
+                        ));
                         $this->data['success'] = REGISTRATION_EMAIL_ACTIVE;
                         redirect(
                         	'/'
@@ -484,8 +627,20 @@ class Account extends FrontEndController
                                 'password' => sha1($post["password"]),
                                 'code' => $code,
                             );
+                            $data['mail_subscribe'] = !empty($post['register_newsletters']) ? 1 : 0;
                             if ($this->db->insert('clients', $data)) {
                                 $clientId = $this->db->insert_id();
+                                $this->record_consent_event(
+                                    $clientId,
+                                    'email_marketing',
+                                    !empty($data['mail_subscribe']),
+                                    'registration',
+                                    $this->lclang === 'ro'
+                                        ? 'Preferința pentru comunicări comerciale selectată la înregistrare.'
+                                        : 'Настройка маркетинговых коммуникаций, выбранная при регистрации.',
+                                    $data['email'],
+                                    $data['phone']
+                                );
                                 $number = substr($post['number'], -8);
 
                                 $smsSent = $this->sendSMS(
@@ -496,6 +651,7 @@ class Account extends FrontEndController
                                 if ($smsSent) {
                                     $response['code_auth'] = 1;
                                     $response['number'] = $number;
+                                    $_SESSION['pending_welcome_registration_id'] = (int) $clientId;
                                 } else {
                                     $this->db
                                         ->where('id', $clientId)
@@ -542,6 +698,35 @@ class Account extends FrontEndController
 
                 if (!empty($user)) {
                     $this->db->where('id', $user->id)->update('clients', array('code' => '1'));
+
+                    if (
+                        !empty($_SESSION['pending_welcome_registration_id'])
+                        && (int) $_SESSION['pending_welcome_registration_id'] === (int) $user->id
+                    ) {
+                        $this->load->model('promocodes_model');
+                        $welcomePromo = $this->promocodes_model->findByCode('WELCOME18');
+
+                        if ($this->promocodes_model->isWelcomeOfferConfigured($welcomePromo)) {
+                            $offerStartedAt = date('Y-m-d H:i:s');
+                            $offerExpiresAt = date('Y-m-d H:i:s', time() + (14 * 24 * 60 * 60));
+
+                            $this->db
+                                ->where('id', (int) $user->id)
+                                ->where('welcome_offer_started_at IS NULL', null, false)
+                                ->update('clients', array(
+                                    'welcome_offer_started_at' => $offerStartedAt,
+                                    'welcome_offer_expires_at' => $offerExpiresAt,
+                                ));
+
+                            if ($this->db->affected_rows() > 0) {
+                                $_SESSION['cart_promo'] = array('code' => 'WELCOME18');
+                                unset($_SESSION['welcome_offer_removed']);
+                                $response['welcome_offer_expires_at'] = strtotime($offerExpiresAt);
+                            }
+                        }
+                    }
+
+                    unset($_SESSION['pending_welcome_registration_id']);
 
                     $_SESSION['user_id'] = $user->id;
                     $_SESSION['user_login'] = $user->email;
@@ -921,14 +1106,14 @@ class Account extends FrontEndController
         unset($_SESSION['user_login']);
         unset($_SESSION['usr_key']);
         unset($_SESSION['isb2b']);
+        unset($_SESSION['welcome_offer_removed']);
+        unset($_SESSION['pending_welcome_registration_id']);
 
-        $referer = $this->input->server('HTTP_REFERER', TRUE);
-        $currentHost = $this->input->server('HTTP_HOST', TRUE);
-        $refererHost = !empty($referer) ? parse_url($referer, PHP_URL_HOST) : '';
-
-        if (!empty($referer) && (empty($refererHost) || $refererHost === $currentHost)) {
-            redirect($referer);
-            die();
+        if (
+            !empty($_SESSION['cart_promo']['code'])
+            && strtoupper(trim((string) $_SESSION['cart_promo']['code'])) === 'WELCOME18'
+        ) {
+            unset($_SESSION['cart_promo']);
         }
 
         redirect('/' . $this->lclang . '/');

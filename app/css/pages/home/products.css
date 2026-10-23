@@ -72,10 +72,14 @@
 .home-products__arrow svg {
 	display: block;
 
-	width: 22px;
-	height: 22px;
+	width: 25px;
+	height: 15px;
 
 	transition: transform 200ms ease;
+}
+
+.home-products .home-arrow-icon--right {
+	transform: scaleX(-1);
 }
 
 .home-products__arrow:hover {
@@ -87,7 +91,7 @@
 }
 
 .home-products__arrow--next:hover svg {
-	transform: translateX(2px);
+	transform: translateX(2px) scaleX(-1);
 }
 
 .home-products__arrow:focus-visible {
@@ -205,8 +209,8 @@
 .home-products__catalog-link svg {
 	flex: 0 0 auto;
 
-	width: 20px;
-	height: 20px;
+	width: 25px;
+	height: 15px;
 
 	transition: transform 220ms ease;
 }
@@ -218,7 +222,7 @@
 	}
 
 	.home-products__catalog-link:hover svg {
-		transform: translateX(4px);
+		transform: translateX(4px) scaleX(-1);
 	}
 }
 
@@ -447,8 +451,12 @@
 	.home-products__mobile-arrow svg {
 		display: block;
 
-		width: 20px;
-		height: 20px;
+		width: 25px;
+		height: 15px;
+	}
+
+	.home-products__mobile-arrow--next .home-arrow-icon--right {
+		transform: scaleX(-1);
 	}
 
 	.home-products__mobile-arrow--previous {

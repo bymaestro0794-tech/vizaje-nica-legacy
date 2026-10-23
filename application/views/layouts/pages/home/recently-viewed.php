@@ -9,7 +9,7 @@ $sectionTitle = $isRomanian
 ?>
 
 <section
-	class="home-products recently-viewed"
+	class="home-products home-products--home-card recently-viewed"
 	data-recently-viewed
 	data-products-slider
 	data-current-product-id="<?= !empty($current_product_id)
@@ -50,27 +50,9 @@ $sectionTitle = $isRomanian
 					data-products-previous
 					disabled
 				>
-					<svg
-						width="22"
-						height="22"
-						viewBox="0 0 24 24"
-						fill="none"
-						aria-hidden="true"
-					>
-						<path
-							d="M19 12H5"
-							stroke="currentColor"
-							stroke-width="1.5"
-							stroke-linecap="round"
-						/>
-
-						<path
-							d="M10 7L5 12L10 17"
-							stroke="currentColor"
-							stroke-width="1.5"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						/>
+					<svg class="home-arrow-icon" fill="none" stroke="none" viewBox="0 0 25 15" aria-hidden="true">
+						<path stroke="currentColor" d="M6 2 .5 7.5 6 13" />
+						<path fill="currentColor" d="M1 7h20v1H1z" />
 					</svg>
 				</button>
 
@@ -86,27 +68,9 @@ $sectionTitle = $isRomanian
 					data-recently-viewed-next
 					data-products-next
 				>
-					<svg
-						width="22"
-						height="22"
-						viewBox="0 0 24 24"
-						fill="none"
-						aria-hidden="true"
-					>
-						<path
-							d="M5 12H19"
-							stroke="currentColor"
-							stroke-width="1.5"
-							stroke-linecap="round"
-						/>
-
-						<path
-							d="M14 7L19 12L14 17"
-							stroke="currentColor"
-							stroke-width="1.5"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						/>
+					<svg class="home-arrow-icon home-arrow-icon--right" fill="none" stroke="none" viewBox="0 0 25 15" aria-hidden="true">
+						<path stroke="currentColor" d="M6 2 .5 7.5 6 13" />
+						<path fill="currentColor" d="M1 7h20v1H1z" />
 					</svg>
 				</button>
 			</div>
@@ -136,27 +100,9 @@ $sectionTitle = $isRomanian
 				disabled
 				hidden
 			>
-				<svg
-					width="20"
-					height="20"
-					viewBox="0 0 24 24"
-					fill="none"
-					aria-hidden="true"
-				>
-					<path
-						d="M19 12H5"
-						stroke="currentColor"
-						stroke-width="1.5"
-						stroke-linecap="round"
-					/>
-
-					<path
-						d="M10 7L5 12L10 17"
-						stroke="currentColor"
-						stroke-width="1.5"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					/>
+				<svg class="home-arrow-icon" fill="none" stroke="none" viewBox="0 0 25 15" aria-hidden="true">
+					<path stroke="currentColor" d="M6 2 .5 7.5 6 13" />
+					<path fill="currentColor" d="M1 7h20v1H1z" />
 				</svg>
 			</button>
 
@@ -172,27 +118,9 @@ $sectionTitle = $isRomanian
 				data-recently-viewed-mobile-next
 				hidden
 			>
-				<svg
-					width="20"
-					height="20"
-					viewBox="0 0 24 24"
-					fill="none"
-					aria-hidden="true"
-				>
-					<path
-						d="M5 12H19"
-						stroke="currentColor"
-						stroke-width="1.5"
-						stroke-linecap="round"
-					/>
-
-					<path
-						d="M14 7L19 12L14 17"
-						stroke="currentColor"
-						stroke-width="1.5"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					/>
+				<svg class="home-arrow-icon home-arrow-icon--right" fill="none" stroke="none" viewBox="0 0 25 15" aria-hidden="true">
+					<path stroke="currentColor" d="M6 2 .5 7.5 6 13" />
+					<path fill="currentColor" d="M1 7h20v1H1z" />
 				</svg>
 			</button>
 		</div>

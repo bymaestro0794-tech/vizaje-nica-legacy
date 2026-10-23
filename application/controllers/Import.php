@@ -3,10 +3,102 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Import extends CI_Controller
 {
+    private $productImportTrackingEnabled = false;
+
     public function __construct()
     {
         parent::__construct();
 
+    }
+
+    private function productImportSnapshot($product, array $categoryIds, array $categoryNames, array $brandNames)
+    {
+        $categories = array();
+        foreach ($categoryIds as $categoryId) {
+            $categoryId = (int) $categoryId;
+            if ($categoryId > 0) {
+                $categories[] = isset($categoryNames[$categoryId])
+                    ? $categoryNames[$categoryId]
+                    : 'Категория #' . $categoryId;
+            }
+        }
+        $categories = array_values(array_unique($categories));
+        sort($categories, SORT_NATURAL | SORT_FLAG_CASE);
+
+        $brandId = isset($product->brand_id) ? (int) $product->brand_id : 0;
+        $brandTitle = isset($product->brand_title)
+            ? (string) $product->brand_title
+            : (isset($brandNames[$brandId]) ? $brandNames[$brandId] : '');
+
+        return array(
+            'titleRU' => isset($product->titleRU) ? trim((string) $product->titleRU) : '',
+            'titleRO' => isset($product->titleRO) ? trim((string) $product->titleRO) : '',
+            'SKU' => isset($product->SKU) ? trim((string) $product->SKU) : '',
+            'categories' => $categories,
+            'brand' => trim($brandTitle),
+            'volume' => isset($product->volume) ? trim((string) $product->volume) : '',
+            'barcode' => isset($product->barcode) ? trim((string) $product->barcode) : '',
+        );
+    }
+
+    private function productImportDiff(array $before, array $after)
+    {
+        $labels = array(
+            'titleRU' => 'Название RU',
+            'titleRO' => 'Название RO',
+            'SKU' => 'Артикул',
+            'categories' => 'Категории',
+            'brand' => 'Бренд',
+            'volume' => 'Объём',
+            'barcode' => 'Штрихкод',
+        );
+        $changes = array();
+
+        foreach ($labels as $field => $label) {
+            $oldValue = isset($before[$field]) ? $before[$field] : '';
+            $newValue = isset($after[$field]) ? $after[$field] : '';
+
+            if (is_array($oldValue) || is_array($newValue)) {
+                $oldValue = array_values((array) $oldValue);
+                $newValue = array_values((array) $newValue);
+                if ($oldValue === $newValue) {
+                    continue;
+                }
+            } else {
+                $oldValue = trim((string) $oldValue);
+                $newValue = trim((string) $newValue);
+                if ($oldValue === $newValue) {
+                    continue;
+                }
+            }
+
+            $changes[$field] = array(
+                'label' => $label,
+                'before' => $oldValue,
+                'after' => $newValue,
+            );
+        }
+
+        return $changes;
+    }
+
+    private function saveProductImportChange($productId, $guid, $action, array $changes)
+    {
+        if (!$this->productImportTrackingEnabled) {
+            return;
+        }
+
+        if ($action === 'updated' && empty($changes)) {
+            return;
+        }
+
+        $this->db->insert('product_import_changes', array(
+            'product_id' => (int) $productId,
+            'product_guid' => (string) $guid,
+            'action' => $action,
+            'changed_fields' => json_encode($changes, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            'created_at' => date('Y-m-d H:i:s'),
+        ));
     }
 
     private function addSeoFieldsFromFeed(array $data, $value)
@@ -36,6 +128,10 @@ class Import extends CI_Controller
 
     public function import()
     {
+        $this->productImportTrackingEnabled = $this->db->table_exists('product_import_changes');
+        if (!$this->productImportTrackingEnabled) {
+            log_message('error', 'Product import change tracking is disabled: apply the product_import_changes SQL patch.');
+        }
 
         $file = realpath('public') . '/import/products.json';
         if (file_exists($file)) {
@@ -58,6 +154,7 @@ class Import extends CI_Controller
         ], true);
 
         $categories = [];
+        $categoryNames = [];
 
         // RO
         $query = $this->db->select('id, titleRO')
@@ -67,6 +164,7 @@ class Import extends CI_Controller
 
         foreach ($query as $row) {
             $categories[trim($row->titleRO)] = $row->id;
+            $categoryNames[(int) $row->id] = trim((string) $row->titleRO);
         }
 
         // RU
@@ -77,22 +175,40 @@ class Import extends CI_Controller
 
         foreach ($query as $row) {
             $categories[trim($row->titleRU)] = $row->id;
+            if (empty($categoryNames[(int) $row->id])) {
+                $categoryNames[(int) $row->id] = trim((string) $row->titleRU);
+            }
         }
 
         $brands = [];
+        $brandNames = [];
 
         $query = $this->db->select('id, title')->get('brands')->result();
         foreach ($query as $row) {
             $brands[trim($row->title)] = $row->id;
+            $brandNames[(int) $row->id] = trim((string) $row->title);
         }
 
         $products = [];
 
-        $query = $this->db->select('id, GUID')->get('products')->result();
+        $query = $this->db
+            ->select('id, GUID, SKU, volume, barcode, category_id, brand_id, titleRU, titleRO')
+            ->get('products')
+            ->result();
         foreach ($query as $row) {
-            $products[$row->GUID] = $row->id;
+            $products[$row->GUID] = $row;
         }
 
+        $productCategories = [];
+        $query = $this->db
+            ->select('product_id, category_id')
+            ->get('product_categories')
+            ->result();
+        foreach ($query as $row) {
+            $productCategories[(int) $row->product_id][] = (int) $row->category_id;
+        }
+
+		$replacedPendingNewProductChanges = false;
 
         foreach ($currentChunk as $value) {
 
@@ -119,14 +235,37 @@ class Import extends CI_Controller
                     'uri' => transliteration($brandTitle),
                 ]);
                 $brands[$brandTitle] = $this->db->insert_id(); // кешируем
+                $brandNames[(int) $brands[$brandTitle]] = $brandTitle;
             }
             $brandId = $brands[$brandTitle];
+            $incomingCategoryIds = array_values(array_unique(array_filter(array(
+                (int) $category,
+                (int) $category2,
+            ))));
+            $incomingSku = !empty($value->VariativeNomenclature)
+                ? $value->VariativeNomenclature
+                : $value->ID_nom;
+            $sourceProduct = (object) array(
+                'titleRU' => $value->ShortDescriptionRus,
+                'titleRO' => $value->ShortDescriptionMD,
+                'SKU' => $incomingSku,
+                'brand_id' => $brandId,
+                'brand_title' => $brandTitle,
+                'volume' => $value->VolumeVar,
+                'barcode' => $value->Barcode,
+            );
+            $sourceSnapshot = $this->productImportSnapshot(
+                $sourceProduct,
+                $incomingCategoryIds,
+                $categoryNames,
+                $brandNames
+            );
 
 
             if (!isset($products[$value->ID_nom])) {
 
                 $VariativeNomenclature = !empty($value->VariativeNomenclature) ? $value->VariativeNomenclature : '';
-                $value->SKU = !empty($value->VariativeNomenclature) ? $value->VariativeNomenclature : $value->ID_nom;
+                $value->SKU = $incomingSku;
 
                 $titleRU = $value->ShortDescriptionRus;
                 $titleRO = $value->ShortDescriptionMD;
@@ -183,9 +322,45 @@ class Import extends CI_Controller
                     $this->db->insert_batch('product_categories', $data_cat);
                 }
 
+				if (
+					!$replacedPendingNewProductChanges
+					&& $this->productImportTrackingEnabled
+					&& $this->db->field_exists('status', 'product_import_changes')
+				) {
+					// Keep only the latest import's unreviewed new-product entries.
+					// This removes journal rows only; product records remain untouched.
+					$this->db
+						->where('action', 'added')
+						->where('status', 'new')
+						->delete('product_import_changes');
+					$replacedPendingNewProductChanges = true;
+				}
+
+                $this->saveProductImportChange(
+                    $id_prod,
+                    $value->ID_nom,
+                    'added',
+                    $this->productImportDiff(array(), $sourceSnapshot)
+                );
+                $products[$value->ID_nom] = (object) array_merge($data, array('id' => $id_prod));
+                $productCategories[(int) $id_prod] = $incomingCategoryIds;
+
             } else {
 
-                $productId = $products[$value->ID_nom];
+                $existingProduct = $products[$value->ID_nom];
+                $productId = (int) $existingProduct->id;
+                $existingCategoryIds = isset($productCategories[$productId])
+                    ? $productCategories[$productId]
+                    : array();
+                if (empty($existingCategoryIds) && !empty($existingProduct->category_id)) {
+                    $existingCategoryIds[] = (int) $existingProduct->category_id;
+                }
+                $beforeSnapshot = $this->productImportSnapshot(
+                    $existingProduct,
+                    $existingCategoryIds,
+                    $categoryNames,
+                    $brandNames
+                );
 
                 $titleRU = $value->ShortDescriptionRus;
                 $titleRO = $value->ShortDescriptionMD;
@@ -237,7 +412,21 @@ class Import extends CI_Controller
                         ->delete('product_categories');
 
                     $this->db->insert_batch('product_categories', $data_cat);
+                    $productCategories[$productId] = $incomingCategoryIds;
+                } else {
+                    $sourceSnapshot['categories'] = $beforeSnapshot['categories'];
                 }
+
+                $this->saveProductImportChange(
+                    $productId,
+                    $value->ID_nom,
+                    'updated',
+                    $this->productImportDiff($beforeSnapshot, $sourceSnapshot)
+                );
+                $existingProduct->titleRU = $titleRU;
+                $existingProduct->titleRO = $titleRO;
+                $existingProduct->volume = $value->VolumeVar;
+                $existingProduct->barcode = $value->Barcode;
             }
 
         }

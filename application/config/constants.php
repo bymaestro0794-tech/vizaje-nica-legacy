@@ -49,6 +49,15 @@ defined('FOPEN_WRITE_CREATE_STRICT') OR define('FOPEN_WRITE_CREATE_STRICT', 'xb'
 defined('FOPEN_READ_WRITE_CREATE_STRICT') OR define('FOPEN_READ_WRITE_CREATE_STRICT', 'x+b');
 define('ADM_CONTROLLER', 'cp');
 define('REAL_CONTROLLER', 'admin');
+defined('TELEGRAM_SUPPORT_BOT') OR define(
+    'TELEGRAM_SUPPORT_BOT',
+    'https://t.me/vizaje_nica_support_bot'
+);
+// Temporary inbox for personal-data requests; keep CONT_EMAIL1 for public contacts.
+defined('PERSONAL_DATA_REQUEST_EMAIL') OR define(
+    'PERSONAL_DATA_REQUEST_EMAIL',
+    'marketing@vizaje-nica.com'
+);
 /*
 |--------------------------------------------------------------------------
 | Exit Status Codes

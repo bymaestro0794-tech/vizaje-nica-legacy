@@ -727,8 +727,8 @@
 }
 
 .quick-view-volume-list__item.is-selected {
-	background: #111;
-	color: #fff;
+	background: #fff;
+	color: #111;
 }
 
 .quick-view-volume-list__item:disabled {

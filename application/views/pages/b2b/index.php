@@ -16,12 +16,6 @@ $b2bIconCss = function_exists('base_url')
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Vizaje-Nica — B2B</title>
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link
-			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-			rel="stylesheet"
-		/>
 		<link rel="stylesheet" href="<?= $b2bAsset('main.css'); ?>" />
 		<link rel="stylesheet" href="<?= htmlspecialchars($b2bIconCss, ENT_QUOTES, 'UTF-8'); ?>" />
 		<!-- Прячем элементы до анимации появления; если скрипты не запустились за 4 с, показываем всё как есть -->

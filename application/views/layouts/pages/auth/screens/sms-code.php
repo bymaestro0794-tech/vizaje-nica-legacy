@@ -115,6 +115,17 @@ defined('BASEPATH') or exit('No direct script access allowed');
 			</div>
 
 			<button
+				type="button"
+				class="auth-drawer__code-change"
+				data-auth-open="register"
+				data-auth-back
+			>
+				<?= $isRomanian
+					? 'Schimbă numărul de telefon'
+					: 'Изменить номер телефона' ?>
+			</button>
+
+			<button
 				type="submit"
 				class="auth-drawer__primary-button"
 			>

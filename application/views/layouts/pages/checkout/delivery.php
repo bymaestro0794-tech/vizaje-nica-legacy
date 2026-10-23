@@ -40,7 +40,7 @@ $deliveryIcons = array(
 	>
 		<div class="vn-checkout-step__heading">
 			<span class="vn-checkout-step__number">
-				01 / 03
+				02 / 03
 			</span>
 
 			<h2 class="vn-checkout-step__title">
@@ -404,12 +404,21 @@ $deliveryIcons = array(
 								: 'Населённый пункт' ?>
 						</span>
 
-						<input
-							type="text"
-							name="city"
-							class="vn-checkout-field__input"
-							autocomplete="address-level2"
-						>
+						<span class="vn-checkout-field__control">
+							<span class="vn-checkout-field__icon" aria-hidden="true">
+								<svg class="lucide lucide-map-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
+									<circle cx="12" cy="10" r="2.5" />
+								</svg>
+							</span>
+
+							<input
+								type="text"
+								name="city"
+								class="vn-checkout-field__input"
+								autocomplete="address-level2"
+							>
+						</span>
 
 						<p
 							class="vn-checkout-field__error"
@@ -425,12 +434,22 @@ $deliveryIcons = array(
 								: 'Улица' ?>
 						</span>
 
-						<input
-								type="text"
-								name="address"
-								class="vn-checkout-field__input"
-								autocomplete="address-line1"
-							>
+							<span class="vn-checkout-field__control">
+								<span class="vn-checkout-field__icon" aria-hidden="true">
+									<svg class="lucide lucide-route" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+										<circle cx="6" cy="19" r="3" />
+										<path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15" />
+										<circle cx="18" cy="5" r="3" />
+									</svg>
+								</span>
+
+								<input
+									type="text"
+									name="address"
+									class="vn-checkout-field__input"
+									autocomplete="address-line1"
+								>
+							</span>
 
 							<p
 								class="vn-checkout-field__error"
@@ -446,11 +465,20 @@ $deliveryIcons = array(
 									: 'Дом' ?>
 							</span>
 
-							<input
-								type="text"
-								name="house"
-								class="vn-checkout-field__input"
-							>
+							<span class="vn-checkout-field__control">
+								<span class="vn-checkout-field__icon" aria-hidden="true">
+									<svg class="lucide lucide-house" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+										<path d="m3 10 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+										<path d="M9 22V12h6v10" />
+									</svg>
+								</span>
+
+								<input
+									type="text"
+									name="house"
+									class="vn-checkout-field__input"
+								>
+							</span>
 
 							<p
 								class="vn-checkout-field__error"
@@ -466,11 +494,19 @@ $deliveryIcons = array(
 									: 'Подъезд' ?>
 							</span>
 
-							<input
-								type="text"
-								name="porch"
-								class="vn-checkout-field__input"
-							>
+							<span class="vn-checkout-field__control">
+								<span class="vn-checkout-field__icon" aria-hidden="true">
+									<svg class="lucide lucide-stairs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+										<path d="M3 18h3v-5h5V8h5V3h5" />
+									</svg>
+								</span>
+
+								<input
+									type="text"
+									name="porch"
+									class="vn-checkout-field__input"
+								>
+							</span>
 
 							<p
 								class="vn-checkout-field__error"
@@ -486,27 +522,23 @@ $deliveryIcons = array(
 								: 'Квартира' ?>
 						</span>
 
-						<input
-							type="text"
-							name="apartament"
-							class="vn-checkout-field__input"
-						>
+						<span class="vn-checkout-field__control">
+							<span class="vn-checkout-field__icon" aria-hidden="true">
+								<svg class="lucide lucide-building-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M6 22V2h12v20M6 12H3v10h18V12h-3" />
+									<path d="M10 6h1m3 0h1m-5 4h1m3 0h1m-5 4h1m3 0h1" />
+								</svg>
+							</span>
+
+							<input
+								type="text"
+								name="apartament"
+								class="vn-checkout-field__input"
+							>
+						</span>
 					</label>
 
 				</div>
-			</div>
-
-			<div class="vn-checkout-step__actions">
-				<button
-					type="button"
-					class="vn-checkout-step__continue"
-					data-checkout-delivery-continue
-					disabled
-				>
-					<?= $isRomanian
-						? 'Continuă'
-						: 'Продолжить' ?>
-				</button>
 			</div>
 
 			<p
