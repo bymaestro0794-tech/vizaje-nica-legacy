@@ -58,6 +58,11 @@ $sidebar_menu = array(
                 'ico' => '<i class="fa fa-tags"></i>',
             ],
 
+            'beauty_selections' => [
+                'name' => 'Бьюти-подборки',
+                'ico' => '<i class="fa fa-th-large"></i>',
+            ],
+
             /*
              * Добавим позже, когда появятся модули.
              *

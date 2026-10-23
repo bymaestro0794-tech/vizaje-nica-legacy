@@ -438,6 +438,10 @@ switch ($currentView) {
 	$pageCss[] = '/app/css/pages/home/home.css?v=20261022-catalog-cards';
 	$pageCss[] = '/app/css/pages/home/catalog-slider-card.css?v=20261022-catalog-cards';
         break;
+    case 'pages/beauty_selections/index':
+    case 'pages/beauty_selections/item':
+        $pageCss[] = '/app/css/pages/beauty-selections.css?v=20261023-1';
+        break;
     case 'pages/main/contacts':
         $pageCss[] = 'app/css/style/22-contactpage.css';
         break;

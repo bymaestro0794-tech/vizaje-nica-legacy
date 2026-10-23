@@ -262,6 +262,19 @@ if (!empty($menu['top'])) {
     }
 }
 
+$beautySelectionsTitle = $isRomanian ? 'Selecții de frumusețe' : 'Бьюти-подборки';
+$beautySelectionsUri = 'beauty-selections';
+if (!isset($registeredUris[$beautySelectionsUri])) {
+    $desktopNavItems[] = [
+        'title' => $beautySelectionsTitle,
+        'uri' => $beautySelectionsUri,
+        'url' => '/' . $lclang . '/' . $beautySelectionsUri,
+        'type' => 'direct',
+        'has_children' => false,
+        'category' => null,
+    ];
+}
+
 $mobileCatalogItems = [];
 $mobileSecondaryItems = [];
 

@@ -139,6 +139,9 @@ $route[$langs.'/(brendyi|brands)'] = "frontend/brands/index";
 $route[$langs.'/(aktsii|promotii)'] = "frontend/offers/index";
 $route[$langs.'/(aktsii|promotii)/:any'] = "frontend/offers/items";
 
+$route[$langs.'/(beauty-selections|byuti-podborki)'] = "frontend/beauty_selections/index";
+$route[$langs.'/(beauty-selections|byuti-podborki)/(:any)'] = "frontend/beauty_selections/item";
+
 $route[$langs.'/blog/like/(:num)'] = 'frontend/articles/blog_like/$2';
 $route[$langs.'/blog'] = 'frontend/articles/blog_index';
 $route[$langs.'/blog/(:any)'] = 'frontend/articles/blog_item';
