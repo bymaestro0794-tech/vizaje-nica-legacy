@@ -176,7 +176,9 @@ class PaynetEcomAPI
         $product_line = 0;
         $_service_item = ""; 
         //-------------------------------------------------------------------
-        $pRequest->ExpiryDate = $this->ExpiryDateGet(self::EXPIRY_DATE_HOURS);
+        if (empty($pRequest->ExpiryDate)) {
+            $pRequest->ExpiryDate = $this->ExpiryDateGet(self::EXPIRY_DATE_HOURS);
+        }
 
         $amount = $pRequest->Amount;
         foreach ($pRequest->Service["Products"] as $item) {
@@ -305,6 +307,8 @@ class PaynetEcomAPI
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         }
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         if ($method != 'GET') {

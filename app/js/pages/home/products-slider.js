@@ -338,12 +338,14 @@ const initProductsSlider = section => {
 		window.addEventListener('resize', updateMobileControls)
 
 		updateMobileControls()
+		section.__vnProductsSliderRefresh = updateMobileControls
 
 		return
 	}
 
 	updateAccessibility()
 	updateControls()
+	section.__vnProductsSliderRefresh = updateControls
 }
 
 /* ==========================================================================
@@ -355,7 +357,8 @@ const revealSection = section => {
 }
 window.VNProductsSlider = {
 	init: initProductsSlider,
-	reveal: revealSection
+	reveal: revealSection,
+	refresh: section => section?.__vnProductsSliderRefresh?.()
 }
 document.querySelectorAll('[data-products-slider]').forEach(section => {
 	initProductsSlider(section)

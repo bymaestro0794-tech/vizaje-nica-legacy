@@ -20,24 +20,7 @@
 	function isValidPhone(value) {
 		const digits = String(value || '').replace(/\D/g, '')
 
-		/*
-		 * Поддерживаем:
-		 *
-		 * 061234567
-		 * 61234567
-		 * +373 61 234 567
-		 *
-		 * После очистки:
-		 *
-		 * 8 цифр
-		 * или
-		 * 373 + 8 цифр
-		 */
-
-		return (
-			digits.length === 8 ||
-			(digits.length === 11 && digits.indexOf('373') === 0)
-		)
+		return digits.length >= 1
 	}
 
 	function isValidEmail(value) {

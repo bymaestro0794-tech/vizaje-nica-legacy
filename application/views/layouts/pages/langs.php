@@ -14,10 +14,10 @@
         $data_link_without_get = $langLink;
         $langLink .= (!empty($get_data)) ? '?' . $get_data : '';
         ?>
-        <a href="javascript:;"
+        <a href="<?= htmlspecialchars($langLink, ENT_QUOTES, 'UTF-8') ?>"
            class="language-main-header__item <?= uri(1) == $lang || $_SESSION['lang'] == $lang ? '_active' : '' ?>"
            data-link="<?= $data_link_without_get ?>"
-           title="<?= $lang ?>" onclick="changeLangue(this)">
+           title="<?= $lang ?>" onclick="changeLangue(this); return false;">
             <?= $lang_title[$lang] ?>
         </a>
     <?php endforeach; ?>

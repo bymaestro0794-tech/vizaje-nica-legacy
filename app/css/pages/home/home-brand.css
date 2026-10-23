@@ -66,11 +66,6 @@
 	transform: translateX(4px);
 }
 
-.home-brand-showcase__brand-link span:last-child {
-	font-size: 18px;
-	line-height: 1;
-}
-
 /* --------------------------------------------------------------------------
    Banner
    -------------------------------------------------------------------------- */
@@ -164,7 +159,7 @@
 }
 
 .home-brand-showcase__product:hover {
-	transform: translateY(-3px);
+	transform: none;
 }
 
 /*

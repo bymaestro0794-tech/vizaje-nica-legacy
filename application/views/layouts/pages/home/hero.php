@@ -93,6 +93,13 @@ $formatSlideNumber = static function (int $number): string {
                             : 'Кампания Vizaje-Nica'
                     );
 
+                $storedYoutube = trim((string) ($slider->youtube ?? ''));
+                $youtubeId = extract_youtube_video_id(
+                    preg_match('/^[A-Za-z0-9_-]{11}$/', $storedYoutube)
+                        ? 'https://youtu.be/' . $storedYoutube
+                        : $storedYoutube
+                );
+
                 /*
                  * Позже можно перенести эти параметры в админку.
                  * Пока используем безопасные значения по умолчанию.
@@ -206,6 +213,27 @@ $formatSlideNumber = static function (int $number): string {
                     <?php else : ?>
                         </div>
                     <?php endif; ?>
+
+                    <?php if ($youtubeId !== false) : ?>
+                        <button
+                            type="button"
+                            class="home-hero__video-play"
+                            data-hero-video-play
+                            data-video-id="<?= htmlspecialchars($youtubeId, ENT_QUOTES, 'UTF-8') ?>"
+                            aria-label="<?= $isRomanian ? 'Redă videoclipul campaniei' : 'Смотреть видео кампании' ?>"
+                            tabindex="<?= $isFirstSlide ? '0' : '-1' ?>"
+                        >
+                            <span class="home-hero__video-play-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M9 6.75v10.5L17.25 12 9 6.75Z" fill="currentColor"/></svg>
+                            </span>
+                            <span><?= $isRomanian ? 'Urmăriți videoclipul' : 'Смотреть видео' ?></span>
+                        </button>
+                        <div class="home-hero__video-player" data-hero-video-player hidden>
+                            <button type="button" class="home-hero__video-close" data-hero-video-close aria-label="<?= $isRomanian ? 'Închide videoclipul' : 'Закрыть видео' ?>">
+                                <span></span><span></span>
+                            </button>
+                        </div>
+                    <?php endif; ?>
                 </article>
             <?php endforeach; ?>
         </div>
@@ -244,28 +272,10 @@ $formatSlideNumber = static function (int $number): string {
                     class="home-hero__cursor-icon home-hero__cursor-icon--navigation"
                     data-hero-cursor-navigation
                 >
-                    <svg
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        aria-hidden="true"
-                    >
-                        <path
-                            d="M5 12H19"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                        />
-
-                        <path
-                            d="M14 7L19 12L14 17"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-                    </svg>
+					<svg class="home-arrow-icon home-arrow-icon--right" fill="none" stroke="none" viewBox="0 0 25 15" aria-hidden="true">
+						<path stroke="currentColor" d="M6 2 .5 7.5 6 13" />
+						<path fill="currentColor" d="M1 7h20v1H1z" />
+					</svg>
                 </span>
 
                 

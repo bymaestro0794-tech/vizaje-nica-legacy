@@ -191,13 +191,29 @@ class Paynet extends CI_Controller
         $checkObj = $api->PaymentGet($paymentObj->Payment->ExternalId);
 
         if ($checkObj->IsOk()) {
-            if ($checkObj->Data['status'] !== 4) {
+            $paymentStatus = null;
+            if (is_array($checkObj->Data)) {
+                if (isset($checkObj->Data['status']) && is_numeric($checkObj->Data['status'])) {
+                    $paymentStatus = (int) $checkObj->Data['status'];
+                } elseif (
+                    isset($checkObj->Data[0]['Status'])
+                    && is_numeric($checkObj->Data[0]['Status'])
+                ) {
+                    $paymentStatus = (int) $checkObj->Data[0]['Status'];
+                }
+            }
+
+            if ($paymentStatus !== 4) {
                 $data = array(
                     'order_id' => 'The payment status is not complete. Please wait and try again !!!',
                     'response' => json_encode($paymentObj),
                     'date' => date("Y-m-d H:i:s")
                 );
                 $this->db->insert('paynet_logs', $data);
+                $this->load->model('roulette_game_model');
+                $this->roulette_game_model->failPaynetReservation(
+                    (string) $paymentObj->Payment->ExternalId
+                );
                 return;
             } else {
                 $data = array(
@@ -217,6 +233,11 @@ class Paynet extends CI_Controller
                         )
                         ->get('orders')
                         ->row();
+
+                $this->load->model('roulette_game_model');
+                $this->roulette_game_model->confirmPaynetReservation(
+                    (string) $paymentObj->Payment->ExternalId
+                );
 
                 if (
                     !empty($order)

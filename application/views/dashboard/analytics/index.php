@@ -5,6 +5,18 @@ $analytics = isset($analytics) && is_array($analytics) ? $analytics : array();
 $summary = isset($analytics['summary']) && is_array($analytics['summary'])
     ? $analytics['summary']
     : array();
+$previousAnalytics = isset($previous_analytics) && is_array($previous_analytics) ? $previous_analytics : array();
+$previousSummary = isset($previousAnalytics['summary']) && is_array($previousAnalytics['summary']) ? $previousAnalytics['summary'] : array();
+$currentRevenue = (float) ($summary['product_revenue'] ?? 0);
+$previousRevenue = (float) ($previousSummary['product_revenue'] ?? 0);
+$revenueChange = $previousRevenue > 0 ? (($currentRevenue - $previousRevenue) / $previousRevenue) * 100 : null;
+$activeFilterCount = (int) ($group_by === 'day')
+    + (int) ($brand_id !== null)
+    + (int) ($order_source !== '')
+    + (int) ($direction === 'asc')
+    + (int) ($product_sort !== 'quantity')
+    + (int) ($brand_sort !== 'quantity')
+    + (int) ($category_sort !== 'quantity');
 $topProducts = isset($analytics['top_products']) && is_array($analytics['top_products'])
     ? $analytics['top_products']
     : array();
@@ -21,6 +33,11 @@ $money = static function ($value) {
 
 $number = static function ($value) {
     return number_format((float) $value, 0, '.', ' ');
+};
+
+$dateLabel = static function ($value) {
+    $date = DateTime::createFromFormat('!Y-m-d', (string) $value);
+    return $date ? $date->format('d.m.Y') : (string) $value;
 };
 
 $monthNames = array(
@@ -42,8 +59,30 @@ $periodLabel = static function ($period, $groupBy, $monthNames) {
 
     return $monthNames[(int) $date->format('n')] . ' ' . $date->format('Y');
 };
+
+$salesPeriodsByKey = array();
+foreach ($periodSales as $period) {
+    $salesPeriodsByKey[(string) ($period['period_key'] ?? '')] = $period;
+}
+$salesChart = array('labels' => array(), 'product_revenue' => array(), 'finished_orders' => array(), 'sold_quantity' => array());
+$salesChartDate = new DateTime($group_by === 'day' ? $date_from : (new DateTime($date_from))->modify('first day of this month')->format('Y-m-d'));
+$salesChartEndDate = new DateTime($group_by === 'day' ? $date_to : (new DateTime($date_to))->modify('first day of this month')->format('Y-m-d'));
+$salesChartStep = $group_by === 'day' ? '+1 day' : '+1 month';
+while ($salesChartDate <= $salesChartEndDate) {
+    $periodKey = $group_by === 'day' ? $salesChartDate->format('Y-m-d') : $salesChartDate->format('Y-m');
+    $period = isset($salesPeriodsByKey[$periodKey]) ? $salesPeriodsByKey[$periodKey] : array();
+    $salesChart['labels'][] = $group_by === 'day'
+        ? $salesChartDate->format('d.m')
+        : $periodLabel($periodKey, $group_by, $monthNames);
+    $salesChart['product_revenue'][] = (float) ($period['product_revenue'] ?? 0);
+    $salesChart['finished_orders'][] = (int) ($period['finished_orders'] ?? 0);
+    $salesChart['sold_quantity'][] = (int) ($period['sold_quantity'] ?? 0);
+    $salesChartDate->modify($salesChartStep);
+}
+$salesChartJson = json_encode($salesChart, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
 ?>
 
+<div class="analytics-dashboard analytics-dashboard-sales">
 <div class="page-bar">
     <ul class="page-breadcrumb">
         <li><a href="/<?= ADM_CONTROLLER ?>/">Главная</a><i class="fa fa-circle"></i></li>
@@ -54,111 +93,181 @@ $periodLabel = static function ($period, $groupBy, $monthNames) {
 <h1 class="page-title">Аналитика продаж <small>завершённые заказы</small></h1>
 
 <ul class="nav nav-tabs" style="margin-bottom:20px;">
-    <li class="active"><a href="/<?= ADM_CONTROLLER ?>/analytics">Аналитика продаж</a></li>
-    <li><a href="/<?= ADM_CONTROLLER ?>/analytics/funnel">Воронка продаж</a></li>
-    <li><a href="/<?= ADM_CONTROLLER ?>/analytics/site">Аналитика сайта</a></li>
+    <li><a href="/<?= ADM_CONTROLLER ?>/analytics/site">Сайт</a></li>
+    <li class="active"><a href="/<?= ADM_CONTROLLER ?>/analytics">Продажи</a></li>
 </ul>
 
-<form method="get" action="<?= html_escape(current_url()) ?>" class="form-inline" style="margin-bottom:20px;">
-    <div class="form-group">
-        <label for="analytics-date-from">С</label>
-        <input id="analytics-date-from" class="form-control" type="date" name="date_from"
-               value="<?= html_escape($date_from) ?>">
+<form method="get" action="<?= html_escape(current_url()) ?>" class="analytics-filter-form" data-analytics-filter>
+    <div class="analytics-filter-toolbar">
+        <div class="analytics-filter-period-summary">
+            <span class="analytics-filter-eyebrow">Период отчёта</span>
+            <strong><i class="fa fa-calendar-o"></i> <span data-analytics-period-summary><?= html_escape($dateLabel($date_from)) ?> — <?= html_escape($dateLabel($date_to)) ?></span></strong>
+        </div>
+        <button type="button" class="analytics-filter-open" data-analytics-filter-open aria-haspopup="dialog" aria-expanded="false">
+            <i class="fa fa-sliders"></i><span>Настроить отчёт</span>
+            <?php if ($activeFilterCount > 0): ?><span class="analytics-filter-count"><?= $activeFilterCount ?></span><?php endif; ?>
+        </button>
+        <span class="analytics-filter-caption">Период, канал продаж и сортировка</span>
     </div>
-    <div class="form-group" style="margin-left:8px;">
-        <label for="analytics-date-to">По</label>
-        <input id="analytics-date-to" class="form-control" type="date" name="date_to"
-               value="<?= html_escape($date_to) ?>">
-    </div>
-    <div class="form-group" style="margin-left:8px;">
-        <label for="analytics-group-by">Группировка</label>
-        <select id="analytics-group-by" class="form-control" name="group_by">
-            <option value="month" <?= $group_by === 'month' ? 'selected' : '' ?>>По месяцам</option>
-            <option value="day" <?= $group_by === 'day' ? 'selected' : '' ?>>По дням</option>
-        </select>
-    </div>
-    <div class="form-group" style="margin-left:8px;">
-        <label for="analytics-brand-id">Бренд</label>
-        <select id="analytics-brand-id" class="form-control" name="brand_id">
-            <option value="">Все бренды</option>
-            <?php foreach ((array) $brands as $brand): ?>
-                <option value="<?= (int) $brand['id'] ?>" <?= (int) $brand_id === (int) $brand['id'] ? 'selected' : '' ?>>
-                    <?= html_escape($brand['title']) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-    </div>
-    <div class="form-group" style="margin-left:8px;">
-        <label for="analytics-direction">Порядок</label>
-        <select id="analytics-direction" class="form-control" name="direction">
-            <option value="desc" <?= $direction === 'desc' ? 'selected' : '' ?>>По убыванию</option>
-            <option value="asc" <?= $direction === 'asc' ? 'selected' : '' ?>>По возрастанию</option>
-        </select>
-    </div>
-    <button type="submit" class="btn blue" style="margin-left:8px;">Применить</button>
 
-    <div style="margin-top:12px;">
-        <label for="analytics-product-sort">Сортировка товаров</label>
-        <select id="analytics-product-sort" class="form-control" name="product_sort" style="display:inline-block;width:auto;margin-left:8px;">
-            <option value="quantity" <?= $product_sort === 'quantity' ? 'selected' : '' ?>>По количеству</option>
-            <option value="revenue" <?= $product_sort === 'revenue' ? 'selected' : '' ?>>По выручке</option>
-            <option value="orders" <?= $product_sort === 'orders' ? 'selected' : '' ?>>По заказам</option>
-            <option value="title" <?= $product_sort === 'title' ? 'selected' : '' ?>>По названию</option>
-        </select>
+    <div class="analytics-filter-backdrop" data-analytics-filter-close aria-hidden="true"></div>
+    <aside class="analytics-filter-drawer" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="analytics-filter-title">
+        <header class="analytics-filter-drawer__header">
+            <div><span class="analytics-filter-eyebrow">АНАЛИТИКА ПРОДАЖ</span><h2 id="analytics-filter-title">Настройки отчёта</h2></div>
+            <button type="button" class="analytics-filter-close" data-analytics-filter-close aria-label="Закрыть фильтры"><i class="fa fa-times"></i></button>
+        </header>
 
-        <label for="analytics-brand-sort" style="margin-left:16px;">Сортировка брендов</label>
-        <select id="analytics-brand-sort" class="form-control" name="brand_sort" style="display:inline-block;width:auto;margin-left:8px;">
-            <option value="quantity" <?= $brand_sort === 'quantity' ? 'selected' : '' ?>>По количеству</option>
-            <option value="revenue" <?= $brand_sort === 'revenue' ? 'selected' : '' ?>>По выручке</option>
-            <option value="orders" <?= $brand_sort === 'orders' ? 'selected' : '' ?>>По заказам</option>
-            <option value="title" <?= $brand_sort === 'title' ? 'selected' : '' ?>>По названию</option>
-        </select>
+        <div class="analytics-filter-drawer__content">
+            <section class="analytics-filter-section">
+                <h3><span>01</span> Период</h3>
+                <div class="analytics-filter-presets" aria-label="Быстрый выбор периода">
+                    <button type="button" data-analytics-range="7">7 дней</button>
+                    <button type="button" data-analytics-range="30">30 дней</button>
+                    <button type="button" data-analytics-range="90">90 дней</button>
+                    <button type="button" data-analytics-range="month">Этот месяц</button>
+                </div>
+                <div class="analytics-filter-date-grid">
+                    <label>С<input id="analytics-date-from" class="form-control" type="date" name="date_from" value="<?= html_escape($date_from) ?>"></label>
+                    <label>По<input id="analytics-date-to" class="form-control" type="date" name="date_to" value="<?= html_escape($date_to) ?>"></label>
+                </div>
+            </section>
 
-        <label for="analytics-category-sort" style="margin-left:16px;">Сортировка категорий</label>
-        <select id="analytics-category-sort" class="form-control" name="category_sort" style="display:inline-block;width:auto;margin-left:8px;">
-            <option value="quantity" <?= $category_sort === 'quantity' ? 'selected' : '' ?>>По количеству</option>
-            <option value="revenue" <?= $category_sort === 'revenue' ? 'selected' : '' ?>>По выручке</option>
-            <option value="orders" <?= $category_sort === 'orders' ? 'selected' : '' ?>>По заказам</option>
-            <option value="title" <?= $category_sort === 'title' ? 'selected' : '' ?>>По названию</option>
-        </select>
-    </div>
+            <section class="analytics-filter-section">
+                <h3><span>02</span> Состав отчёта</h3>
+                <label class="analytics-filter-field">Группировать данные
+                    <select id="analytics-group-by" class="form-control" name="group_by">
+                        <option value="month" <?= $group_by === 'month' ? 'selected' : '' ?>>По месяцам</option>
+                        <option value="day" <?= $group_by === 'day' ? 'selected' : '' ?>>По дням</option>
+                    </select>
+                </label>
+                <label class="analytics-filter-field">Бренд
+                    <select id="analytics-brand-id" class="form-control" name="brand_id">
+                        <option value="">Все бренды</option>
+                        <?php foreach ((array) $brands as $brand): ?>
+                            <option value="<?= (int) $brand['id'] ?>" <?= (int) $brand_id === (int) $brand['id'] ? 'selected' : '' ?>><?= html_escape($brand['title']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+                <label class="analytics-filter-field">Откуда оформлен заказ
+                    <select id="analytics-order-source" class="form-control" name="order_source">
+                        <option value="" <?= empty($order_source) ? 'selected' : '' ?>>Все заказы</option>
+                        <option value="web" <?= $order_source === 'web' ? 'selected' : '' ?>>Сайт (Web)</option>
+                        <option value="app" <?= $order_source === 'app' ? 'selected' : '' ?>>Приложение (App)</option>
+                    </select>
+                    <small>Старые заказы без отметки источника останутся в варианте «Все заказы».</small>
+                </label>
+            </section>
+
+            <section class="analytics-filter-section">
+                <h3><span>03</span> Сортировка</h3>
+                <label class="analytics-filter-field">Порядок
+                    <select id="analytics-direction" class="form-control" name="direction">
+                        <option value="desc" <?= $direction === 'desc' ? 'selected' : '' ?>>Сначала больше</option>
+                        <option value="asc" <?= $direction === 'asc' ? 'selected' : '' ?>>Сначала меньше</option>
+                    </select>
+                </label>
+                <div class="analytics-filter-sort-grid">
+                    <label class="analytics-filter-field">Товары
+                        <select id="analytics-product-sort" class="form-control" name="product_sort">
+                            <option value="quantity" <?= $product_sort === 'quantity' ? 'selected' : '' ?>>По количеству</option>
+                            <option value="revenue" <?= $product_sort === 'revenue' ? 'selected' : '' ?>>По выручке</option>
+                            <option value="orders" <?= $product_sort === 'orders' ? 'selected' : '' ?>>По заказам</option>
+                            <option value="title" <?= $product_sort === 'title' ? 'selected' : '' ?>>По названию</option>
+                        </select>
+                    </label>
+                    <label class="analytics-filter-field">Бренды
+                        <select id="analytics-brand-sort" class="form-control" name="brand_sort">
+                            <option value="quantity" <?= $brand_sort === 'quantity' ? 'selected' : '' ?>>По количеству</option>
+                            <option value="revenue" <?= $brand_sort === 'revenue' ? 'selected' : '' ?>>По выручке</option>
+                            <option value="orders" <?= $brand_sort === 'orders' ? 'selected' : '' ?>>По заказам</option>
+                            <option value="title" <?= $brand_sort === 'title' ? 'selected' : '' ?>>По названию</option>
+                        </select>
+                    </label>
+                    <label class="analytics-filter-field">Категории
+                        <select id="analytics-category-sort" class="form-control" name="category_sort">
+                            <option value="quantity" <?= $category_sort === 'quantity' ? 'selected' : '' ?>>По количеству</option>
+                            <option value="revenue" <?= $category_sort === 'revenue' ? 'selected' : '' ?>>По выручке</option>
+                            <option value="orders" <?= $category_sort === 'orders' ? 'selected' : '' ?>>По заказам</option>
+                            <option value="title" <?= $category_sort === 'title' ? 'selected' : '' ?>>По названию</option>
+                        </select>
+                    </label>
+                </div>
+            </section>
+        </div>
+
+        <footer class="analytics-filter-drawer__footer">
+            <a href="/<?= ADM_CONTROLLER ?>/analytics">Сбросить</a>
+            <button type="submit" class="analytics-filter-apply"><i class="fa fa-check"></i> Показать отчёт</button>
+        </footer>
+    </aside>
 </form>
 
-<div class="note note-info">
-    В отчёт попадают только заказы со статусом <strong>finished</strong>.
-    Выручка по товарам рассчитывается по позициям заказа и не включает доставку.
+<div class="analytics-sales-note" role="note">
+    <i class="fa fa-info-circle" aria-hidden="true"></i>
+    <span><strong>Как читать отчёт:</strong> здесь только заказы со статусом «Завершён». Выручка по товарам — сумма позиций без доставки. Сравнение идёт с предыдущим периодом такой же длины.</span>
 </div>
 
-<div class="row">
-    <div class="col-md-3 col-sm-6">
-        <div class="dashboard-stat blue">
-            <div class="visual"><i class="fa fa-shopping-cart"></i></div>
-            <div class="details"><div class="number"><?= $number($summary['finished_orders'] ?? 0) ?></div><div class="desc">Завершённые заказы</div></div>
-        </div>
-    </div>
-    <div class="col-md-3 col-sm-6">
-        <div class="dashboard-stat green">
-            <div class="visual"><i class="fa fa-cubes"></i></div>
-            <div class="details"><div class="number"><?= $number($summary['sold_quantity'] ?? 0) ?></div><div class="desc">Проданные товары</div></div>
-        </div>
-    </div>
-    <div class="col-md-3 col-sm-6">
-        <div class="dashboard-stat purple">
-            <div class="visual"><i class="fa fa-line-chart"></i></div>
-            <div class="details"><div class="number"><?= $money($summary['product_revenue'] ?? 0) ?></div><div class="desc">Выручка по товарам</div></div>
-        </div>
-    </div>
-    <div class="col-md-3 col-sm-6">
-        <div class="dashboard-stat red">
-            <div class="visual"><i class="fa fa-calculator"></i></div>
-            <div class="details"><div class="number"><?= $money($summary['average_order_value'] ?? 0) ?></div><div class="desc"><?= $brand_id ? 'Средний чек заказов с брендом' : 'Средний чек' ?></div></div>
-        </div>
-    </div>
-</div>
+<section class="analytics-sales-metrics" aria-label="Ключевые показатели продаж">
+    <?php
+    $salesMetrics = array(
+        array('label' => 'Завершённые заказы', 'value' => $number($summary['finished_orders'] ?? 0), 'icon' => 'fa-check-circle', 'help' => 'Заказы, у которых сейчас статус «Завершён».', 'key' => 'finished_orders'),
+        array('label' => 'Проданные товары', 'value' => $number($summary['sold_quantity'] ?? 0), 'icon' => 'fa-cubes', 'help' => 'Сумма количества товаров из завершённых заказов.', 'key' => 'sold_quantity'),
+        array('label' => 'Выручка по товарам', 'value' => $money($summary['product_revenue'] ?? 0), 'icon' => 'fa-line-chart', 'help' => 'Сумма позиций завершённых заказов; доставка не включена.', 'key' => 'product_revenue'),
+        array('label' => $brand_id ? 'Средний чек с брендом' : 'Средний чек', 'value' => $money($summary['average_order_value'] ?? 0), 'icon' => 'fa-calculator', 'help' => 'Средняя сумма заказа среди завершённых заказов.', 'key' => 'average_order_value'),
+    );
+    foreach ($salesMetrics as $index => $metric):
+        $metricChange = null;
+        $previousValue = (float) ($previousSummary[$metric['key']] ?? 0);
+        $currentValue = (float) ($summary[$metric['key']] ?? 0);
+        if ($previousValue > 0) {
+            $metricChange = (($currentValue - $previousValue) / $previousValue) * 100;
+        }
+    ?>
+        <article class="analytics-sales-metric <?= $index === 2 ? 'is-primary' : '' ?>">
+            <div class="analytics-sales-metric__label" title="<?= html_escape($metric['help']) ?>"><i class="fa <?= html_escape($metric['icon']) ?>" aria-hidden="true"></i><?= html_escape($metric['label']) ?><i class="fa fa-info-circle" aria-hidden="true"></i></div>
+            <strong class="analytics-sales-metric__value"><?= $metric['value'] ?></strong>
+            <?php if ($metricChange !== null): ?>
+                <span class="analytics-sales-metric__change <?= $metricChange >= 0 ? 'is-positive' : 'is-negative' ?>"><?= $metricChange >= 0 ? '↗' : '↘' ?> <?= number_format(abs($metricChange), 1, '.', ' ') ?>% к прошлому периоду</span>
+            <?php endif; ?>
+        </article>
+    <?php endforeach; ?>
+</section>
 
-<div class="row">
+<section class="analytics-sales-insight <?= $revenueChange !== null && $revenueChange <= -10 ? 'is-warning' : '' ?>">
+    <div class="analytics-sales-insight__icon"><i class="fa fa-lightbulb-o" aria-hidden="true"></i></div>
+    <div class="analytics-sales-insight__body">
+        <strong>Краткий обзор</strong>
+        <p>
+            <?php if ($revenueChange === null): ?>
+                Для сравнения выручки пока недостаточно данных за предыдущий период.
+            <?php elseif ($revenueChange <= -10): ?>
+                Выручка по товарам снизилась на <?= number_format(abs($revenueChange), 1, '.', ' ') ?>%: <?= $money($currentRevenue) ?> против <?= $money($previousRevenue) ?> в предыдущем периоде.
+            <?php elseif ($revenueChange >= 10): ?>
+                Выручка по товарам выросла на <?= number_format($revenueChange, 1, '.', ' ') ?>%: <?= $money($currentRevenue) ?> против <?= $money($previousRevenue) ?> в предыдущем периоде.
+            <?php else: ?>
+                Выручка по товарам почти не изменилась: <?= $money($currentRevenue) ?> (<?= ($revenueChange > 0 ? '+' : '') . number_format($revenueChange, 1, '.', ' ') ?>% к предыдущему периоду).
+            <?php endif; ?>
+            <?php if (!empty($topProducts)): ?> Первый товар в текущей сортировке — <strong><?= html_escape($topProducts[0]['product_title']) ?></strong> (<?= $number($topProducts[0]['sold_quantity']) ?> шт.).<?php endif; ?>
+        </p>
+        <small>Автоматическая сводка по правилам и текущим данным, не ИИ-анализ. Сравнение приблизительное при малом количестве заказов.</small>
+    </div>
+</section>
+
+<section class="analytics-sales-chart-card" aria-labelledby="analytics-sales-chart-title">
+    <div class="analytics-sales-section-heading">
+        <div><h2 id="analytics-sales-chart-title">Выручка по товарам</h2><p>Динамика за выбранный период</p></div>
+        <span class="analytics-sales-chart-caption"><i></i> Выручка, MDL</span>
+    </div>
+    <?php if (empty($periodSales)): ?>
+        <div class="analytics-sales-empty">За выбранный период завершённых заказов пока нет.</div>
+    <?php else: ?>
+        <div class="analytics-sales-chart" data-analytics-sales-chart data-chart="<?= html_escape($salesChartJson) ?>"></div>
+    <?php endif; ?>
+</section>
+
+<div class="row analytics-sales-tables">
     <div class="col-md-6">
-        <div class="portlet light bordered">
+        <div class="portlet light bordered analytics-sales-card">
             <div class="portlet-title"><div class="caption"><i class="icon-basket"></i> Популярные товары</div></div>
             <div class="portlet-body table-responsive">
                 <table class="table table-striped table-hover">
@@ -183,7 +292,7 @@ $periodLabel = static function ($period, $groupBy, $monthNames) {
     </div>
 
     <div class="col-md-6">
-        <div class="portlet light bordered">
+        <div class="portlet light bordered analytics-sales-card">
             <div class="portlet-title"><div class="caption"><i class="icon-tag"></i> Популярные бренды</div></div>
             <div class="portlet-body table-responsive">
                 <table class="table table-striped table-hover">
@@ -208,7 +317,7 @@ $periodLabel = static function ($period, $groupBy, $monthNames) {
     </div>
 </div>
 
-<div class="portlet light bordered">
+<div class="portlet light bordered analytics-sales-card">
     <div class="portlet-title"><div class="caption"><i class="icon-list"></i> Популярные категории</div></div>
     <div class="portlet-body table-responsive">
         <table class="table table-striped table-hover">
@@ -232,7 +341,7 @@ $periodLabel = static function ($period, $groupBy, $monthNames) {
     </div>
 </div>
 
-<div class="portlet light bordered">
+<div class="portlet light bordered analytics-sales-card">
     <div class="portlet-title"><div class="caption"><i class="icon-graph"></i> Продажи по периодам</div></div>
     <div class="portlet-body table-responsive">
         <table class="table table-striped table-hover">
@@ -255,3 +364,8 @@ $periodLabel = static function ($period, $groupBy, $monthNames) {
         </table>
     </div>
 </div>
+
+</div>
+<script src="/static/assets/global/plugins/echarts/echarts.js"></script>
+<script src="/app/js/dashboard/analytics-sales.js?v=<?= filemtime(FCPATH . 'app/js/dashboard/analytics-sales.js') ?>"></script>
+<script src="/app/js/dashboard/analytics-filters.js?v=<?= filemtime(FCPATH . 'app/js/dashboard/analytics-filters.js') ?>"></script>

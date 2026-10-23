@@ -53,7 +53,7 @@ $showDesktopNavigation =
 ?>
 
 <section
-	class="home-brand-showcase home-products"
+	class="home-brand-showcase home-products products_catalog home-products--catalog-card"
 	data-home-brand-showcase
 >
 	<div class="home-brand-showcase__container">
@@ -84,9 +84,10 @@ $showDesktopNavigation =
 							: 'Перейти к бренду' ?>
 					</span>
 
-					<span aria-hidden="true">
-						→
-					</span>
+					<svg class="home-arrow-icon home-arrow-icon--right" fill="none" stroke="none" viewBox="0 0 25 15" aria-hidden="true">
+						<path stroke="currentColor" d="M6 2 .5 7.5 6 13" />
+						<path fill="currentColor" d="M1 7h20v1H1z" />
+					</svg>
 				</a>
 			<?php endif; ?>
 		</header>
@@ -166,20 +167,9 @@ $showDesktopNavigation =
 						? 'Produsele anterioare'
 						: 'Предыдущие товары' ?>"
 				>
-					<svg
-						width="22"
-						height="22"
-						viewBox="0 0 24 24"
-						fill="none"
-						aria-hidden="true"
-					>
-						<path
-							d="M15 5L8 12L15 19"
-							stroke="currentColor"
-							stroke-width="1.5"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						/>
+					<svg class="home-arrow-icon" fill="none" stroke="none" viewBox="0 0 25 15" aria-hidden="true">
+						<path stroke="currentColor" d="M6 2 .5 7.5 6 13" />
+						<path fill="currentColor" d="M1 7h20v1H1z" />
 					</svg>
 				</button>
 			<?php endif; ?>
@@ -199,6 +189,8 @@ $showDesktopNavigation =
 								'layouts/pages/product_slider',
 								[
 									'item' => $item,
+									'is_home_brand_products' => true,
+									'is_catalog_product_card' => true,
 									'lclang' => $lclang ?? 'ru',
 									'clang' => $clang ?? 'RU',
 									'menu' => $menu ?? [],
@@ -222,20 +214,9 @@ $showDesktopNavigation =
 						? 'Produsele următoare'
 						: 'Следующие товары' ?>"
 				>
-					<svg
-						width="22"
-						height="22"
-						viewBox="0 0 24 24"
-						fill="none"
-						aria-hidden="true"
-					>
-						<path
-							d="M9 5L16 12L9 19"
-							stroke="currentColor"
-							stroke-width="1.5"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						/>
+					<svg class="home-arrow-icon home-arrow-icon--right" fill="none" stroke="none" viewBox="0 0 25 15" aria-hidden="true">
+						<path stroke="currentColor" d="M6 2 .5 7.5 6 13" />
+						<path fill="currentColor" d="M1 7h20v1H1z" />
 					</svg>
 				</button>
 			<?php endif; ?>

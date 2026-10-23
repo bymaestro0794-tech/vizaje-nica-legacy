@@ -13,6 +13,17 @@
 	color: #111111;
 }
 
+body.page-404[data-site-theme="halloween"],
+body[data-site-theme="halloween"] .page-404 {
+	background: #ffffff;
+	background-image: none;
+}
+
+body[data-site-theme="halloween"] .page-404 .error-404::before,
+body[data-site-theme="halloween"] .page-404 .error-404::after {
+	display: none;
+}
+
 .error-404 {
 	position: relative;
 	overflow: hidden;
@@ -112,7 +123,7 @@
 .error-404__title {
 	max-width: 700px;
 	margin: 0 auto;
-	font-family: var(--font-title, Georgia, serif);
+	font-family: var(--font-title);
 	font-size: clamp(48px, 6vw, 78px);
 	font-weight: 500;
 	line-height: 0.98;

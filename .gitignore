@@ -32,6 +32,7 @@ error_log
 # Generated/data files
 sitemap.xml
 products.json
-
+session-test.php
 # phpMyAdmin
 pmadm/
+robots.txt

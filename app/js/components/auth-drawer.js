@@ -754,6 +754,19 @@
 				pointerEvents: 'auto'
 			})
 
+			/*
+			 * Неактивные экраны скрываются inline-стилями при инициализации.
+			 * При прямом открытии регистрации выбранный экран нужно вернуть
+			 * в видимое состояние до запуска анимации drawer.
+			 */
+			gsap.set(targetScreen, {
+				display: 'block',
+				visibility: 'visible',
+				pointerEvents: 'auto',
+				opacity: 1,
+				xPercent: 0
+			})
+
 			gsap.set(panel, {
 				xPercent: -100
 			})
@@ -1239,6 +1252,14 @@
 				const response = await submitForm(form)
 
 				if (response?.success) {
+					if (response.welcome_offer_expires_at) {
+						document.dispatchEvent(new CustomEvent('welcome-offer:activated', {
+							detail: {
+								expiresAt: response.welcome_offer_expires_at
+							}
+						}))
+					}
+
 					showScreen(SCREEN_NAMES.registerSuccess)
 
 					return

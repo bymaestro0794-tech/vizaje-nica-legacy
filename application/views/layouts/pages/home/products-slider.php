@@ -43,10 +43,24 @@ $productPages = array_chunk(
 $pagesCount = count($productPages);
 
 $isRomanian = $lclang === 'ro';
+
+$useCatalogProductCardStyle = !empty($is_catalog_product_card);
+
+$useHomeProductCardStyle = !$useCatalogProductCardStyle
+	&& (!empty($is_home_product_tabs)
+	|| !empty($is_product_recommendation));
+
+$sectionClasses = 'home-products';
+if ($useHomeProductCardStyle) {
+	$sectionClasses .= ' home-products--home-card';
+}
+if ($useCatalogProductCardStyle) {
+	$sectionClasses .= ' products_catalog home-products--catalog-card';
+}
 ?>
 
 <section
-	class="home-products"
+	class="<?= $sectionClasses ?>"
 	data-products-slider
 	data-products-key="<?= htmlspecialchars(
 		$sectionKey,
@@ -86,27 +100,9 @@ $isRomanian = $lclang === 'ro';
 						data-products-previous
 						disabled
 					>
-						<svg
-							width="22"
-							height="22"
-							viewBox="0 0 24 24"
-							fill="none"
-							aria-hidden="true"
-						>
-							<path
-								d="M19 12H5"
-								stroke="currentColor"
-								stroke-width="1.5"
-								stroke-linecap="round"
-							/>
-
-							<path
-								d="M10 7L5 12L10 17"
-								stroke="currentColor"
-								stroke-width="1.5"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							/>
+						<svg class="home-arrow-icon" fill="none" stroke="none" viewBox="0 0 25 15" aria-hidden="true">
+							<path stroke="currentColor" d="M6 2 .5 7.5 6 13" />
+							<path fill="currentColor" d="M1 7h20v1H1z" />
 						</svg>
 					</button>
 
@@ -121,27 +117,9 @@ $isRomanian = $lclang === 'ro';
 							: 'Следующие товары' ?>"
 						data-products-next
 					>
-						<svg
-							width="22"
-							height="22"
-							viewBox="0 0 24 24"
-							fill="none"
-							aria-hidden="true"
-						>
-							<path
-								d="M5 12H19"
-								stroke="currentColor"
-								stroke-width="1.5"
-								stroke-linecap="round"
-							/>
-
-							<path
-								d="M14 7L19 12L14 17"
-								stroke="currentColor"
-								stroke-width="1.5"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							/>
+						<svg class="home-arrow-icon home-arrow-icon--right" fill="none" stroke="none" viewBox="0 0 25 15" aria-hidden="true">
+							<path stroke="currentColor" d="M6 2 .5 7.5 6 13" />
+							<path fill="currentColor" d="M1 7h20v1H1z" />
 						</svg>
 					</button>
 				</div>
@@ -190,27 +168,9 @@ $isRomanian = $lclang === 'ro';
 									: 'Перейти к товарам' ?>
 							</span>
 
-							<svg
-								width="20"
-								height="20"
-								viewBox="0 0 24 24"
-								fill="none"
-								aria-hidden="true"
-							>
-								<path
-									d="M5 12H19"
-									stroke="currentColor"
-									stroke-width="1.4"
-									stroke-linecap="round"
-								/>
-
-								<path
-									d="M14 7L19 12L14 17"
-									stroke="currentColor"
-									stroke-width="1.4"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-								/>
+							<svg class="home-arrow-icon home-arrow-icon--right" fill="none" stroke="none" viewBox="0 0 25 15" aria-hidden="true">
+								<path stroke="currentColor" d="M6 2 .5 7.5 6 13" />
+								<path fill="currentColor" d="M1 7h20v1H1z" />
 							</svg>
 						</a>
 					<?php else : ?>
@@ -219,6 +179,7 @@ $isRomanian = $lclang === 'ro';
 							'layouts/pages/product_slider',
 							[
 								'item' => $product,
+								'is_catalog_product_card' => $useCatalogProductCardStyle,
 							]
 						);
 						?>
@@ -241,28 +202,10 @@ $isRomanian = $lclang === 'ro';
 			data-products-mobile-previous
 			disabled
 		>
-			<svg
-				width="20"
-				height="20"
-				viewBox="0 0 24 24"
-				fill="none"
-				aria-hidden="true"
-			>
-				<path
-					d="M19 12H5"
-					stroke="currentColor"
-					stroke-width="1.5"
-					stroke-linecap="round"
-				/>
-
-				<path
-					d="M10 7L5 12L10 17"
-					stroke="currentColor"
-					stroke-width="1.5"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				/>
-			</svg>
+				<svg class="home-arrow-icon" fill="none" stroke="none" viewBox="0 0 25 15" aria-hidden="true">
+					<path stroke="currentColor" d="M6 2 .5 7.5 6 13" />
+					<path fill="currentColor" d="M1 7h20v1H1z" />
+				</svg>
 		</button>
 
 		<button
@@ -276,27 +219,9 @@ $isRomanian = $lclang === 'ro';
 				: 'Следующий товар' ?>"
 			data-products-mobile-next
 		>
-			<svg
-				width="20"
-				height="20"
-				viewBox="0 0 24 24"
-				fill="none"
-				aria-hidden="true"
-			>
-				<path
-					d="M5 12H19"
-					stroke="currentColor"
-					stroke-width="1.5"
-					stroke-linecap="round"
-				/>
-
-				<path
-					d="M14 7L19 12L14 17"
-					stroke="currentColor"
-					stroke-width="1.5"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				/>
+			<svg class="home-arrow-icon home-arrow-icon--right" fill="none" stroke="none" viewBox="0 0 25 15" aria-hidden="true">
+				<path stroke="currentColor" d="M6 2 .5 7.5 6 13" />
+				<path fill="currentColor" d="M1 7h20v1H1z" />
 			</svg>
 		</button>
 	<?php endif; ?>

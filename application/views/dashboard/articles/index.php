@@ -70,6 +70,16 @@
                                                     <input type="date" name="date" class="form-control" style="width: 140px;" required>
                                                 </td>
                                             </tr>
+                                            <tr>
+                                                <td width="200">Блоговая статья</td>
+                                                <td>
+                                                    <label class="mt-checkbox mt-checkbox-outline">
+                                                        <input type="checkbox" name="isBlog" value="1">
+                                                        Публиковать в блоге отдельно от новостей
+                                                        <span></span>
+                                                    </label>
+                                                </td>
+                                            </tr>
                                             <? foreach (language(true) as $lang) { ?>
                                                 <tr>
                                                     <td width="200"><?= lang('Title') ?> <?= strtoupper($lang) ?> *</td>
@@ -90,9 +100,43 @@
                                             <? } ?>
                                             <? foreach (language(true) as $lang) { ?>
                                                 <tr>
+                                                    <td width="200">Теги <?= strtoupper($lang) ?></td>
+                                                    <td>
+                                                        <input type="text" name="tags<?= strtoupper($lang) ?>"
+                                                               class="form-control" placeholder="уход, волосы, советы">
+                                                    </td>
+                                                </tr>
+                                            <? } ?>
+                                            <tr>
+                                                <td width="200">Товары в тексте</td>
+                                                <td>
+                                                    <div class="article-product-picker"
+                                                         data-endpoint="<?= $path ?>product_lookup">
+                                                        <div style="display:flex;gap:8px;max-width:760px;">
+                                                            <input type="search" class="form-control" data-product-search
+                                                                   placeholder="Найти товар по названию, артикулу или ID">
+                                                            <select class="form-control" data-product-language style="width:100px;">
+                                                                <? foreach (language(true) as $lang) { ?>
+                                                                    <option value="<?= strtoupper($lang) ?>"><?= strtoupper($lang) ?></option>
+                                                                <? } ?>
+                                                            </select>
+                                                        </div>
+                                                        <div class="article-product-picker__results" data-product-results
+                                                             style="max-width:760px;margin-top:6px;"></div>
+                                                        <div style="margin-top:8px;">
+                                                            <button type="button" class="btn blue" data-insert-product disabled>
+                                                                Вставить выбранный товар в текст
+                                                            </button>
+                                                        </div>
+                                                        <p class="help-block">Товар вставится в позицию курсора в выбранном языковом редакторе.</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <? foreach (language(true) as $lang) { ?>
+                                                <tr>
                                                     <td width="200"><?= lang('Text') ?> <?= strtoupper($lang) ?></td>
                                                     <td>
-                                                        <textarea name="text<?= strtoupper($lang) ?>" cols="30" rows="3"
+                                                        <textarea id="text<?= strtoupper($lang) ?>" name="text<?= strtoupper($lang) ?>" cols="30" rows="3"
                                                                   class="form-control ckeditor"></textarea>
                                                     </td>
                                                 </tr>
@@ -177,6 +221,11 @@
     <div class="row">
         <div class="portlet light">
             <div class="portlet-body">
+                <div class="btn-group" style="margin-bottom:15px;">
+                    <a href="<?= $path ?>" class="btn <?= $blog_filter === null ? 'blue' : 'default' ?>">Все публикации</a>
+                    <a href="<?= $path ?>?blog=1" class="btn <?= $blog_filter === '1' ? 'blue' : 'default' ?>">Блог</a>
+                    <a href="<?= $path ?>?blog=0" class="btn <?= $blog_filter === '0' ? 'blue' : 'default' ?>">Новости</a>
+                </div>
                 <form action="<?= $o_path; ?>" method="post">
                     <div class="table-scrollable">
                         <table class="table table-bordered table-striped table-hover">
@@ -194,6 +243,9 @@
                                     <td class="align-middle"><?= $item->date ?></td>
                                     <td class="align-middle"><a style="font-weight: 900;"
                                                                 href="<?= $e_path . $item->id; ?>"><?= $item->{'title' . strtoupper($lang)} ?></a>
+                                        <?php if (!empty($item->isBlog)) : ?>
+                                            <span class="label label-info" style="margin-left:6px;">Блог</span>
+                                        <?php endif; ?>
                                     </td>
                                     <td class="align-middle">
                                         <?php $cmod = (!empty($item->isShown)) ? 'checked' : '' ?>
@@ -225,4 +277,18 @@
             </div>
         </div>
     </div>
+<?php else : ?>
+    <div class="row">
+        <div class="portlet light">
+            <div class="portlet-body">
+                <div class="btn-group">
+                    <a href="<?= $path ?>" class="btn <?= $blog_filter === null ? 'blue' : 'default' ?>">Все публикации</a>
+                    <a href="<?= $path ?>?blog=1" class="btn <?= $blog_filter === '1' ? 'blue' : 'default' ?>">Блог</a>
+                    <a href="<?= $path ?>?blog=0" class="btn <?= $blog_filter === '0' ? 'blue' : 'default' ?>">Новости</a>
+                </div>
+                <p class="text-muted" style="margin-top:15px;">Пока нет публикаций в этом разделе.</p>
+            </div>
+        </div>
+    </div>
 <?php endif; ?>
+<script src="/app/js/dashboard/articles-products.js?v=20261009-1"></script>

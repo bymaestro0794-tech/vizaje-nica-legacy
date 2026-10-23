@@ -26,7 +26,7 @@ class Banners extends BackEndController {
     }
 
     public function index() {
-        init_load_img($this->main_page);
+        init_load_img($this->main_page, true, 'jpg|jpeg|gif|png|svg|webp|avif');
 
         $objects = $this->banners_model->find();
 
@@ -42,7 +42,7 @@ class Banners extends BackEndController {
 
         $post = array();
 
-        init_load_img($this->main_page);
+        init_load_img($this->main_page, true, 'jpg|jpeg|gif|png|svg|webp|avif');
 
         try {
             foreach ($_POST as $index => $item) {
@@ -122,7 +122,7 @@ class Banners extends BackEndController {
     public function item($id = 0) {
         $id = (int)$id;
 
-        init_load_img($this->main_page);
+        init_load_img($this->main_page, true, 'jpg|jpeg|gif|png|svg|webp|avif');
         $item = $this->banners_model->find_first($id);
         if (empty($item)) throw_on_404();
 

@@ -1,0 +1,181 @@
+.numbers {
+	background: var(--bg-page);
+}
+
+.numbers__inner {
+	max-width: var(--container-max);
+	margin-inline: auto;
+	padding: 100px 24px;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-lg);
+}
+
+.numbers__title {
+	font-size: 48px;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.numbers__row {
+	display: flex;
+	gap: 20px;
+}
+
+.numbers__row--top .number-card {
+	height: 312px;
+}
+
+.numbers__row--bottom .number-card {
+	height: 344px;
+}
+
+.number-card {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	padding: 32px;
+	border-radius: var(--radius-card);
+	background: var(--bg-section);
+}
+
+.number-card--wide {
+	flex: 1 1 auto;
+}
+
+.number-card--narrow {
+	flex: 0 0 448px;
+}
+
+.number-card__value {
+	font-size: 160px;
+	font-weight: 600;
+	line-height: 1;
+	letter-spacing: -6.4px;
+	color: var(--text-primary);
+}
+
+/* Одинаковая ширина цифр, чтобы при подсчёте число не дрожало */
+.number-card__count {
+	font-variant-numeric: tabular-nums;
+}
+
+/* Стартовое состояние до появления по скроллу */
+.js .number-card,
+.js .number-card__label {
+	opacity: 0;
+}
+
+.number-card__value--red {
+	color: var(--accent-red);
+}
+
+.number-card__value--blue {
+	color: var(--accent-blue);
+}
+
+.number-card__label {
+	font-size: 21px;
+	line-height: 1.3;
+	color: var(--text-secondary);
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+	.numbers__inner {
+		padding-inline: 32px;
+	}
+
+	.numbers__row--top .number-card,
+	.numbers__row--bottom .number-card {
+		height: 280px;
+	}
+
+	.number-card--narrow {
+		flex-basis: 310px;
+	}
+
+	.number-card--wide .number-card__value {
+		font-size: 112px;
+		letter-spacing: -4.48px;
+	}
+
+	.number-card--narrow .number-card__value {
+		font-size: 88px;
+		letter-spacing: -3.52px;
+	}
+}
+
+/* 768: «35» и «115,000+» на всю ширину, «12» и «100+» в ряд.
+   Ряды растворяются в общую сетку, порядок карточек в разметке уже нужный. */
+@media (min-width: 768px) and (max-width: 1023px) {
+	.numbers__inner {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		column-gap: 20px;
+		row-gap: var(--space-lg);
+		padding-inline: 32px;
+	}
+
+	.numbers__title,
+	.number-card--wide {
+		grid-column: 1 / -1;
+	}
+
+	.numbers__row {
+		display: contents;
+	}
+
+	.numbers__row--top .number-card--wide,
+	.numbers__row--bottom .number-card--wide {
+		height: 260px;
+	}
+
+	.numbers__row--top .number-card--narrow,
+	.numbers__row--bottom .number-card--narrow {
+		height: 280px;
+	}
+
+	.number-card--wide .number-card__value {
+		font-size: 120px;
+		letter-spacing: -4.8px;
+	}
+
+	.number-card--narrow .number-card__value {
+		font-size: 88px;
+		letter-spacing: -3.52px;
+	}
+}
+
+@media (max-width: 767px) {
+	.numbers__inner {
+		padding: 64px 20px;
+		gap: var(--space-md);
+	}
+
+	.numbers__title {
+		font-size: 32px;
+	}
+
+	.numbers__row {
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	.numbers__row--top .number-card,
+	.numbers__row--bottom .number-card {
+		height: 280px;
+	}
+
+	.number-card--narrow {
+		flex-basis: auto;
+	}
+
+	.number-card__value {
+		font-size: 64px;
+		letter-spacing: -1.92px;
+	}
+
+	.number-card__label {
+		font-size: 18px;
+	}
+}

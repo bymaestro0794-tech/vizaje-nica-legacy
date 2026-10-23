@@ -52,35 +52,51 @@ class Analytics_model extends BaseModel
             'summary' => $this->get_summary(
                 $fromDateTime,
                 $toDateTime,
-                isset($options['brand_id']) ? $options['brand_id'] : null
+                isset($options['brand_id']) ? $options['brand_id'] : null,
+                isset($options['order_source']) ? $options['order_source'] : null
             ),
             'top_products' => $this->get_top_products(
                 $fromDateTime,
                 $toDateTime,
                 isset($options['product_sort']) ? $options['product_sort'] : 'quantity',
                 isset($options['direction']) ? $options['direction'] : 'desc',
-                isset($options['brand_id']) ? $options['brand_id'] : null
+                isset($options['brand_id']) ? $options['brand_id'] : null,
+                isset($options['order_source']) ? $options['order_source'] : null
             ),
             'top_brands' => $this->get_top_brands(
                 $fromDateTime,
                 $toDateTime,
                 isset($options['brand_sort']) ? $options['brand_sort'] : 'quantity',
                 isset($options['direction']) ? $options['direction'] : 'desc',
-                isset($options['brand_id']) ? $options['brand_id'] : null
+                isset($options['brand_id']) ? $options['brand_id'] : null,
+                isset($options['order_source']) ? $options['order_source'] : null
             ),
             'top_categories' => $this->get_top_categories(
                 $fromDateTime,
                 $toDateTime,
                 isset($options['category_sort']) ? $options['category_sort'] : 'quantity',
                 isset($options['direction']) ? $options['direction'] : 'desc',
-                isset($options['brand_id']) ? $options['brand_id'] : null
+                isset($options['brand_id']) ? $options['brand_id'] : null,
+                isset($options['order_source']) ? $options['order_source'] : null
             ),
             'period_sales' => $this->get_period_sales(
                 $fromDateTime,
                 $toDateTime,
                 isset($options['group_by']) ? $options['group_by'] : 'month',
-                isset($options['brand_id']) ? $options['brand_id'] : null
+                isset($options['brand_id']) ? $options['brand_id'] : null,
+                isset($options['order_source']) ? $options['order_source'] : null
             ),
+        );
+    }
+
+    public function get_summary_for_range($fromDateTime, $toDateTime, $options = array())
+    {
+        $options = is_array($options) ? $options : array();
+        return $this->get_summary(
+            $fromDateTime,
+            $toDateTime,
+            isset($options['brand_id']) ? $options['brand_id'] : null,
+            isset($options['order_source']) ? $options['order_source'] : null
         );
     }
 
@@ -91,9 +107,10 @@ class Analytics_model extends BaseModel
      * not store an order-status history, so it must not be presented as a
      * historical transition funnel.
      */
-    public function get_order_funnel($fromDateTime, $toDateTime, $groupBy = 'month')
+    public function get_order_funnel($fromDateTime, $toDateTime, $groupBy = 'month', $orderSource = null)
     {
         $groupBy = $groupBy === 'day' ? 'day' : 'month';
+        $sourceCondition = $this->order_source_condition($orderSource);
 
         $summaryRow = $this->db->query(
             "SELECT
@@ -103,7 +120,7 @@ class Analytics_model extends BaseModel
                 SUM(status = 'finished') AS finished_orders,
                 SUM(status = 'canceled') AS canceled_orders
              FROM orders
-             WHERE added >= ? AND added < ?",
+             WHERE added >= ? AND added < ? {$sourceCondition}",
             array($fromDateTime, $toDateTime)
         )->row_array();
 
@@ -135,7 +152,7 @@ class Analytics_model extends BaseModel
                 SUM(status = 'finished') AS finished_orders,
                 SUM(status = 'canceled') AS canceled_orders
              FROM orders
-             WHERE added >= ? AND added < ?
+             WHERE added >= ? AND added < ? {$sourceCondition}
              GROUP BY period_key
              ORDER BY period_key DESC",
             array($fromDateTime, $toDateTime)
@@ -214,10 +231,11 @@ class Analytics_model extends BaseModel
         return "CAST(REPLACE(REPLACE(NULLIF({$column}, ''), ' ', ''), ',', '.') AS DECIMAL(12,2))";
     }
 
-    private function get_summary($fromDateTime, $toDateTime, $brandId = null)
+    private function get_summary($fromDateTime, $toDateTime, $brandId = null, $orderSource = null)
     {
         $orderTotal = $this->money_expression('o.total');
         $lineTotal = $this->money_expression('op.total');
+        $sourceCondition = $this->order_source_condition($orderSource, 'o');
 
         if ($brandId !== null) {
             $sql = "
@@ -239,6 +257,7 @@ class Analytics_model extends BaseModel
                     WHERE o.status = 'finished'
                       AND o.added >= ?
                       AND o.added < ?
+                      {$sourceCondition}
                       AND p.brand_id = ?
                     GROUP BY o.id, o.total
                 ) AS s
@@ -273,6 +292,7 @@ class Analytics_model extends BaseModel
                 WHERE o.status = 'finished'
                   AND o.added >= ?
                   AND o.added < ?
+                  {$sourceCondition}
                 GROUP BY o.id, o.total
             ) AS s
         ";
@@ -288,12 +308,12 @@ class Analytics_model extends BaseModel
         );
     }
 
-    private function get_top_products($fromDateTime, $toDateTime, $sort, $direction, $brandId = null)
+    private function get_top_products($fromDateTime, $toDateTime, $sort, $direction, $brandId = null, $orderSource = null)
     {
         $lineTotal = $this->money_expression('op.total');
         $sortSql = $this->product_sort_sql($sort);
         $directionSql = $this->normalize_direction($direction);
-        $brandCondition = '';
+        $brandCondition = $this->order_source_condition($orderSource, 'o');
         $params = array($fromDateTime, $toDateTime);
 
         if ($brandId !== null) {
@@ -326,12 +346,12 @@ class Analytics_model extends BaseModel
         return $this->db->query($sql, $params)->result_array();
     }
 
-    private function get_top_brands($fromDateTime, $toDateTime, $sort, $direction, $brandId = null)
+    private function get_top_brands($fromDateTime, $toDateTime, $sort, $direction, $brandId = null, $orderSource = null)
     {
         $lineTotal = $this->money_expression('op.total');
         $sortSql = $this->brand_sort_sql($sort);
         $directionSql = $this->normalize_direction($direction);
-        $brandCondition = '';
+        $brandCondition = $this->order_source_condition($orderSource, 'o');
         $params = array($fromDateTime, $toDateTime);
 
         if ($brandId !== null) {
@@ -363,12 +383,12 @@ class Analytics_model extends BaseModel
         return $this->db->query($sql, $params)->result_array();
     }
 
-    private function get_top_categories($fromDateTime, $toDateTime, $sort, $direction, $brandId = null)
+    private function get_top_categories($fromDateTime, $toDateTime, $sort, $direction, $brandId = null, $orderSource = null)
     {
         $lineTotal = $this->money_expression('op.total');
         $sortSql = $this->category_sort_sql($sort);
         $directionSql = $this->normalize_direction($direction);
-        $brandCondition = '';
+        $brandCondition = $this->order_source_condition($orderSource, 'o');
         $params = array($fromDateTime, $toDateTime);
 
         if ($brandId !== null) {
@@ -407,7 +427,7 @@ class Analytics_model extends BaseModel
         return $this->db->query($sql, $params)->result_array();
     }
 
-    private function get_period_sales($fromDateTime, $toDateTime, $groupBy, $brandId = null)
+    private function get_period_sales($fromDateTime, $toDateTime, $groupBy, $brandId = null, $orderSource = null)
     {
         $lineTotal = $this->money_expression('op.total');
         $orderTotal = $this->money_expression('o.total');
@@ -416,14 +436,14 @@ class Analytics_model extends BaseModel
         $dateExpression = $groupBy === 'day'
             ? 'DATE(o.added)'
             : "DATE_FORMAT(o.added, '%Y-%m')";
-        $orderBrandCondition = '';
+        $orderBrandCondition = $this->order_source_condition($orderSource, 'o');
         $orderParams = array($fromDateTime, $toDateTime);
         $itemBrandJoin = '';
-        $itemBrandCondition = '';
+        $itemBrandCondition = $this->order_source_condition($orderSource, 'o');
         $itemParams = array($fromDateTime, $toDateTime);
 
         if ($brandId !== null) {
-            $orderBrandCondition = "
+            $orderBrandCondition .= "
                   AND EXISTS (
                       SELECT 1
                       FROM orders_products AS op_filter
@@ -433,7 +453,7 @@ class Analytics_model extends BaseModel
                   )";
             $orderParams[] = $brandId;
             $itemBrandJoin = ' INNER JOIN products AS p ON p.id = op.product_id';
-            $itemBrandCondition = ' AND p.brand_id = ?';
+            $itemBrandCondition .= ' AND p.brand_id = ?';
             $itemParams[] = $brandId;
         }
 
@@ -477,5 +497,15 @@ class Analytics_model extends BaseModel
             $sql,
             array_merge($orderParams, $itemParams)
         )->result_array();
+    }
+
+    private function order_source_condition($orderSource, $alias = '')
+    {
+        if (!in_array($orderSource, array('web', 'app'), true)) {
+            return '';
+        }
+
+        $column = $alias !== '' ? $alias . '.order_source' : 'order_source';
+        return " AND {$column} = '" . $orderSource . "'";
     }
 }

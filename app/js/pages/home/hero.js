@@ -53,6 +53,11 @@ const initHero = hero => {
 			slide.classList.toggle('is-active', isActive)
 			slide.setAttribute('aria-hidden', String(!isActive))
 
+			const videoPlayButton = slide.querySelector('[data-hero-video-play]')
+			if (videoPlayButton) {
+				videoPlayButton.tabIndex = isActive ? 0 : -1
+			}
+
 			if (link) {
 				link.tabIndex = isActive ? 0 : -1
 			}
@@ -90,7 +95,11 @@ const initHero = hero => {
 	}
 
 	const canAutoplay = () =>
-		slides.length > 1 && isVisible && !document.hidden && !reducedMotion
+		slides.length > 1 &&
+		isVisible &&
+		!document.hidden &&
+		!reducedMotion &&
+		!hero.querySelector('[data-hero-video-player]:not([hidden])')
 
 	const startAutoplay = () => {
 		stopAutoplay()
@@ -134,6 +143,8 @@ const initHero = hero => {
 		const outgoing = slides[activeIndex]
 		const incoming = slides[nextIndex]
 
+		resetHeroVideo(outgoing, false)
+
 		isAnimating = true
 		activeIndex = nextIndex
 
@@ -162,6 +173,58 @@ const initHero = hero => {
 			startAutoplay()
 		}
 	}
+
+	const resetHeroVideo = (slide, resumeAutoplay = true) => {
+		const player = slide?.querySelector('[data-hero-video-player]')
+		const playButton = slide?.querySelector('[data-hero-video-play]')
+
+		if (!player) {
+			return
+		}
+
+		player.querySelector('iframe')?.remove()
+		player.hidden = true
+		if (playButton) playButton.hidden = false
+
+		if (resumeAutoplay && slide === slides[activeIndex]) {
+			startAutoplay()
+		}
+	}
+
+	hero.addEventListener('click', event => {
+		const closeButton = event.target.closest('[data-hero-video-close]')
+		if (closeButton) {
+			event.preventDefault()
+			event.stopPropagation()
+			resetHeroVideo(closeButton.closest('[data-hero-slide]'))
+			return
+		}
+
+		const playButton = event.target.closest('[data-hero-video-play]')
+		if (!playButton) {
+			return
+		}
+
+		event.preventDefault()
+		event.stopPropagation()
+
+		const videoId = playButton.dataset.videoId || ''
+		const player = playButton.parentElement.querySelector('[data-hero-video-player]')
+		if (!player || !/^[A-Za-z0-9_-]{11}$/.test(videoId)) {
+			return
+		}
+
+		const iframe = document.createElement('iframe')
+		iframe.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?autoplay=1&rel=0`
+		iframe.title = playButton.getAttribute('aria-label') || 'Campaign video'
+		iframe.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'
+		iframe.allowFullscreen = true
+		iframe.referrerPolicy = 'strict-origin-when-cross-origin'
+		player.prepend(iframe)
+		player.hidden = false
+		playButton.hidden = true
+		stopAutoplay()
+	})
 
 	const showPrevious = () => {
 		showSlide(activeIndex - 1)

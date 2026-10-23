@@ -50,6 +50,11 @@ class Offers extends BackEndController {
                 $post[$index] = $this->input->post($index, TRUE);
             }
 
+            if (!isset($post['is_online']) || !in_array((string) $post['is_online'], array('0', '1'), true)) {
+                throw new Exception('Выберите формат акции: онлайн или офлайн.');
+            }
+            $post['is_online'] = (int) $post['is_online'];
+
             foreach(language(true) as $lang){
                 $post['uri'.strtoupper($lang)] = (!empty($post['title'.strtoupper($lang)])) ? transliteration($post['title'.strtoupper($lang)]) : '';
             }
@@ -143,6 +148,11 @@ class Offers extends BackEndController {
                 foreach ($_POST as $index => $post_data) {
                     $post[$index] = $this->input->post($index, TRUE);
                 }
+
+                if (!isset($post['is_online']) || !in_array((string) $post['is_online'], array('0', '1'), true)) {
+                    throw new Exception('Выберите формат акции: онлайн или офлайн.');
+                }
+                $post['is_online'] = (int) $post['is_online'];
 
 
                 if (!empty($_FILES['imgRU']['name'])) {

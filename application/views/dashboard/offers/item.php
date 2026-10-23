@@ -93,6 +93,16 @@
                                             <input type="text" name="sale" class="form-control" value="<?= $item->sale ?>">
                                         </td>
                                     </tr>
+                                    <tr>
+                                        <td width="200">Формат акции</td>
+                                        <td>
+                                            <?php $offerIsOnline = !isset($item->is_online) || (int) $item->is_online === 1; ?>
+                                            <select name="is_online" class="form-control" required>
+                                                <option value="1" <?= $offerIsOnline ? 'selected' : '' ?>>Онлайн</option>
+                                                <option value="0" <?= !$offerIsOnline ? 'selected' : '' ?>>Офлайн</option>
+                                            </select>
+                                        </td>
+                                    </tr>
                                     <? foreach (language(true) as $lang) { ?>
                                         <tr>
                                             <td width="200"><?= lang('Location') ?> <?= strtoupper($lang) ?>

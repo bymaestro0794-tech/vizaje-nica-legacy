@@ -32,7 +32,8 @@ class CartCalculator
 
     public function calculate(
         $lang = 'ru',
-        $promoCode = null
+        $promoCode = null,
+        $discountChoice = null
     ) {
         $lang =
             strtolower(
@@ -80,7 +81,7 @@ class CartCalculator
                     : null;
         }
 
-        $promo =
+        $coupon =
             $this->preparePromo(
                 $promoCode,
                 $client
@@ -132,30 +133,95 @@ class CartCalculator
         |--------------------------------------------------------------------------
         */
 
-        $promo =
+        $couponRows = $rows;
+        $coupon =
             $this->calculatePromo(
-                $promo,
-                $rows,
+                $coupon,
+                $couponRows,
                 $client,
                 $isB2B
             );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Distribute promo discount
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            !empty($promo['applied'])
-            && $promo['discount'] > 0
-        ) {
-            $rows =
-                $this->distributePromoDiscount(
-                    $rows,
-                    $promo['discount']
-                );
+        if (!empty($coupon['applied']) && $coupon['discount'] > 0) {
+            $couponRows = $this->distributePromoDiscount(
+                $couponRows,
+                $coupon['discount']
+            );
         }
+
+        $roulette = $this->calculateRouletteOption(
+            $client,
+            $lang,
+            $rows
+        );
+
+        $requestedChoice = $discountChoice;
+        if ($requestedChoice === null && !empty($_SESSION['cart_discount_choice'])) {
+            $requestedChoice = (string) $_SESSION['cart_discount_choice'];
+        }
+
+        if (!in_array($requestedChoice, array('promo', 'roulette'), true)) {
+            $requestedChoice = null;
+        }
+
+        if ($requestedChoice === null) {
+            $requestedChoice = !empty($coupon['applied'])
+                ? 'promo'
+                : (!empty($roulette['available']) ? 'roulette' : 'none');
+        }
+
+        if ($requestedChoice === 'promo' && empty($coupon['applied'])) {
+            $requestedChoice = 'none';
+        } elseif ($requestedChoice === 'roulette' && empty($roulette['available'])) {
+            $requestedChoice = 'none';
+        }
+
+        $selectedDiscount = array(
+            'source' => 'none',
+            'code' => null,
+            'label' => null,
+            'discount' => 0,
+            'expires_at' => null,
+        );
+
+        if ($requestedChoice === 'promo') {
+            $rows = $couponRows;
+            $selectedDiscount = array(
+                'source' => 'promo',
+                'code' => $coupon['code'],
+                'label' => $coupon['code'],
+                'discount' => (float) $coupon['discount'],
+                'expires_at' => null,
+            );
+        } elseif ($requestedChoice === 'roulette') {
+            $rows = $roulette['rows'];
+            $selectedDiscount = array(
+                'source' => 'roulette',
+                'code' => $roulette['code'],
+                'label' => $roulette['title'],
+                'discount' => (float) $roulette['discount'],
+                'expires_at' => $roulette['prize']['expires_at'],
+            );
+        } else {
+            $rows = $this->resetRowDiscounts($rows);
+        }
+
+        $couponOption = array(
+            'available' => !empty($coupon['applied']),
+            'code' => $coupon['code'],
+            'discount' => (float) $coupon['discount'],
+            'reason' => $coupon['reason'],
+        );
+
+        $coupon['selected'] = $requestedChoice === 'promo';
+        $coupon['available'] = !empty($coupon['applied']);
+        if (!$coupon['selected']) {
+            $coupon['applied'] = false;
+            $coupon['discount'] = 0;
+        }
+        $promo = $coupon;
+
+        $roulette['selected'] = $requestedChoice === 'roulette';
+        unset($roulette['rows']);
 
         /*
         |--------------------------------------------------------------------------
@@ -317,35 +383,6 @@ class CartCalculator
             );
 
         /*
-            |--------------------------------------------------------------------------
-            | Express delivery availability
-            |--------------------------------------------------------------------------
-            |
-            | Даже если option скрыт на frontend,
-            | delivery=3 нельзя принимать вручную.
-            |
-            */
-
-            if (
-                (int) $post['delivery'] === 3
-                && !$expressDeliveryEnabled
-            ) {
-                $_SESSION['checkout_error'] =
-                    $this->lclang === 'ro'
-                        ? 'Livrarea expres nu este disponibilă momentan.'
-                        : 'Срочная доставка сейчас недоступна.';
-
-                redirect(
-                    '/'
-                    . $this->lclang
-                    . '/'
-                    . $page->uri
-                );
-
-                return;
-            }
-
-        /*
         |--------------------------------------------------------------------------
         | Delivery
         |--------------------------------------------------------------------------
@@ -372,7 +409,8 @@ class CartCalculator
         } else {
             $isFreeShipping =
                 $shippingThreshold <= 0
-                || $cartTotal >= $shippingThreshold;
+                || $cartTotal >= $shippingThreshold
+                || ($requestedChoice === 'roulette' && !empty($roulette['free_shipping']));
 
             $deliveryPrice =
                 $isFreeShipping
@@ -474,6 +512,29 @@ class CartCalculator
 
             'promo' =>
                 $promo,
+
+            'roulette' =>
+                $roulette,
+
+            'discount_choice' =>
+                $requestedChoice,
+
+            'discount' =>
+                $selectedDiscount,
+
+            'discount_options' => array(
+                'promo' => $couponOption,
+                'roulette' => array(
+                    'available' => !empty($roulette['available']),
+                    'code' => $roulette['code'],
+                    'title' => $roulette['title'],
+                    'discount' => (float) $roulette['discount'],
+                    'free_shipping' => !empty($roulette['free_shipping']),
+                    'expires_at' => !empty($roulette['prize']['expires_at'])
+                        ? $roulette['prize']['expires_at']
+                        : null,
+                ),
+            ),
 
             'shipping' => array(
                 'threshold' =>
@@ -755,6 +816,111 @@ class CartCalculator
         return $state;
     }
 
+    private function calculateRouletteOption($client, $language, array $rows)
+    {
+        $option = array(
+            'available' => false,
+            'selected' => false,
+            'code' => null,
+            'title' => null,
+            'discount' => 0,
+            'eligible_subtotal' => 0,
+            'reason' => 'no_active_prize',
+            'prize' => null,
+            'free_shipping' => false,
+            'rows' => $this->resetRowDiscounts($rows),
+        );
+
+        if (empty($client) || empty($client->id)) {
+            $option['reason'] = 'authentication_required';
+            return $option;
+        }
+
+        $this->CI->load->model('roulette_game_model');
+        if (!$this->CI->roulette_game_model->isReady()) {
+            $option['reason'] = 'roulette_setup_required';
+            return $option;
+        }
+
+        try {
+            $gameState = $this->CI->roulette_game_model->getState((int) $client->id, $language);
+        } catch (Throwable $exception) {
+            log_message('error', 'Could not load roulette discount state: ' . $exception->getMessage());
+            $option['reason'] = 'roulette_unavailable';
+            return $option;
+        }
+
+        $prize = !empty($gameState['active_prize']) && is_array($gameState['active_prize'])
+            ? $gameState['active_prize']
+            : null;
+
+        if (empty($prize)) {
+            $option['reason'] = !empty($gameState['reason'])
+                ? (string) $gameState['reason']
+                : 'no_active_prize';
+            return $option;
+        }
+
+		$isDiscountPrize = $prize['type'] === 'discount_percent'
+			&& (float) $prize['value'] > 0
+			&& (float) $prize['value'] <= 100;
+		$isFreeShippingPrize = $prize['type'] === 'free_shipping';
+        if (!$isDiscountPrize && !$isFreeShippingPrize) {
+            $option['reason'] = 'reward_not_ready';
+            $option['prize'] = $prize;
+            return $option;
+        }
+
+        if ($isFreeShippingPrize && empty($rows)) {
+            $option['reason'] = 'no_eligible_products';
+            $option['prize'] = $prize;
+            return $option;
+        }
+
+        $eligibleSubtotal = 0;
+        foreach ($option['rows'] as $key => $row) {
+            $eligible = empty($row['has_product_discount'])
+                && !$this->isPromotionExcludedBrand($row);
+            $option['rows'][$key]['promo_eligible'] = $eligible;
+            if ($eligible) {
+                $eligibleSubtotal += (float) $row['current_total'];
+            }
+        }
+
+        $discount = $isDiscountPrize
+            ? round($eligibleSubtotal * ((float) $prize['value'] / 100), 2)
+            : 0;
+        if ($isDiscountPrize && ($eligibleSubtotal <= 0 || $discount <= 0)) {
+            $option['reason'] = 'no_eligible_products';
+            $option['prize'] = $prize;
+            return $option;
+        }
+
+        $option['available'] = true;
+        $option['code'] = 'ROULETTE_' . (int) round((float) $prize['value']);
+        $option['title'] = (string) $prize['title'];
+        $option['discount'] = $discount;
+        $option['eligible_subtotal'] = $eligibleSubtotal;
+        $option['reason'] = null;
+        $option['prize'] = $prize;
+        $option['free_shipping'] = $isFreeShippingPrize;
+        if ($discount > 0) {
+            $option['rows'] = $this->distributePromoDiscount($option['rows'], $discount);
+        }
+
+        return $option;
+    }
+
+    private function resetRowDiscounts(array $rows)
+    {
+        foreach ($rows as $key => $row) {
+            $rows[$key]['promo_eligible'] = false;
+            $rows[$key]['promo_discount'] = 0;
+        }
+
+        return $rows;
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Calculate promo
@@ -777,6 +943,41 @@ class CartCalculator
 
         $promo =
             $state['promo'];
+
+        if (
+            strtoupper(trim((string) $promo->code)) === 'WELCOME18'
+        ) {
+            $startedAt = !empty($client->welcome_offer_started_at)
+                ? strtotime($client->welcome_offer_started_at)
+                : false;
+            $expiresAt = !empty($client->welcome_offer_expires_at)
+                ? strtotime($client->welcome_offer_expires_at)
+                : false;
+
+            if (!$this->CI->promocodes_model->isWelcomeOfferConfigured($promo)) {
+                $state['reason'] = 'PROMO_NOT_FOUND';
+                return $this->removeInternalPromo($state);
+            }
+
+            if (
+                !$startedAt
+                || !$expiresAt
+                || $startedAt > time()
+                || $expiresAt <= time()
+            ) {
+                $state['reason'] = 'PROMO_EXPIRED';
+                return $this->removeInternalPromo($state);
+            }
+
+            $existingOrders = $this->CI->db
+                ->where('client_id', (int) $client->id)
+                ->count_all_results('orders');
+
+            if ($existingOrders > 0) {
+                $state['reason'] = 'PROMO_ALREADY_USED';
+                return $this->removeInternalPromo($state);
+            }
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -928,11 +1129,33 @@ class CartCalculator
 
             /*
             |--------------------------------------------------------------------------
+            | Global brand exclusions
+            |--------------------------------------------------------------------------
+            |
+            | MAC, Anastasia Beverly Hills (ABH) and SHIK never receive a
+            | campaign/promo discount, including the roulette discount.
+            |
+            */
+
+            if ($this->isPromotionExcludedBrand($row)) {
+                $eligible = false;
+                if (!empty($row['brand_id']) && !empty($row['brand_title'])) {
+                    $excludedCartBrands[(int) $row['brand_id']] = array(
+                        'id' => (int) $row['brand_id'],
+                        'title' => (string) $row['brand_title'],
+                    );
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
             | Existing product discount
             |--------------------------------------------------------------------------
             */
 
             if (
+                $eligible
+                &&
                 empty($promo->allow_discounted)
                 && !empty(
                     $row['has_product_discount']
@@ -1367,5 +1590,30 @@ class CartCalculator
         );
 
         return $state;
+    }
+
+    /**
+     * Campaign and roulette discounts are not valid for these brands.
+     * Keep this server-side so a client cannot bypass the rule by changing
+     * the cart UI or selecting a different discount source.
+     */
+    private function isPromotionExcludedBrand(array $row)
+    {
+        $title = strtoupper(trim((string) ($row['brand_title'] ?? '')));
+        if ($title === '') {
+            return false;
+        }
+
+        $compact = preg_replace('/[^A-Z0-9]+/', '', $title);
+        if ($compact === '') {
+            return false;
+        }
+
+        return $compact === 'MAC'
+            || strpos($compact, 'MACCOSMETICS') === 0
+            || $compact === 'ABH'
+            || strpos($compact, 'ANASTASIABEVERLYHILLS') === 0
+            || $compact === 'SHIK'
+            || strpos($compact, 'SHIK') === 0;
     }
 }

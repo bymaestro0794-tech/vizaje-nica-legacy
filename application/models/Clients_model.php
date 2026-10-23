@@ -135,6 +135,8 @@ class Clients_model extends BaseModel
             Discount as discount, 
             Bonus as Bonus, 
             address as address,  
+            welcome_offer_started_at as welcome_offer_started_at,
+            welcome_offer_expires_at as welcome_offer_expires_at
         ");
         $this->db->where('id', $id);
         return $this->db->get($this->tblname)->row();

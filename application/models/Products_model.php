@@ -7,11 +7,54 @@ class Products_model extends BaseModel
     protected $shop_type = 'shop_type';
     protected $shop_feature = 'shop_feature';
     protected $feature_items = 'shop_feature_values';
+    private $productCardOptionsCache = array();
+    private $productCardCategoryTypeCache = array();
 
     public function __construct()
     {
         parent::__construct();
     }
+
+    /**
+     * Decide whether a product page should be indexed.
+     * `seo_indexable` is nullable: NULL means automatic, 1/0 are overrides.
+     */
+    public function isSeoIndexable($product, $hasRealImage, $lang = null)
+    {
+        if (!empty($product) && property_exists($product, 'seo_indexable')
+            && $product->seo_indexable !== null && $product->seo_indexable !== '') {
+            return (int) $product->seo_indexable === 1;
+        }
+
+        if (empty($product) || !$hasRealImage) {
+            return false;
+        }
+
+        $lang = $lang ? strtoupper((string) $lang) : '';
+        $title = $lang !== '' && isset($product->{'title' . $lang})
+            ? $product->{'title' . $lang}
+            : (isset($product->title) ? $product->title : '');
+        $description = $lang !== '' && isset($product->{'desc' . $lang})
+            ? $product->{'desc' . $lang}
+            : (isset($product->desc) ? $product->desc : '');
+        $text = $lang !== '' && isset($product->{'text' . $lang})
+            ? $product->{'text' . $lang}
+            : (isset($product->text) ? $product->text : '');
+
+        $title = trim(html_entity_decode(strip_tags((string) $title), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        $description = preg_replace('/\s+/u', ' ', trim(html_entity_decode(strip_tags((string) $description), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+        $text = preg_replace('/\s+/u', ' ', trim(html_entity_decode(strip_tags((string) $text), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+        $contentLength = max(
+            mb_strlen($description, 'UTF-8'),
+            mb_strlen($text, 'UTF-8')
+        );
+
+        return mb_strlen($title, 'UTF-8') >= 5
+            && (int) (isset($product->brand_id) ? $product->brand_id : 0) > 0
+            && (int) (isset($product->category_id) ? $product->category_id : 0) > 0
+            && $contentLength >= 40;
+    }
+
     /**
      * Добавляет условие доступности товара.
      *
@@ -31,6 +74,63 @@ class Products_model extends BaseModel
         }
 
         $this->db->where("\n            (\n                products.price > 0\n                OR EXISTS (\n                    SELECT 1\n                    FROM products_variable pv\n                    WHERE pv.product_id = products.id\n                      AND pv.price > 0\n                      AND pv.qty > 0\n                )\n            )\n        ", null, false);
+    }
+
+    private function applyAvailableStockCondition()
+    {
+        if (!empty($_SESSION['isb2b'])) {
+            $this->db->where("(
+                products.on_stockWH > 0
+                OR EXISTS (
+                    SELECT 1
+                    FROM products_variable pv
+                    WHERE pv.product_id = products.id
+                      AND pv.isShown = 1
+                      AND pv.qtyWH > 0
+                )
+            )", null, false);
+
+            return;
+        }
+
+        $this->db->where("(
+            products.on_stock > 0
+            OR EXISTS (
+                SELECT 1
+                FROM products_variable pv
+                WHERE pv.product_id = products.id
+                  AND pv.isShown = 1
+                  AND pv.qty > 0
+            )
+        )", null, false);
+    }
+
+    private function getHomeBrandPriorityExpression()
+    {
+        return "CASE
+            WHEN LOWER(COALESCE((SELECT brands.title FROM brands WHERE brands.id = products.brand_id LIMIT 1), '')) LIKE '%clarins%' THEN 500
+            WHEN LOWER(COALESCE((SELECT brands.title FROM brands WHERE brands.id = products.brand_id LIMIT 1), '')) LIKE '%pupa%' THEN 400
+            WHEN LOWER(COALESCE((SELECT brands.title FROM brands WHERE brands.id = products.brand_id LIMIT 1), '')) LIKE '%artdeco%' THEN 300
+            WHEN LOWER(COALESCE((SELECT brands.title FROM brands WHERE brands.id = products.brand_id LIMIT 1), '')) LIKE '%mac%' THEN 200
+            WHEN LOWER(COALESCE((SELECT brands.title FROM brands WHERE brands.id = products.brand_id LIMIT 1), '')) LIKE '%naj oleari%' THEN 100
+            ELSE 0
+        END";
+    }
+
+    /**
+     * Возвращает стабильный seed для ротации промо-товаров раз в 48 часов.
+     * Внутри одного периода порядок одинаковый на всех запросах, а затем
+     * меняется предсказуемо без необходимости хранить состояние в БД.
+     */
+    private function getTwoDayRotationSeed($lang, $scope = '')
+    {
+        $period = (int) floor(time() / (2 * 24 * 60 * 60));
+        // Берём только 7 hex-символов, чтобы seed оставался безопасным
+        // даже на 32-битных окружениях PHP.
+        $hash = hexdec(substr(sha1(strtoupper((string) $lang) . ':' . $scope), 0, 7));
+        $seed = ($period + $hash) % 2147483647;
+
+        return $seed > 0 ? $seed : 1;
     }
 
     /**
@@ -62,8 +162,13 @@ class Products_model extends BaseModel
     $effectiveFields =
         $this->getEffectiveProductFields();
 
+    $seoIndexableField = $this->db->field_exists('seo_indexable', $this->tblname)
+        ? 'seo_indexable'
+        : 'NULL AS seo_indexable';
+
     $this->db->select("
         id,
+        {$seoIndexableField},
         SKU,
         category_id,
         brand_id,
@@ -81,6 +186,8 @@ class Products_model extends BaseModel
         uriRO,
         uriRU,
         uriEN,
+
+        youtube_video_id,
 
         seoTitle$lang AS seo_title,
         seoKeywords$lang AS seo_keywords,
@@ -151,7 +258,8 @@ class Products_model extends BaseModel
 
 public function get_product_by_id_for_quick_view(
     $lang,
-    $id
+    $id,
+    $includeHidden = false
 ) {
     if (
         empty($lang)
@@ -168,6 +276,7 @@ public function get_product_by_id_for_quick_view(
 
     $this->db->select("
         products.id,
+        products.isShown,
         products.SKU,
         products.category_id,
         products.brand_id,
@@ -199,6 +308,14 @@ public function get_product_by_id_for_quick_view(
         products.best_selling,
 
         {$effectiveFields},
+
+        (
+            SELECT pi.img
+            FROM products_img pi
+            WHERE pi.product_id = products.id
+            ORDER BY pi.sorder ASC, pi.id DESC
+            LIMIT 1
+        ) AS img,
 
         (
             SELECT brands.title
@@ -241,10 +358,12 @@ public function get_product_by_id_for_quick_view(
     |
     */
 
-    $this->db->where(
-        'products.isShown',
-        1
-    );
+    if (!$includeHidden) {
+        $this->db->where(
+            'products.isShown',
+            1
+        );
+    }
 
     $this->db->where(
         'products.id',
@@ -703,6 +822,242 @@ public function get_product_variable(
 
     return $productVariable;
 }
+
+/**
+ * Returns the compact volume/color options used on product cards.
+ * The category ancestors are checked so only fragrance cards receive volume
+ * pills and only makeup cards receive shade swatches.
+ */
+public function get_product_card_options($product, $lang = 'RU')
+{
+    if (is_object($product)) {
+        $productId = isset($product->id) ? (int) $product->id : 0;
+    } else {
+        $productId = (int) $product;
+        $product = null;
+    }
+
+    if ($productId <= 0) {
+        return array();
+    }
+
+    $lang = strtoupper((string) $lang);
+    if (!in_array($lang, array('RU', 'RO', 'EN'), true)) {
+        $lang = 'RU';
+    }
+
+    $cacheKey = $productId . ':' . $lang;
+    if (isset($this->productCardOptionsCache[$cacheKey])) {
+        return $this->productCardOptionsCache[$cacheKey];
+    }
+
+    $categoryId = is_object($product) && isset($product->category_id)
+        ? (int) $product->category_id
+        : 0;
+
+    if (
+        $categoryId <= 0
+        || !is_object($product)
+        || !property_exists($product, 'volume')
+    ) {
+        $productRow = $this->db
+            ->select('category_id, volume')
+            ->where('id', $productId)
+            ->get($this->tblname)
+            ->row();
+
+        if (empty($productRow)) {
+            return array();
+        }
+
+        if ($categoryId <= 0) {
+            $categoryId = (int) $productRow->category_id;
+        }
+
+        if (!is_object($product)) {
+            $product = $productRow;
+            $product->id = $productId;
+        } else {
+            if (!property_exists($product, 'volume')) {
+                $product->volume = $productRow->volume;
+            }
+        }
+    }
+
+    $categoryType = $this->getProductCardCategoryType($categoryId);
+    if (!in_array($categoryType, array('volume', 'color'), true)) {
+        $this->productCardOptionsCache[$cacheKey] = array();
+        return array();
+    }
+
+    $variants = is_object($product)
+        && isset($product->variable)
+        && is_array($product->variable)
+            ? $product->variable
+            : null;
+
+    if ($variants === null) {
+        $isB2B = !empty($_SESSION['isb2b']);
+        $availabilityPriceField = $isB2B ? 'priceWH' : 'price';
+        $availabilityQuantityField = $isB2B ? 'qtyWH' : 'qty';
+
+        $variants = $this->db
+            ->select(
+                "color{$lang} AS color, color_data, VolumeVar, "
+                . "{$availabilityPriceField}, {$availabilityQuantityField}"
+            )
+            ->where('product_id', $productId)
+            ->where('isShown', 1)
+            ->where($availabilityPriceField . ' >', 0)
+            ->where($availabilityQuantityField . ' >', 0)
+            ->order_by('sorder ASC, id ASC')
+            ->get('products_variable')
+            ->result();
+    }
+
+    $variants = array_values(array_filter(
+        $variants,
+        array($this, 'isProductCardVariantAvailable')
+    ));
+
+    $options = array();
+
+    if ($categoryType === 'volume') {
+        $volumes = array();
+
+        foreach ($variants as $variant) {
+            $rawVolume = is_object($variant)
+                && isset($variant->VolumeVar)
+                    ? $variant->VolumeVar
+                    : '';
+            $volume = $this->normalizeProductCardVolume($rawVolume);
+
+            if ($volume !== '' && !in_array($volume, $volumes, true)) {
+                $volumes[] = $volume;
+            }
+        }
+
+        if (empty($volumes) && is_object($product) && !empty($product->volume)) {
+            $volume = $this->normalizeProductCardVolume($product->volume);
+            if ($volume !== '') {
+                $volumes[] = $volume;
+            }
+        }
+
+        $options = $volumes
+            ? array('type' => 'volume', 'items' => $volumes)
+            : array();
+    } else {
+        $colors = array();
+        $seen = array();
+
+        foreach ($variants as $variant) {
+            if (!is_object($variant)) {
+                continue;
+            }
+
+            $hexColors = $this->decodeVariantColorData(
+                isset($variant->color_data) ? $variant->color_data : null
+            );
+            $label = isset($variant->color)
+                ? trim((string) $variant->color)
+                : '';
+            $key = !empty($hexColors)
+                ? 'hex:' . implode(',', $hexColors)
+                : 'text:' . mb_strtolower($label, 'UTF-8');
+
+            if (($hexColors || $label !== '') && !isset($seen[$key])) {
+                $seen[$key] = true;
+                $colors[] = array(
+                    'hex' => $hexColors,
+                    'label' => $label,
+                );
+            }
+        }
+
+        $options = $colors
+            ? array('type' => 'color', 'items' => $colors)
+            : array();
+    }
+
+    $this->productCardOptionsCache[$cacheKey] = $options;
+    return $options;
+}
+
+private function isProductCardVariantAvailable($variant)
+{
+    if (!is_object($variant)) {
+        return false;
+    }
+
+    $isB2B = !empty($_SESSION['isb2b']);
+    $priceField = $isB2B ? 'priceWH' : 'price';
+    $quantityField = $isB2B ? 'qtyWH' : 'qty';
+
+    return (float) ($variant->{$priceField} ?? 0) > 0
+        && (int) ($variant->{$quantityField} ?? 0) > 0;
+}
+
+private function getProductCardCategoryType($categoryId)
+{
+    $categoryId = (int) $categoryId;
+    if ($categoryId <= 0) {
+        return '';
+    }
+
+    if (isset($this->productCardCategoryTypeCache[$categoryId])) {
+        return $this->productCardCategoryTypeCache[$categoryId];
+    }
+
+    $category = $this->db
+        ->select("
+            c0.titleRU AS c0_title_ru, c0.titleRO AS c0_title_ro,
+            c0.uriRU AS c0_uri_ru, c0.uriRO AS c0_uri_ro, c0.uriEN AS c0_uri_en,
+            c1.titleRU AS c1_title_ru, c1.titleRO AS c1_title_ro,
+            c1.uriRU AS c1_uri_ru, c1.uriRO AS c1_uri_ro, c1.uriEN AS c1_uri_en,
+            c2.titleRU AS c2_title_ru, c2.titleRO AS c2_title_ro,
+            c2.uriRU AS c2_uri_ru, c2.uriRO AS c2_uri_ro, c2.uriEN AS c2_uri_en
+        ", false)
+        ->from('categories c0')
+        ->join('categories c1', 'c1.id = c0.parent_id', 'left')
+        ->join('categories c2', 'c2.id = c1.parent_id', 'left')
+        ->where('c0.id', $categoryId)
+        ->get()
+        ->row();
+
+    $haystack = '';
+    if (!empty($category)) {
+        foreach ($category as $value) {
+            $haystack .= ' ' . (string) $value;
+        }
+    }
+
+    if (preg_match('/парфюм|parfum|parfumer|parfumerie|perfume|perfumery|fragrance|fragran/iu', $haystack)) {
+        $type = 'volume';
+    } elseif (preg_match('/макияж|make[\s-]?up|machiaj|cosmetice[\s_-]*(?:decorative|colorate)|decorative[\s_-]*cosmetics/iu', $haystack)) {
+        $type = 'color';
+    } else {
+        $type = '';
+    }
+
+    $this->productCardCategoryTypeCache[$categoryId] = $type;
+    return $type;
+}
+
+private function normalizeProductCardVolume($value)
+{
+    if (!preg_match('/\d+(?:[.,]\d+)?/u', (string) $value, $match)) {
+        return '';
+    }
+
+    $volume = str_replace(',', '.', $match[0]);
+    if (strpos($volume, '.') !== false) {
+        $volume = rtrim(rtrim($volume, '0'), '.');
+    }
+
+    return $volume;
+}
+
 private function decodeVariantColorData($colorData)
 {
     if (empty($colorData)) {
@@ -871,7 +1226,8 @@ private function decodeVariantColorData($colorData)
     public function get_similar_products(
     $lang,
     $product,
-    $limit = 10
+    $limit = 10,
+    $titleKeywords = array()
 ) {
     if (
         empty($lang)
@@ -1108,6 +1464,19 @@ private function decodeVariantColorData($colorData)
         'products.id !=',
         $productId
     );
+
+    // Blog embeds can narrow a broad category to the source product's type.
+    if (!empty($titleKeywords)) {
+        $this->db->group_start();
+        foreach (array_values($titleKeywords) as $keywordIndex => $keyword) {
+            if ($keywordIndex === 0) {
+                $this->db->like("products.title$lang", $keyword);
+            } else {
+                $this->db->or_like("products.title$lang", $keyword);
+            }
+        }
+        $this->db->group_end();
+    }
 
     /*
      * В рекомендациях показываем только то,
@@ -1587,7 +1956,7 @@ if (!empty($_SESSION['isb2b'])) {
             ->result();
     }
 
-    public function get_products_home_new($lang)
+    public function get_products_home_new($lang, $limit = 20)
     {
         if (empty($lang)) {
             return false;
@@ -1620,11 +1989,14 @@ if (!empty($_SESSION['isb2b'])) {
         $this->db->join('products_img', 'products_img.product_id = products.id');
         $this->db->where("$this->tblname.isShown", 1);
         $this->db->where('products.is_new', 1);
+        $this->db->select($this->getHomeBrandPriorityExpression() . ' AS home_brand_priority', false);
         $this->applySellableCondition();
+        $this->applyAvailableStockCondition();
 
         $this->db->offset(0);
-        $this->db->limit(10);
+        $this->db->limit(max(1, min(20, (int) $limit)));
 
+        $this->db->order_by('home_brand_priority', 'DESC');
         $this->db->order_by("products.stock DESC, products.sorder ASC, products.id DESC");
         $this->db->group_by("products.id");
         $products = $this->db->get($this->tblname)->result();
@@ -1632,7 +2004,7 @@ if (!empty($_SESSION['isb2b'])) {
         return $products;
     }
 
-    public function get_products_home_sale($lang)
+    public function get_products_home_sale($lang, $limit = 20)
     {
         if (empty($lang)) {
             return false;
@@ -1664,17 +2036,193 @@ if (!empty($_SESSION['isb2b'])) {
         ");
         $this->db->join('products_img', 'products_img.product_id = products.id');
         $this->db->where("$this->tblname.isShown", 1);
-       $this->applySellableCondition();
+        $this->db->select($this->getHomeBrandPriorityExpression() . ' AS home_brand_priority', false);
+        $this->applySellableCondition();
+        $this->applyAvailableStockCondition();
 
         $this->db->where('products.discount_price >', 1);
         $this->db->offset(0);
-        $this->db->limit(10);
+        $this->db->limit(max(1, min(20, (int) $limit)));
 
+        $this->db->order_by('home_brand_priority', 'DESC');
+        $this->db->order_by(
+            'RAND(' . $this->getTwoDayRotationSeed($lang, 'home-sale') . ')',
+            '',
+            false
+        );
         $this->db->order_by("products.stock DESC, products.sorder ASC, products.id DESC");
         $this->db->group_by("products.id");
         $products = $this->db->get($this->tblname)->result();
 
         return $products;
+    }
+
+    /**
+     * Акционные товары для компактного промо-слайдера в шапке.
+     * Берём только позиции из каталога скидок с реальной скидкой,
+     * изображением и доступным остатком (у товара или скидочного варианта).
+     */
+    public function get_header_discount_products($lang, $limit = 18)
+    {
+        $lang = strtoupper((string) $lang);
+        if (!in_array($lang, array('RU', 'RO'), true)) {
+            return array();
+        }
+
+        $limit = max(1, min(24, (int) $limit));
+        $poolLimit = max($limit * 3, 36);
+        $popularBrandPriority = "CASE
+            WHEN LOWER(COALESCE(brands.title, '')) LIKE '%clarins%' THEN 700
+            WHEN LOWER(COALESCE(brands.title, '')) LIKE '%mac%' THEN 600
+            WHEN LOWER(COALESCE(brands.title, '')) LIKE '%pupa%' THEN 500
+            WHEN LOWER(COALESCE(brands.title, '')) LIKE '%artdeco%' THEN 400
+            WHEN LOWER(COALESCE(brands.title, '')) LIKE '%abh%' THEN 300
+            WHEN LOWER(COALESCE(brands.title, '')) LIKE '%bourjois%' THEN 200
+            WHEN LOWER(COALESCE(brands.title, '')) LIKE '%l%oreal%' THEN 100
+            ELSE 0
+        END";
+        $parentDiscount = "(
+            products.price > 0
+            AND products.discount_price > 0
+            AND products.discount_price < products.price
+        )";
+        $variantDiscount = "(
+            pv_sale.isShown = 1
+            AND pv_sale.price > 0
+            AND pv_sale.discount_price > 0
+            AND pv_sale.discount_price < pv_sale.price
+        )";
+        $parentStockField = !empty($_SESSION['isb2b'])
+            ? 'products.on_stockWH'
+            : 'products.on_stock';
+        $variantStockConditions = !empty($_SESSION['isb2b'])
+            ? 'pv_sale.priceWH > 0 AND pv_sale.qtyWH > 0'
+            : 'pv_sale.qty > 0';
+        $rankVariantStockConditions = !empty($_SESSION['isb2b'])
+            ? 'pv_rank.priceWH > 0 AND pv_rank.qtyWH > 0'
+            : 'pv_rank.qty > 0';
+        $discountPercent = "GREATEST(
+            CASE
+                WHEN {$parentDiscount} AND {$parentStockField} > 0
+                    THEN ROUND(((products.price - products.discount_price) / products.price) * 100)
+                ELSE 0
+            END,
+            COALESCE((
+                SELECT MAX(ROUND(((pv_rank.price - pv_rank.discount_price) / pv_rank.price) * 100))
+                FROM products_variable pv_rank
+                WHERE pv_rank.product_id = products.id
+                  AND pv_rank.isShown = 1
+                  AND pv_rank.price > 0
+                  AND pv_rank.discount_price > 0
+                  AND pv_rank.discount_price < pv_rank.price
+                  AND {$rankVariantStockConditions}
+            ), 0)
+        )";
+
+        $this->db->select("\n            products.id,\n            products.title{$lang} AS title,\n            products.uri{$lang} AS uri,\n            categories.uri{$lang} AS cat_uri,\n            {$discountPercent} AS discount_percent\n        ", false);
+        $this->db->from('products');
+        $this->db->join('categories', 'categories.id = products.category_id', 'inner');
+        $this->db->join('brands', 'brands.id = products.brand_id', 'left');
+        $this->db->select(
+            "products.brand_id, brands.title AS brand_title, {$popularBrandPriority} AS brand_priority",
+            false
+        );
+        $this->db->where('products.isShown', 1);
+        $this->db->where('products.discount_price >', 0);
+        $this->db->where("products.discount_price < products.price", null, false);
+        $this->db->where('products.price >', 0);
+        $this->db->where("categories.uri{$lang} != ''", null, false);
+        $this->db->where("products.uri{$lang} != ''", null, false);
+        $this->db->where("EXISTS (
+            SELECT 1
+            FROM products_img pi_header
+            WHERE pi_header.product_id = products.id
+        )", null, false);
+        $this->db->where("(
+            ({$parentStockField} > 0 AND {$parentDiscount})
+            OR EXISTS (
+                SELECT 1
+                FROM products_variable pv_sale
+                WHERE pv_sale.product_id = products.id
+                  AND {$variantDiscount}
+                  AND {$variantStockConditions}
+            )
+        )", null, false);
+        $this->db->order_by(
+            'brand_priority DESC, discount_percent DESC, products.stock DESC, products.sorder ASC, products.id DESC',
+            '',
+            false
+        );
+        $this->db->limit($poolLimit);
+
+        $pool = $this->db->get()->result();
+        /*
+         * Не отдаём подряд все товары одного бренда. Внутри каждого бренда
+         * сохраняется приоритет скидки, а сами бренды проходят по очереди.
+         */
+        $byBrand = array();
+        foreach ($pool as $product) {
+            $brandKey = !empty($product->brand_id)
+                ? 'brand_' . (int) $product->brand_id
+                : 'product_' . (int) $product->id;
+
+            if (!isset($byBrand[$brandKey])) {
+                $byBrand[$brandKey] = array();
+            }
+
+            $byBrand[$brandKey][] = $product;
+        }
+
+        $brandKeys = array_keys($byBrand);
+        usort($brandKeys, static function ($left, $right) use ($byBrand) {
+            $leftPriority = (int) ($byBrand[$left][0]->brand_priority ?? 0);
+            $rightPriority = (int) ($byBrand[$right][0]->brand_priority ?? 0);
+
+            if ($leftPriority === $rightPriority) {
+                return strcmp($left, $right);
+            }
+
+            return $rightPriority <=> $leftPriority;
+        });
+
+        $rotatedPool = array();
+        $round = 0;
+        while (count($rotatedPool) < min($limit, count($pool))) {
+            $addedInRound = false;
+
+            foreach ($brandKeys as $brandKey) {
+                if (!isset($byBrand[$brandKey][$round])) {
+                    continue;
+                }
+
+                $rotatedPool[] = $byBrand[$brandKey][$round];
+                $addedInRound = true;
+
+                if (count($rotatedPool) >= $limit) {
+                    break;
+                }
+            }
+
+            if (!$addedInRound) {
+                break;
+            }
+
+            $round++;
+        }
+
+        /* Меняем стартовую позицию один раз в 48 часов, а не на каждый запрос. */
+        $rotationCount = count($rotatedPool);
+        if ($rotationCount > 1) {
+            $rotationOffset = $this->getTwoDayRotationSeed($lang, 'header-sale') % $rotationCount;
+            if ($rotationOffset > 0) {
+                $rotatedPool = array_merge(
+                    array_slice($rotatedPool, $rotationOffset),
+                    array_slice($rotatedPool, 0, $rotationOffset)
+                );
+            }
+        }
+
+        return array_slice($rotatedPool, 0, $limit);
     }
 
     public function get_products_home_order($lang)
@@ -2112,6 +2660,7 @@ if (!empty($_SESSION['isb2b'])) {
             products.id,
             products.brand_id,
             products.price,
+            products.discount_price,
             products.category_id
         ');
 
@@ -2136,7 +2685,12 @@ if (!empty($_SESSION['isb2b'])) {
         }
 
         if (!empty($_GET['sex']) && is_array($_GET['sex'])) {
-            $sexValues = array_map('intval', $_GET['sex']);
+            $sexValues = array_values(array_filter(
+                array_map('trim', $_GET['sex']),
+                static function ($value) {
+                    return $value !== '';
+                }
+            ));
             $this->db->where_in('products.sex', $sexValues);
         }
 
@@ -2199,6 +2753,16 @@ if (!empty($_SESSION['isb2b'])) {
         ORDER BY pi.sorder ASC, pi.id DESC
         LIMIT 1
     ) AS img,
+
+(
+    SELECT GROUP_CONCAT(
+        pi_gallery.img
+        ORDER BY pi_gallery.sorder ASC, pi_gallery.id DESC
+        SEPARATOR '||'
+    )
+    FROM products_img pi_gallery
+    WHERE pi_gallery.product_id = $this->tblname.id
+) AS gallery_images,
 
     (
         SELECT b.title
@@ -2266,7 +2830,12 @@ if (!empty($_SESSION['isb2b'])) {
         }
 
         if (!empty($_GET['sex']) && is_array($_GET['sex'])) {
-            $sex = array_map('intval', $_GET['sex']);
+            $sex = array_values(array_filter(
+                array_map('trim', $_GET['sex']),
+                static function ($value) {
+                    return $value !== '';
+                }
+            ));
 
             if (!empty($sex)) {
                 $this->db->where_in(
@@ -2452,7 +3021,9 @@ if (!empty($_SESSION['isb2b'])) {
         }
 
         if (!empty($_GET['brand']) && is_array($_GET['brand'])) {
-            $brandIds = array_values(array_filter(array_map('intval', $_GET['brand'])));
+            $brandIds = array_values(array_filter(array_map(function ($value) {
+                return is_scalar($value) ? (int) $value : 0;
+            }, $_GET['brand'])));
 
             if (!empty($brandIds)) {
                 $this->db->where_in("$this->tblname.brand_id", $brandIds);
@@ -2500,16 +3071,13 @@ if (!empty($_SESSION['isb2b'])) {
 
         // фильтр по цене
 
-        if (isset($_GET['price_min'], $_GET['price_max'])) {
+        if (isset($_GET['price_min'], $_GET['price_max']) && is_numeric($_GET['price_min']) && is_numeric($_GET['price_max'])) {
             $this->applyEffectivePriceRange($_GET['price_min'], $_GET['price_max']);
         } else {
             $this->applySellableCondition();
         }
 
-        // фильтр по брендам
-        if (!empty($_GET['brand']) && is_array($_GET['brand'])) {
-            $this->db->where_in('products.brand_id', $_GET['brand']);
-        }
+        $this->applyCategoryListingFilters();
 
         $this->db->group_by("products.id");
 
@@ -2540,6 +3108,7 @@ if (!empty($_SESSION['isb2b'])) {
         products.is_new,    
         {$effectiveFields},
         (SELECT products_img.img FROM products_img WHERE products_img.product_id=$this->tblname.id ORDER BY sorder ASC, id DESC LIMIT 1) as img, 
+        (SELECT GROUP_CONCAT(pi_gallery.img ORDER BY pi_gallery.sorder ASC, pi_gallery.id DESC SEPARATOR '||') FROM products_img pi_gallery WHERE pi_gallery.product_id = products.id) as gallery_images,
         (SELECT brands.title FROM brands WHERE brands.id=$this->tblname.brand_id) as brand_title, 
         (SELECT categories.uri$lang FROM categories WHERE categories.id=$this->tblname.category_id) as cat_uri, 
         (SELECT categories.title$lang FROM categories WHERE categories.id=$this->tblname.category_id) as cat_title,
@@ -2558,16 +3127,13 @@ if (!empty($_SESSION['isb2b'])) {
 
         // Фильтр по цене
 
-        if (isset($_GET['price_min'], $_GET['price_max'])) {
+        if (isset($_GET['price_min'], $_GET['price_max']) && is_numeric($_GET['price_min']) && is_numeric($_GET['price_max'])) {
             $this->applyEffectivePriceRange($_GET['price_min'], $_GET['price_max']);
         } else {
             $this->applySellableCondition();
         }
 
-        // Фильтр по брендам
-        if (!empty($_GET['brand']) && is_array($_GET['brand'])) {
-            $this->db->where_in('products.brand_id', $_GET['brand']);
-        }
+        $this->applyCategoryListingFilters();
 
         // Пагинация
         $this->db->offset($offset);
@@ -2602,6 +3168,144 @@ if (!empty($_SESSION['isb2b'])) {
         $products = $this->db->get()->result();
 
         return $products;
+    }
+
+    /** Apply listing filters shared by the category count and product queries. */
+    private function applyCategoryListingFilters()
+    {
+        if (!empty($_GET['brand']) && is_array($_GET['brand'])) {
+            $brandIds = array_values(array_filter(array_map('intval', $_GET['brand'])));
+            if ($brandIds) $this->db->where_in('products.brand_id', $brandIds);
+        }
+
+        if (!empty($_GET['sex']) && is_array($_GET['sex'])) {
+            $allowedSex = array('Женский', 'Мужской', 'Унисекс');
+            $sex = array_values(array_intersect($allowedSex, array_filter($_GET['sex'], 'is_string')));
+            if ($sex) $this->db->where_in('products.sex', $sex);
+        }
+
+        if (!empty($_GET['in_stock'])) {
+            if (!empty($_SESSION['isb2b'])) {
+                $this->db->where(
+                    "(
+                        products.on_stockWH > 0
+                        OR EXISTS (
+                            SELECT 1
+                            FROM products_variable pv
+                            WHERE pv.product_id = products.id
+                              AND pv.priceWH > 0
+                              AND pv.qtyWH > 0
+                        )
+                    )",
+                    null,
+                    false
+                );
+            } else {
+                $this->db->where(
+                    "(
+                        products.on_stock > 0
+                        OR EXISTS (
+                            SELECT 1
+                            FROM products_variable pv
+                            WHERE pv.product_id = products.id
+                              AND pv.price > 0
+                              AND pv.qty > 0
+                        )
+                    )",
+                    null,
+                    false
+                );
+            }
+        }
+
+        if (!empty($_GET['discounted'])) {
+            $this->db->where('products.discount_price >', 0);
+        }
+
+        if (!empty($_GET['feature']) && is_array($_GET['feature'])) {
+            foreach ($_GET['feature'] as $featureId => $valueIds) {
+                $featureId = (int) $featureId;
+                if ($featureId < 1 || !is_array($valueIds)) continue;
+
+                $valueIds = array_values(array_filter(array_map(function ($value) {
+                    return is_scalar($value) ? (int) $value : 0;
+                }, $valueIds)));
+                if (!$valueIds) continue;
+
+                $valueList = implode(',', $valueIds);
+                $this->db->where(
+                    "EXISTS (SELECT 1 FROM products_features pf_filter WHERE pf_filter.product_id = products.id " .
+                    "AND pf_filter.feature_id = {$featureId} AND pf_filter.feature_value_id IN ({$valueList}))",
+                    null,
+                    false
+                );
+            }
+        }
+    }
+
+    /** Return only feature values that occur in the current category tree. */
+    public function get_category_filter_features($lang, $featureType, $categoriesId)
+    {
+        if (!in_array($lang, array('RU', 'RO', 'EN'), true) || empty($categoriesId)) {
+            return array();
+        }
+
+        $categoryIds = array_values(array_filter(array_map('intval', $categoriesId)));
+        if (!$categoryIds) return array();
+
+        $this->db->select("sf.id AS feature_id, sf.name_{$lang} AS feature_name, " .
+            "sfv.id AS value_id, sfv.name_{$lang} AS value_name, COUNT(DISTINCT products.id) AS value_count", false);
+        $this->db->from('shop_feature sf');
+        $this->db->join('shop_feature_values sfv', 'sfv.feature_id = sf.id', 'inner');
+        $this->db->join('products_features pf', 'pf.feature_id = sf.id AND pf.feature_value_id = sfv.id', 'inner');
+        $this->db->join('products', 'products.id = pf.product_id AND products.isShown = 1', 'inner');
+        $this->db->join('products_img pfi', 'pfi.product_id = products.id', 'inner');
+        if ((int) $featureType > 0) $this->db->where('sf.type_id', (int) $featureType);
+        $this->db->where_in('pf.category_id', $categoryIds);
+        $this->applySellableCondition();
+        $this->db->group_by(array('sf.id', 'sfv.id'));
+        $this->db->order_by('sf.sorder ASC, sf.id ASC, sfv.sorder ASC, sfv.id ASC');
+        $rows = $this->db->get()->result();
+
+        $features = array();
+        foreach ($rows as $row) {
+            $id = (int) $row->feature_id;
+            if (!isset($features[$id])) {
+                $features[$id] = array('id' => $id, 'name' => $row->feature_name, 'values' => array());
+            }
+            $features[$id]['values'][] = array(
+                'id' => (int) $row->value_id,
+                'name' => $row->value_name,
+                'count' => (int) $row->value_count,
+            );
+        }
+
+        return array_values($features);
+    }
+
+    public function get_category_listing_price_bounds($categoriesId)
+    {
+        if (empty($categoriesId)) return (object) array('price_min' => 0, 'price_max' => 0);
+
+        if (!empty($_SESSION['isb2b'])) {
+            $priceExpression = "CASE WHEN products.priceWH > 0 THEN products.priceWH ELSE (SELECT MIN(pv.priceWH) FROM products_variable pv WHERE pv.product_id = products.id AND pv.priceWH > 0 AND pv.qtyWH > 0) END";
+        } else {
+            $priceExpression = "CASE WHEN products.price > 0 THEN products.price ELSE (SELECT MIN(pv.price) FROM products_variable pv WHERE pv.product_id = products.id AND pv.price > 0 AND pv.qty > 0) END";
+        }
+
+        $this->db->select("MIN(($priceExpression)) AS price_min, MAX(($priceExpression)) AS price_max", false);
+        $this->db->from('products');
+        $this->db->join('product_categories pc', 'pc.product_id = products.id', 'inner');
+        $this->db->join('products_img', 'products_img.product_id = products.id', 'inner');
+        $this->db->where_in('pc.category_id', array_values(array_map('intval', $categoriesId)));
+        $this->db->where('products.isShown', 1);
+        $this->applySellableCondition();
+
+        $bounds = $this->db->get()->row();
+        if (empty($bounds)) return (object) array('price_min' => 0, 'price_max' => 0);
+        $bounds->price_min = (float) $bounds->price_min;
+        $bounds->price_max = (float) $bounds->price_max;
+        return $bounds;
     }
 
 
@@ -2830,9 +3534,13 @@ if (!empty($_SESSION['isb2b'])) {
 
         $this->db->join('products_img', 'products_img.product_id = products.id');
         $this->db->where("$this->tblname.isShown", 1);
-        $this->applySellableCondition();
-
         $this->db->where('products.brand_id', $brand_id);
+        if (isset($_GET['price_min'], $_GET['price_max']) && is_numeric($_GET['price_min']) && is_numeric($_GET['price_max'])) {
+            $this->applyEffectivePriceRange($_GET['price_min'], $_GET['price_max']);
+        } else {
+            $this->applySellableCondition();
+        }
+        $this->applyCategoryListingFilters();
         $this->db->group_by("products.id");
         return $this->db->get($this->tblname)->result();
     }
@@ -2862,6 +3570,7 @@ if (!empty($_SESSION['isb2b'])) {
             $this->tblname.is_new,    
              {$effectiveFields},
              (SELECT products_img.img FROM products_img WHERE products_img.product_id=$this->tblname.id ORDER BY sorder ASC, id DESC LIMIT 1) as img,
+             (SELECT GROUP_CONCAT(pi_gallery.img ORDER BY pi_gallery.sorder ASC, pi_gallery.id DESC SEPARATOR '||') FROM products_img pi_gallery WHERE pi_gallery.product_id = products.id) as gallery_images,
              (SELECT brands.title FROM brands WHERE brands.id=$this->tblname.brand_id) as brand_title,
              (SELECT categories.uri$lang FROM categories WHERE categories.id=$this->tblname.category_id) as cat_uri,
              (SELECT categories.title$lang FROM categories WHERE categories.id=$this->tblname.category_id) as cat_title, 
@@ -2875,9 +3584,13 @@ if (!empty($_SESSION['isb2b'])) {
         }
 
         $this->db->where("$this->tblname.isShown", 1);
-       $this->applySellableCondition();
-
+        if (isset($_GET['price_min'], $_GET['price_max']) && is_numeric($_GET['price_min']) && is_numeric($_GET['price_max'])) {
+            $this->applyEffectivePriceRange($_GET['price_min'], $_GET['price_max']);
+        } else {
+            $this->applySellableCondition();
+        }
         $this->db->where('products.brand_id', $brand_id);
+        $this->applyCategoryListingFilters();
         $this->db->offset($offset);
         $this->db->limit($limit);
 
@@ -3343,6 +4056,36 @@ if (!empty($_SESSION['isb2b'])) {
             LIMIT 1
         ";
 
+        $availableStockField = !empty($_SESSION['isb2b'])
+            ? "
+                CASE
+                    WHEN products.on_stockWH > 0 THEN 1
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM products_variable pv_available
+                        WHERE pv_available.product_id = products.id
+                          AND pv_available.isShown = 1
+                          AND pv_available.priceWH > 0
+                          AND pv_available.qtyWH > 0
+                    ) THEN 1
+                    ELSE 0
+                END
+            "
+            : "
+                CASE
+                    WHEN products.on_stock > 0 THEN 1
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM products_variable pv_available
+                        WHERE pv_available.product_id = products.id
+                          AND pv_available.isShown = 1
+                          AND pv_available.price > 0
+                          AND pv_available.qty > 0
+                    ) THEN 1
+                    ELSE 0
+                END
+            ";
+
         $parentImage = "
             SELECT pi.img
             FROM products_img pi
@@ -3389,6 +4132,8 @@ if (!empty($_SESSION['isb2b'])) {
                     {$variantStock}
                 )
             END AS effective_stock,
+
+            {$availableStockField} AS has_available_stock,
 
             CASE
                 WHEN {$parentDiscountCondition}
@@ -3528,6 +4273,16 @@ if (!empty($_SESSION['isb2b'])) {
             ) AS img,
 
             (
+                SELECT GROUP_CONCAT(
+                    pi_gallery.img
+                    ORDER BY pi_gallery.sorder ASC, pi_gallery.id DESC
+                    SEPARATOR '||'
+                )
+                FROM products_img pi_gallery
+                WHERE pi_gallery.product_id = products.id
+            ) AS gallery_images,
+
+            (
                 SELECT brands.title
                 FROM brands
                 WHERE brands.id = products.brand_id
@@ -3604,6 +4359,36 @@ if (!empty($_SESSION['isb2b'])) {
 
         $wholesaleStock = "\n            CASE\n                WHEN products.on_stockWH > 0 THEN products.on_stockWH\n                ELSE (\n                    SELECT COALESCE(SUM(pv.qtyWH), 0)\n                    FROM products_variable pv\n                    WHERE pv.product_id = products.id\n                      AND pv.priceWH > 0\n                      AND pv.qtyWH > 0\n                )\n            END\n        ";
 
+        $retailHasAvailableStock = "
+            CASE
+                WHEN products.on_stock > 0 THEN 1
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM products_variable pv
+                    WHERE pv.product_id = products.id
+                      AND pv.isShown = 1
+                      AND pv.price > 0
+                      AND pv.qty > 0
+                ) THEN 1
+                ELSE 0
+            END
+        ";
+
+        $wholesaleHasAvailableStock = "
+            CASE
+                WHEN products.on_stockWH > 0 THEN 1
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM products_variable pv
+                    WHERE pv.product_id = products.id
+                      AND pv.isShown = 1
+                      AND pv.priceWH > 0
+                      AND pv.qtyWH > 0
+                ) THEN 1
+                ELSE 0
+            END
+        ";
+
         $effectivePrice = !empty($_SESSION['isb2b'])
             ? $wholesalePrice
             : $retailPrice;
@@ -3611,6 +4396,10 @@ if (!empty($_SESSION['isb2b'])) {
         $effectiveStock = !empty($_SESSION['isb2b'])
             ? $wholesaleStock
             : $retailStock;
+
+        $hasAvailableStock = !empty($_SESSION['isb2b'])
+            ? $wholesaleHasAvailableStock
+            : $retailHasAvailableStock;
 
         $hasVariable = !empty($_SESSION['isb2b'])
             ? "
@@ -3639,6 +4428,7 @@ if (!empty($_SESSION['isb2b'])) {
             {$wholesaleStock} AS effective_stock_wh,
             {$effectivePrice} AS effective_price,
             {$effectiveStock} AS effective_stock,
+            {$hasAvailableStock} AS has_available_stock,
             {$hasVariable} AS has_variable
         ";
     }

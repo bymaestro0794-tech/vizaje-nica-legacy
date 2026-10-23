@@ -2,6 +2,7 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 
 $isRomanian = $lclang === 'ro';
+$isHalloweenTheme = ($site_theme_key ?? 'default') === 'halloween';
 
 $homeUrl = '/' . $lclang;
 
@@ -11,11 +12,11 @@ $catalogUrl = '/' . $lclang . '/' . (
         : ($isRomanian ? 'catalog' : 'katalog')
 );
 
-/*
- * Готовое изображение с девушкой и цифрами 404.
- * Замени путь, если файл называется иначе.
- */
-$errorImage = '/app/img/404.png';
+$errorImage = $isHalloweenTheme
+    ? '/app/img/not-found/hellowen-not-found.png'
+    : '/app/img/404.png';
+$errorImageWidth = $isHalloweenTheme ? 1953 : 4200;
+$errorImageHeight = $isHalloweenTheme ? 805 : 1800;
 
 /*
  * Фирменный знак Vizaje-Nica между разделительными линиями.
@@ -39,8 +40,8 @@ $brandLogo = '/app/img/icons-2/logo-2.svg';
                             ? 'Eroare 404'
                             : 'Ошибка 404' ?>"
                         class="error-404__visual-image"
-                        width="1400"
-                        height="760"
+                        width="<?= $errorImageWidth ?>"
+                        height="<?= $errorImageHeight ?>"
                         decoding="async"
                     >
                 </div>

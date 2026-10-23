@@ -76,7 +76,7 @@
                                     <tr>
                                         <td width="200"><?= lang('Photo') ?></td>
                                         <td>
-                                            <input type="file" name="img" id="file" class="form-control">
+                                            <input type="file" name="img" id="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.svg,.webp,.avif,.mp4,video/mp4">
                                             <div class="note note-warning"
                                                  style="margin-bottom: 0px; margin-top: 10px;">
                                                 <p>

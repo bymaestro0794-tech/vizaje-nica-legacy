@@ -65,15 +65,18 @@ class Pages extends FrontEndController
 
         // $this->data['products_order'] = $this->products_model->get_products_home_order($this->clang);
 
-        // $this->data['categories_home'] = $this->categories_model->get_category_home($this->clang);
-        
         $this->load->model('home_categories_model');
-
         $this->data['home_categories'] =
             $this->home_categories_model
-                ->get_front_items(
-                    $this->clang
-                );
+                ->get_front_items($this->clang);
+
+        $this->load->model('articles_model');
+        $this->data['home_blog_articles'] =
+            $this->articles_model->get_blog_articles(
+                $this->clang,
+                0,
+                5
+            );
 
         $this->load->model(
             'home_brand_sections_model'
@@ -316,6 +319,14 @@ class Pages extends FrontEndController
         $this->_init_seo_data(
             $page
         );
+
+        $privacyPageUri = strtolower(trim((string) $page->uri, '/'));
+        $privacyPageTitle = strtolower((string) $page->title);
+        $this->data['is_privacy_policy_page'] = (
+            strpos($privacyPageUri, 'polit') !== false
+            && strpos($privacyPageUri, 'cookie') !== false
+        ) || strpos($privacyPageTitle, 'конфиденциаль') !== false
+            || strpos($privacyPageTitle, 'confiden') !== false;
     
         if (
             $page->uri === 'pravila-primeneniya-promokoda'
@@ -340,50 +351,6 @@ class Pages extends FrontEndController
     }
     public function not_found()
     {
-        $this->output->set_status_header(404);
-    
-        $isRomanian = $this->lclang === 'ro';
-    
-        $this->data['page_title'] = $isRomanian
-            ? 'Pagina nu a fost găsită'
-            : 'Страница не найдена';
-    
-        $this->data['page_name'] =
-            $this->data['page_title'];
-    
-        $this->data['description_for_layout'] = $isRomanian
-            ? 'Pagina solicitată nu există sau a fost mutată.'
-            : 'Запрошенная страница не существует или была перемещена.';
-    
-        $this->data['keywords_for_layout'] = '';
-    
-        $this->data['otitle'] =
-            $this->data['page_title'];
-    
-        $this->data['og_img'] =
-            '/app/img/fav_icon.png';
-    
-        $this->data['og_img_width'] = 512;
-        $this->data['og_img_height'] = 512;
-    
-        $this->data['breadcrumbs'] = [];
-    
-        /*
-         * Header ожидает ссылки переключения языков.
-         * На 404 безопаснее вести пользователя
-         * на главную соответствующего языка.
-         */
-        $this->data['lang_urls'] = [
-            'ru' => ['ru'],
-            'ro' => ['ro'],
-        ];
-    
-        $this->data['inner_view'] =
-            'pages/errors/404';
-    
-        $this->data['body_class'] =
-            'page-404';
-    
-        $this->_render();
+        $this->_render_not_found_page();
     }
 }

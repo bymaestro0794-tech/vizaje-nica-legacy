@@ -47,6 +47,12 @@
     <div class="portlet light">
         <div class="portlet-body">
             <form method="post" enctype="multipart/form-data">
+                <?php if (!empty($import_change_id)): ?>
+                    <input type="hidden" name="import_change_id" value="<?= (int) $import_change_id ?>">
+                    <?php foreach ($import_return_filters as $filterKey => $filterValue): ?>
+                        <input type="hidden" name="import_<?= html_escape($filterKey) ?>" value="<?= html_escape($filterValue) ?>">
+                    <?php endforeach; ?>
+                <?php endif; ?>
                 <div class="panel-body">
                     <ul class="nav nav-pills">
                         <ul class="nav nav-pills">
@@ -267,7 +273,7 @@
                                         <td width="200"><?= lang('Photo') ?>
                                         </td>
                                         <td>
-                                            <input type="file" name="images[]" id="file" class="form-control"
+                                            <input type="file" name="images[]" id="file" class="form-control" accept=".jpg,.jpeg,.png,.webp,.avif"
                                                    multiple>
                                             <div class="note note-warning"
                                                  style="margin-bottom: 0px; margin-top: 10px;">
@@ -308,6 +314,21 @@
                                                     </div>
                                                 <?php endforeach; ?>
                                             <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td width="200">Видео YouTube</td>
+                                        <td>
+                                            <input
+                                                type="url"
+                                                name="youtube_video_url"
+                                                class="form-control"
+                                                placeholder="https://youtu.be/XXXXXXXXXXX"
+                                                value="<?= !empty($item->youtube_video_id) ? 'https://youtu.be/' . htmlspecialchars($item->youtube_video_id, ENT_QUOTES, 'UTF-8') : '' ?>"
+                                            >
+                                            <p class="help-block">
+                                                Вставьте ссылку на YouTube. Видео появится отдельным кадром в галерее товара; пустое поле удалит ссылку.
+                                            </p>
                                         </td>
                                     </tr>
                                     <tr>
@@ -901,6 +922,7 @@
                                 <input
                                     type="file"
                                     name="variable_images[<?= (int) $variable->id ?>][]"
+                                    accept=".jpg,.jpeg,.png,.webp,.avif"
                                     multiple
                                     class="form-control"
                                 >
@@ -1038,6 +1060,21 @@
                             <div class="table-scrollable">
                                 <table class="table table-bordered table-striped table-hover">
                                     <tbody>
+                                    <tr>
+                                        <td width="200">Индексация в Google</td>
+                                        <td>
+                                            <?php if (!empty($seo_indexable_available)) : ?>
+                                                <select name="seo_indexable" class="form-control">
+                                                    <option value="auto" <?= !isset($item->seo_indexable) || $item->seo_indexable === null ? 'selected' : '' ?>>Автоматически по заполненности</option>
+                                                    <option value="1" <?= isset($item->seo_indexable) && (string) $item->seo_indexable === '1' ? 'selected' : '' ?>>Индексировать</option>
+                                                    <option value="0" <?= isset($item->seo_indexable) && (string) $item->seo_indexable === '0' ? 'selected' : '' ?>>Не индексировать</option>
+                                                </select>
+                                                <p class="help-block">Автоматически: нужна фотография, название, категория, бренд и описание не короче 40 символов. Товар при этом остаётся в каталоге.</p>
+                                            <?php else : ?>
+                                                <div class="alert alert-warning">Чтобы включить управление индексацией, сначала примените SQL-патч <code>database/patches/2026-10-02-add-product-seo-index-control.sql</code>.</div>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
                                             <? foreach (language(true) as $lang) { ?>
                                                 <tr>
                                                     <td width="200">SEO Title (&lt;title&gt;) <?= strtoupper($lang) ?></td>

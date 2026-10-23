@@ -187,7 +187,7 @@ $canWriteOff =
 
 			<?php if ($canWriteOff) : ?>
 
-				<label class="vn-checkout-bonus-option">
+				<label class="vn-checkout-bonus-option vn-checkout-bonus-option--writeoff">
 					<input
 						type="radio"
 						name="bonus"
@@ -225,7 +225,7 @@ $canWriteOff =
 										0,
 										'.',
 										' '
-									) ?>
+									) ?> MDL
 								</b>
 							</span>
 						</span>
@@ -311,12 +311,23 @@ $canWriteOff =
 						max="<?= (int) floor($bonusMax) ?>"
 						step="1"
 						inputmode="numeric"
+						aria-label="<?= $isRomanian ? 'Suma bonusurilor' : 'Сумма бонусов' ?>"
 						data-bonus-amount
 					>
+
+					<span
+						class="vn-checkout-bonus__amount-divider"
+						aria-hidden="true"
+					></span>
 
 					<span>
 						MDL
 					</span>
+				</div>
+
+				<div class="vn-checkout-bonus__range-labels" aria-hidden="true">
+					<span>0 MDL</span>
+					<span><?= number_format($bonusMax, 0, '.', ' ') ?> MDL</span>
 				</div>
 
 				<input

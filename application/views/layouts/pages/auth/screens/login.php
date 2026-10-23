@@ -14,6 +14,12 @@ defined('BASEPATH') or exit('No direct script access allowed');
 					? 'Intră în cont'
 					: 'Войти в личный кабинет' ?>
 			</h2>
+
+			<p class="auth-drawer__description">
+				<?= $isRomanian
+					? 'Intră în contul tău Vizaje‑Nica.'
+					: 'Войдите в свой аккаунт Vizaje‑Nica.' ?>
+			</p>
 		</header>
 
 		<form
@@ -155,6 +161,10 @@ defined('BASEPATH') or exit('No direct script access allowed');
 			>
 				<?= CONTINUE_NO_REGISTRATION ?>
 			</button>
+			<div class="auth-drawer__separator" aria-hidden="true">
+				<span><?= $isRomanian ? 'sau' : 'или' ?></span>
+			</div>
+
 			<p class="auth-drawer__switch">
 				<span>
 					<?= $isRomanian

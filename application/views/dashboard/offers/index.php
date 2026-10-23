@@ -86,6 +86,15 @@
                                                     <input type="text" name="sale" class="form-control">
                                                 </td>
                                             </tr>
+                                            <tr>
+                                                <td width="200">Формат акции</td>
+                                                <td>
+                                                    <select name="is_online" class="form-control" required>
+                                                        <option value="1" selected>Онлайн</option>
+                                                        <option value="0">Офлайн</option>
+                                                    </select>
+                                                </td>
+                                            </tr>
                                             <? foreach (language(true) as $lang) { ?>
                                                 <tr>
                                                     <td width="200"><?= lang('Location') ?> <?= strtoupper($lang) ?>

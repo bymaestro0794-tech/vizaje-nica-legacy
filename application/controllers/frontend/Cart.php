@@ -486,9 +486,28 @@ public function checkout()
 
             /*
             |--------------------------------------------------------------------------
-            | Normalize submitted phone
+            | Normalize submitted phone — flexible checkout mode
             |--------------------------------------------------------------------------
             */
+
+            /*
+             * LEGACY STRICT RULE (preserved for rollback):
+             *
+             * $digits = preg_replace('/\D/', '', $phone);
+             * if (strlen($digits) === 8) {
+             *     $phone = '+373' . $digits;
+             * } elseif (strlen($digits) === 11 && strpos($digits, '373') === 0) {
+             *     $phone = '+' . $digits;
+             * } else {
+             *     $phone = '';
+             * }
+             *
+             * The old authorized-client fallback is intentionally disabled
+             * here: an empty submitted field must remain invalid.
+             */
+
+            $hasLeadingPlus =
+                substr(ltrim($phone), 0, 1) === '+';
 
             $digits =
                 preg_replace(
@@ -497,66 +516,20 @@ public function checkout()
                     $phone
                 );
 
-            if (strlen($digits) === 8) {
-                $phone =
-                    '+373' . $digits;
-
-            } elseif (
-                strlen($digits) === 11
-                && strpos($digits, '373') === 0
-            ) {
-                $phone =
-                    '+' . $digits;
-
-            } else {
-                $phone = '';
-            }
+            $phone =
+                ($hasLeadingPlus ? '+' : '') . $digits;
 
             /*
             |--------------------------------------------------------------------------
-            | Authorized client fallback
-            |--------------------------------------------------------------------------
-            |
-            | Поле может содержать только маску +(373),
-            | поэтому fallback делаем ПОСЛЕ validation.
-            |
-            */
-
-            if (
-                $phone === ''
-                && !empty($this->data['client_info']->phone)
-            ) {
-                $clientPhoneDigits =
-                    preg_replace(
-                        '/\D/',
-                        '',
-                        (string) $this->data['client_info']->phone
-                    );
-
-                if (strlen($clientPhoneDigits) === 8) {
-                    $phone =
-                        '+373' . $clientPhoneDigits;
-
-                } elseif (
-                    strlen($clientPhoneDigits) === 11
-                    && strpos($clientPhoneDigits, '373') === 0
-                ) {
-                    $phone =
-                        '+' . $clientPhoneDigits;
-                }
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Phone required
+            | Phone required — at least one digit
             |--------------------------------------------------------------------------
             */
 
-            if ($phone === '') {
+            if ($digits === '') {
                 $_SESSION['checkout_error'] =
                     $this->lclang === 'ro'
-                        ? 'Introduceți un număr de telefon valid.'
-                        : 'Введите корректный номер телефона.';
+                        ? 'Introduceți cifre pentru numărul de telefon.'
+                        : 'Введите цифры номера телефона.';
 
                 redirect(
                     '/'
@@ -566,6 +539,29 @@ public function checkout()
                 );
 
                 return;
+            }
+
+            if (array_key_exists('newsletters', $post)) {
+                $newsletterSelected = !empty($post['newsletters']);
+
+                if ($client_id > 0) {
+                    $this->clients_model->update(
+                        array('mail_subscribe' => $newsletterSelected ? 1 : 0),
+                        $client_id
+                    );
+                }
+
+                $this->record_consent_event(
+                    $client_id,
+                    'email_marketing',
+                    $newsletterSelected,
+                    'checkout',
+                    $this->lclang === 'ro'
+                        ? 'Preferința pentru comunicări comerciale selectată la plasarea comenzii.'
+                        : 'Настройка маркетинговых коммуникаций, выбранная при оформлении заказа.',
+                    !empty($post['email']) ? $post['email'] : '',
+                    $phone
+                );
             }
 
             /*
@@ -630,8 +626,17 @@ public function checkout()
                     )
                     : '';
 
+            $sessionDiscountChoice = !empty($_SESSION['cart_discount_choice'])
+                ? (string) $_SESSION['cart_discount_choice']
+                : null;
+
+            $discountChoice = !empty($orderState['discount_choice'])
+                ? (string) $orderState['discount_choice']
+                : 'none';
+
             if (
                 $sessionPromoCode !== ''
+                && $sessionDiscountChoice !== 'roulette'
                 && empty($orderState['promo']['applied'])
             ) {
                 $_SESSION['checkout_promo_error'] =
@@ -649,6 +654,19 @@ public function checkout()
                 return;
             }
 
+            if (
+                !empty($_SESSION['cart_discount_choice'])
+                && $_SESSION['cart_discount_choice'] === 'roulette'
+                && $discountChoice !== 'roulette'
+            ) {
+                $_SESSION['checkout_error'] =
+                    $this->lclang === 'ro'
+                        ? 'Premiul ruletei a expirat sau nu mai este disponibil. Alegeți altă reducere.'
+                        : 'Приз рулетки истёк или больше недоступен. Выберите другую скидку.';
+                redirect('/' . $this->lclang . '/' . $page->uri);
+                return;
+            }
+
             /*
             |--------------------------------------------------------------------------
             | Promo snapshot
@@ -659,7 +677,7 @@ public function checkout()
             $promoCode = null;
             $promoDiscount = 0;
 
-            if (!empty($orderState['promo']['applied'])) {
+            if ($discountChoice === 'promo' && !empty($orderState['promo']['applied'])) {
                 $promoId =
                     !empty($orderState['promo']['id'])
                         ? (int) $orderState['promo']['id']
@@ -670,12 +688,20 @@ public function checkout()
                         ? (string) $orderState['promo']['code']
                         : null;
 
-                $promoDiscount =
-                    round(
-                        (float) $orderState['cart']['promo_discount_total'],
-                        2
-                    );
             }
+
+            if ($discountChoice === 'roulette' && !empty($orderState['discount']['code'])) {
+                $promoCode = (string) $orderState['discount']['code'];
+            }
+
+            if ($discountChoice !== 'none') {
+                $promoDiscount = round((float) $orderState['cart']['promo_discount_total'], 2);
+            }
+
+            $rouletteSpinId = $discountChoice === 'roulette'
+                && !empty($orderState['roulette']['prize']['id'])
+                    ? (int) $orderState['roulette']['prize']['id']
+                    : 0;
 
             /*
             |--------------------------------------------------------------------------
@@ -1059,6 +1085,9 @@ public function checkout()
                 'status' =>
                     'new',
 
+                'order_source' =>
+                    'web',
+
                 'order_id' =>
                     $this->getOrderId(),
 
@@ -1157,8 +1186,42 @@ public function checkout()
                         ? $_SESSION['isb2b']
                         : 0,
             );
+            if ($rouletteSpinId > 0) {
+                $this->db->trans_begin();
+            }
+
             $this->db->insert('orders', $data);
             $order_id = $this->db->insert_id();
+
+            if ($rouletteSpinId > 0) {
+                $this->load->model('roulette_game_model');
+                $rewardBound = $order_id > 0 && $this->roulette_game_model->bindRewardToOrder(
+                    $client_id,
+                    $rouletteSpinId,
+                    $order_id,
+                    (int) $post['pay'] === 2
+                );
+
+                if (!$rewardBound || $this->db->trans_status() === false) {
+                    $this->db->trans_rollback();
+                    $_SESSION['checkout_error'] =
+                        $this->lclang === 'ro'
+                            ? 'Premiul ruletei nu mai este disponibil. Verificați coșul și încercați din nou.'
+                            : 'Приз рулетки больше недоступен. Обновите корзину и попробуйте снова.';
+                    redirect('/' . $this->lclang . '/' . $page->uri);
+                    return;
+                }
+
+                $this->db->trans_commit();
+                if ($this->db->trans_status() === false) {
+                    $_SESSION['checkout_error'] =
+                        $this->lclang === 'ro'
+                            ? 'Reducerea nu a putut fi rezervată. Încercați din nou.'
+                            : 'Не удалось закрепить скидку. Попробуйте ещё раз.';
+                    redirect('/' . $this->lclang . '/' . $page->uri);
+                    return;
+                }
+            }
 
             unset($_SESSION['voucher']);
 
@@ -1446,10 +1509,13 @@ public function checkout()
                 }
 
 
-                unset($_SESSION['cart_promo']);
-
-
                 if ((int) $post['pay'] === 2) {
+
+                    if ($rouletteSpinId <= 0) {
+                        unset($_SESSION['cart_promo']);
+                        unset($_SESSION['cart_discount_choice']);
+                        $this->cart->destroy();
+                    }
 
                     /*
                     |--------------------------------------------------------------------------
@@ -1552,6 +1618,12 @@ public function checkout()
 
                                     'items' =>
                                         $paynetItems,
+
+                                    'client_id' =>
+                                        $client_id,
+
+                                    'roulette_spin_id' =>
+                                        $rouletteSpinId,
                                 ),
                         );
 
@@ -1604,8 +1676,6 @@ public function checkout()
                         )
                     );
 
-                    $this->cart->destroy();
-
                     $this->client_server(
                         $this->clang,
                         $this->lclang,
@@ -1613,6 +1683,8 @@ public function checkout()
                     );
 
                 } else {
+                    unset($_SESSION['cart_promo']);
+                    unset($_SESSION['cart_discount_choice']);
                     $this->email_order(
                         $data,
                         $items
@@ -1707,6 +1779,18 @@ public function checkout()
 
         $this->data['promo'] =
             $checkoutState['promo'];
+
+        $this->data['roulette'] =
+            $checkoutState['roulette'];
+
+        $this->data['discount_choice'] =
+            $checkoutState['discount_choice'];
+
+        $this->data['discount'] =
+            $checkoutState['discount'];
+
+        $this->data['discount_options'] =
+            $checkoutState['discount_options'];
 
         $this->data['shipping'] =
             $checkoutState['shipping'];
@@ -1901,12 +1985,9 @@ public function checkout()
         |--------------------------------------------------------------------------
         */
 
-        if (
-            !empty($checkoutState['promo']['applied'])
-            && !empty($checkoutState['promo']['code'])
-        ) {
+        if (!empty($checkoutState['discount']['code'])) {
             $ga4Checkout['coupon'] =
-                (string) $checkoutState['promo']['code'];
+                (string) $checkoutState['discount']['code'];
         }
 
         $this->data['ga4_checkout'] =
@@ -2323,6 +2404,34 @@ public function checkout()
             'Phone' => $phone
         );
 
+        $rouletteSpinId = !empty($order['order']['roulette_spin_id'])
+            ? (int) $order['order']['roulette_spin_id']
+            : 0;
+        $rouletteReservation = null;
+        if ($rouletteSpinId > 0) {
+            $this->load->model('roulette_game_model');
+            $rouletteReservation = $this->roulette_game_model->createOrReusePaymentReservation(
+                (int) $order['order']['client_id'],
+                $rouletteSpinId,
+                (int) $order['order']['id'],
+                (string) $prequest->ExternalID
+            );
+
+            if (empty($rouletteReservation['ok'])) {
+                $_SESSION['checkout_error'] =
+                    $lclang === 'ro'
+                        ? 'Premiul ruletei a expirat înainte de inițierea plății. Reîncărcați coșul.'
+                        : 'Срок приза истёк до начала оплаты. Обновите корзину.';
+                redirect('/' . $lclang . '/' . $this->data['menu']['all'][19]->uri);
+                exit;
+            }
+
+            $prequest->ExternalID = $rouletteReservation['external_id'];
+            $prequest->ExpiryDate = $rouletteReservation['paynet_expiry'];
+            $prequest->LinkSuccess = 'https://' . $_SERVER['HTTP_HOST'] . '/' . $lclang . '/success?id=' . $prequest->ExternalID;
+            $prequest->LinkCancel = 'https://' . $_SERVER['HTTP_HOST'] . '/' . $lclang . '/error?id=' . $prequest->ExternalID;
+        }
+
         // if($order['customer']['email'] === 'bodarev@ilab.md') {
         //     $prequest->Service['Amount'] = 1;
         //         $prequest->Products[0]['UnitPrice'] = 1;
@@ -2341,7 +2450,21 @@ public function checkout()
                 'ExternalID' => $prequest->ExternalID,
             );
             $this->db->where('id', $order['order']['id']);
-            $this->db->update('orders', $data);
+            $updated = $this->db->update('orders', $data);
+            if (!$updated && $rouletteSpinId > 0) {
+                $this->load->model('roulette_game_model');
+                $this->roulette_game_model->failPaynetReservation($prequest->ExternalID, true);
+                $_SESSION['checkout_error'] =
+                    $lclang === 'ro'
+                        ? 'Nu am putut pregăti plata. Încercați din nou.'
+                        : 'Не удалось подготовить платёж. Попробуйте ещё раз.';
+                redirect('/' . $lclang . '/' . $this->data['menu']['all'][19]->uri);
+                exit;
+            }
+
+            unset($_SESSION['cart_promo']);
+            unset($_SESSION['cart_discount_choice']);
+            $this->cart->destroy();
             echo $formObj->Data;
 
 
@@ -2349,6 +2472,17 @@ public function checkout()
                     document.getElementById("pay_form").submit();
                 </script>';
             die();
+        }
+
+        if ($rouletteSpinId > 0 && !empty($rouletteReservation['external_id'])) {
+            $this->load->model('roulette_game_model');
+            $this->roulette_game_model->failPaynetReservation($rouletteReservation['external_id'], true);
+            $_SESSION['checkout_error'] =
+                $lclang === 'ro'
+                    ? 'Nu am putut iniția plata. Încercați din nou.'
+                    : 'Не удалось открыть форму оплаты. Попробуйте ещё раз.';
+            redirect('/' . $lclang . '/' . $this->data['menu']['all'][19]->uri);
+            exit;
         }
     }
 

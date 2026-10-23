@@ -12,15 +12,26 @@ $sidebar_menu = array(
             'products' => ['name' => lang("Products"), 'ico' => '<i class="fa fa-plus-circle"></i>'],
             'categories' => ['name' => lang("Categories"), 'ico' => '<i class="fa fa-list"></i>'],
             'brands' => ['name' => lang("Brands"), 'ico' => '<i class="fa fa-list"></i>'],
-            'features' => ['name' => lang("Features"), 'ico' => '<i class="fa fa-list"></i>']
+            'features' => ['name' => lang("Features"), 'ico' => '<i class="fa fa-list"></i>'],
+            'product_imports' => ['name' => 'Изменения импорта', 'ico' => '<i class="fa fa-refresh"></i>'],
         ]
     ),
     'offers' => array('name' => lang("Offers"), 'ico' => '<i class="fa fa-list"></i>'),
     'articles' => array('name' => lang("Articles"), 'ico' => '<i class="fa fa-bars"></i>'),
     'clients' => array('name' => lang("Clients"), 'ico' => '<i class="fa fa-users"></i>'),
     'stores' => array('name' => lang("Stores"), 'ico' => '<i class="fa fa-home"></i>'),
-    'promocodes' => array('name' => "Промокоды", 'ico' => '<i class="fa fa-gift"></i>'),
+    'promocodes' => array(
+        'name' => 'Промокоды',
+        'ico' => '<i class="fa fa-gift"></i>',
+        'childs' => [
+            'promocodes' => ['name' => 'Коды промокодов', 'ico' => '<i class="fa fa-ticket"></i>'],
+            'roulette' => ['name' => 'Рулетка удачи', 'ico' => '<i class="fa fa-life-ring"></i>'],
+            'roulette_history' => ['name' => 'История рулетки', 'ico' => '<i class="fa fa-history"></i>'],
+            'welcome_offers' => ['name' => 'Скидка после регистрации −18%', 'ico' => '<i class="fa fa-user-plus"></i>'],
+        ],
+    ),
     'analytics' => array('name' => "Аналитика", 'ico' => '<i class="fa fa-bar-chart"></i>'),
+    'feedback' => array('name' => 'Обратная связь', 'ico' => '<i class="fa fa-commenting-o"></i>'),
     /*
      * Управление новой главной страницей.
      */
@@ -62,6 +73,14 @@ $sidebar_menu = array(
              */
         ],
     ],
+	'site' => array(
+		'name' => 'Сайт',
+		'ico' => '<i class="fa fa-globe"></i>',
+		'childs' => array(
+			'site_themes' => array('name' => 'Атмосфера сайта', 'ico' => '<i class="fa fa-magic"></i>'),
+			'site_support' => array('name' => 'Поддержка сайта', 'ico' => '<i class="fa fa-telegram"></i>'),
+		),
+	),
     
     'dates' => array('name' => lang("Dates"), 'ico' => '<i class="fa fa-calendar"></i>'),
     // Пример составления выпадающего меню

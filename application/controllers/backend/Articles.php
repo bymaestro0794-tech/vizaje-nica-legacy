@@ -31,10 +31,16 @@ class Articles extends BackEndController
     {
         init_load_img($this->main_page);
 
-        $objects = $this->articles_model->find('date DESC, id DESC');
+        $blogFilter = $this->input->get('blog');
+        $filters = array();
+        if ($blogFilter === '1' || $blogFilter === '0') {
+            $filters['isBlog'] = (int) $blogFilter;
+        }
+        $objects = $this->articles_model->find('date DESC, id DESC', null, $filters);
 
         $this->data['inner_view'] = $this->index_view;
         $this->data['objects'] = $objects;
+        $this->data['blog_filter'] = $blogFilter;
 
         $this->load->vars($this->data);
         $this->load->view($this->main_layout);
@@ -52,6 +58,7 @@ class Articles extends BackEndController
             foreach ($_POST as $index => $item) {
                 $post[$index] = $this->input->post($index, TRUE);
             }
+            $post['isBlog'] = $this->input->post('isBlog') ? 1 : 0;
 
             foreach (language(true) as $lang) {
                 $post['uri' . strtoupper($lang)] = (!empty($post['title' . strtoupper($lang)])) ? transliteration($post['title' . strtoupper($lang)]) : '';
@@ -117,6 +124,7 @@ class Articles extends BackEndController
                 foreach ($_POST as $index => $post_data) {
                     $post[$index] = $this->input->post($index, TRUE);
                 }
+                $post['isBlog'] = $this->input->post('isBlog') ? 1 : 0;
 
                 foreach (language(true) as $lang) {
                     $post['uri' . strtoupper($lang)] = (!empty($post['title' . strtoupper($lang)])) ? transliteration($post['title' . strtoupper($lang)]) : '';
@@ -175,5 +183,30 @@ class Articles extends BackEndController
         }
 
         redirect($this->path);
+    }
+
+    public function product_lookup()
+    {
+        $query = trim((string) $this->input->get('q', TRUE));
+        $products = array();
+
+        if (mb_strlen($query, 'UTF-8') >= 2) {
+            $this->db->select('id, SKU, titleRU AS title, titleRO AS title_ro, on_stock');
+            $this->db->group_start();
+            $this->db->like('titleRU', $query)
+                ->or_like('titleRO', $query)
+                ->or_like('SKU', $query);
+            if (ctype_digit($query)) {
+                $this->db->or_where('id', (int) $query);
+            }
+            $this->db->group_end();
+            $this->db->where('isShown', 1);
+            $this->db->order_by('stock DESC, id DESC');
+            $products = $this->db->limit(15)->get('products')->result_array();
+        }
+
+        $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode($products));
     }
 }

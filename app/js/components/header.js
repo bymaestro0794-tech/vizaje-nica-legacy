@@ -153,6 +153,19 @@
 
 		const searchInput = header.querySelector(SELECTORS.searchInput)
 
+		const catalogToolbar = document.querySelector(
+			'.catalog-category-page .catalog-category__toolbar'
+		)
+		const catalogToolbarMarker = catalogToolbar
+			? document.createElement('span')
+			: null
+
+		if (catalogToolbarMarker) {
+			catalogToolbarMarker.className = 'catalog-category__toolbar-marker'
+			catalogToolbarMarker.setAttribute('aria-hidden', 'true')
+			catalogToolbar.before(catalogToolbarMarker)
+		}
+
 		/* ==========================================================
 		   State
 		   ========================================================== */
@@ -165,6 +178,7 @@
 		let megaCloseTimer = null
 
 		let mobileScreenHistory = ['root']
+		let mobileCatalogHistory = ['root']
 		let lastFocusedElement = null
 
 		let mobileTimeline = null
@@ -190,6 +204,36 @@
 
 		const isDesktop = () => {
 			return window.innerWidth > MOBILE_BREAKPOINT
+		}
+
+		const getScrollThreshold = () => {
+			if (isDesktop()) {
+				return SCROLL_THRESHOLD
+			}
+
+			const mobileHeaderHeight = Number.parseFloat(
+				window
+					.getComputedStyle(document.documentElement)
+					.getPropertyValue('--header-mobile-height')
+			)
+
+			return mobileHeaderHeight || 64
+		}
+
+		const updateCatalogToolbarPastState = scrollingUp => {
+			if (!catalogToolbar || window.innerWidth > 767) {
+				document.body.classList.remove('is-catalog-toolbar-past')
+				return
+			}
+
+			const markerTop = catalogToolbarMarker.getBoundingClientRect().top
+			const toolbarHeight = catalogToolbar.offsetHeight
+			const headerHeight = getScrollThreshold()
+			const hasPassed = scrollingUp
+				? markerTop < headerHeight
+				: markerTop + toolbarHeight <= 0
+
+			document.body.classList.toggle('is-catalog-toolbar-past', hasPassed)
 		}
 
 		const isMobileMenuOpen = () => {
@@ -1681,11 +1725,77 @@
 		   Click delegation
 		   ========================================================== */
 
-		header.addEventListener('click', event => {
+		document.addEventListener('click', event => {
 			const target = event.target
 
 			if (!(target instanceof Element)) {
 				return
+			}
+
+			const catalogPage = target.closest('[data-mobile-catalog-page]')
+			if (catalogPage) {
+				const catalogOpenButton = target.closest('[data-mobile-catalog-open]')
+				if (catalogOpenButton && catalogPage.contains(catalogOpenButton)) {
+					event.preventDefault()
+					const nextScreenId = catalogOpenButton.dataset.mobileCatalogOpen
+					const nextScreen = Array.from(
+						catalogPage.querySelectorAll('[data-mobile-catalog-screen]')
+					).find(screen => screen.dataset.mobileCatalogScreen === nextScreenId)
+					if (nextScreen) {
+						const activeScreen = catalogPage.querySelector('[data-mobile-catalog-screen].is-active')
+						const activeScreenId = activeScreen?.dataset.mobileCatalogScreen || 'root'
+						if (mobileCatalogHistory[mobileCatalogHistory.length - 1] !== activeScreenId) {
+							mobileCatalogHistory = [activeScreenId]
+						}
+						catalogPage.querySelectorAll('[data-mobile-catalog-screen]').forEach(screen => {
+							screen.hidden = screen !== nextScreen
+							screen.classList.toggle('is-active', screen === nextScreen)
+						})
+						if (mobileCatalogHistory[mobileCatalogHistory.length - 1] !== nextScreenId) {
+							mobileCatalogHistory.push(nextScreenId)
+						}
+						const title = catalogPage.querySelector('[data-mobile-catalog-title]')
+						const back = catalogPage.querySelector('[data-mobile-catalog-back]')
+						const searchButton = catalogPage.querySelector('.mobile-catalog-page__search')
+						catalogPage.classList.add('is-nested')
+						if (title) title.textContent = catalogOpenButton.dataset.mobileCatalogScreenTitle || ''
+						if (back) back.hidden = false
+						if (searchButton) searchButton.hidden = true
+						window.scrollTo({ top: 0, behavior: 'smooth' })
+					}
+					return
+				}
+
+				if (target.closest('[data-mobile-catalog-back]')) {
+					event.preventDefault()
+					const activeScreen = catalogPage.querySelector('[data-mobile-catalog-screen].is-active')
+					const activeScreenId = activeScreen?.dataset.mobileCatalogScreen || 'root'
+					if (mobileCatalogHistory[mobileCatalogHistory.length - 1] !== activeScreenId) {
+						mobileCatalogHistory = [activeScreenId]
+					}
+					if (mobileCatalogHistory.length > 1) mobileCatalogHistory.pop()
+					const screenId = mobileCatalogHistory[mobileCatalogHistory.length - 1] || 'root'
+					const screen = Array.from(
+						catalogPage.querySelectorAll('[data-mobile-catalog-screen]')
+					).find(item => item.dataset.mobileCatalogScreen === screenId)
+					if (screen) {
+						catalogPage.querySelectorAll('[data-mobile-catalog-screen]').forEach(item => {
+							item.hidden = item !== screen
+							item.classList.toggle('is-active', item === screen)
+						})
+						const title = catalogPage.querySelector('[data-mobile-catalog-title]')
+						const back = catalogPage.querySelector('[data-mobile-catalog-back]')
+						const searchButton = catalogPage.querySelector('.mobile-catalog-page__search')
+						catalogPage.classList.toggle('is-nested', screenId !== 'root')
+						if (title) title.textContent = screenId === 'root'
+							? title.dataset.rootTitle
+							: screen.dataset.mobileCatalogScreenTitle || ''
+						if (back) back.hidden = screenId === 'root'
+						if (searchButton) searchButton.hidden = screenId !== 'root'
+						window.scrollTo({ top: 0, behavior: 'smooth' })
+					}
+					return
+				}
 			}
 
 			const mobileOpenButton = target.closest(SELECTORS.mobileOpen)
@@ -1810,11 +1920,14 @@
 			const currentScrollY = Math.max(window.scrollY, 0)
 
 			const difference = currentScrollY - previousScrollY
+			// Не прячем мобильный header раньше, чем прокрутится его место в layout.
+			const scrollThreshold = getScrollThreshold()
 
-			header.classList.toggle('_scroll', currentScrollY > SCROLL_THRESHOLD)
+			header.classList.toggle('_scroll', currentScrollY > scrollThreshold)
 
-			if (currentScrollY <= SCROLL_THRESHOLD) {
+			if (currentScrollY <= scrollThreshold) {
 				header.classList.remove('is-scrolling-down', 'is-scrolling-up')
+				updateCatalogToolbarPastState(false)
 
 				previousScrollY = currentScrollY
 
@@ -1838,6 +1951,7 @@
 			header.classList.toggle('is-scrolling-down', scrollingDown)
 
 			header.classList.toggle('is-scrolling-up', !scrollingDown)
+			updateCatalogToolbarPastState(!scrollingDown)
 
 			if (scrollingDown) {
 				closeMegaMenu()
@@ -1886,6 +2000,9 @@
 				}
 
 				previousScrollY = Math.max(window.scrollY, 0)
+				updateCatalogToolbarPastState(
+					header.classList.contains('is-scrolling-up')
+				)
 			}, 100)
 		})
 

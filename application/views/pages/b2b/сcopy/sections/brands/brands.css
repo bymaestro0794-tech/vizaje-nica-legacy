@@ -1,0 +1,282 @@
+.brands {
+	background: var(--bg-page);
+}
+
+.brands__inner {
+	max-width: var(--container-max);
+	margin-inline: auto;
+	padding: 100px 24px;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-lg);
+}
+
+.brands__title {
+	font-size: 48px;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.brands__grid {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-lg);
+}
+
+.brands__row {
+	display: flex;
+	gap: 20px;
+}
+
+.brand-card {
+	--card-bg: var(--bg-page);
+	--tile-border: rgba(0, 0, 0, 0.06);
+	--tile-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	height: 600px;
+	min-width: 0;
+	background: var(--card-bg);
+	border-radius: var(--radius-card);
+	overflow: hidden;
+	text-align: left;
+}
+
+.brand-card--fragrances {
+	--card-bg: var(--brand-fragrances-bg);
+}
+
+.brand-card--makeup {
+	--card-bg: var(--brand-makeup-bg);
+}
+
+.brand-card--skincare {
+	--card-bg: var(--brand-skincare-bg);
+}
+
+.brand-card--niche {
+	--card-bg: var(--text-primary);
+	--tile-border: rgba(255, 255, 255, 0.12);
+	--tile-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.brand-card--wide {
+	flex: 1 1 auto;
+}
+
+.brand-card--narrow {
+	flex: 0 0 448px;
+}
+
+.brand-card__text {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	padding: 32px 96px 24px 32px;
+}
+
+.brand-card__eyebrow {
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--text-secondary);
+}
+
+.brand-card__headline {
+	font-size: 28px;
+	font-weight: 600;
+	line-height: 1.1;
+	color: var(--text-primary);
+}
+
+.brand-card--niche .brand-card__eyebrow {
+	color: rgba(255, 255, 255, 0.6);
+}
+
+.brand-card--niche .brand-card__headline {
+	color: var(--text-inverse);
+}
+
+.brand-card__logos {
+	flex: 1;
+	min-height: 0;
+	overflow: hidden;
+	position: relative;
+}
+
+/* Растворение плиток к краям карточки в цвет её фона */
+.brand-card__logos::before,
+.brand-card__logos::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	z-index: 1;
+	width: 72px;
+	pointer-events: none;
+}
+
+.brand-card__logos::before {
+	left: 0;
+	background: linear-gradient(to right, var(--card-bg), transparent);
+}
+
+.brand-card__logos::after {
+	right: 0;
+	background: linear-gradient(to left, var(--card-bg), transparent);
+}
+
+/* Ряды собираются в JS: 7 плиток в широкой карточке, 4 в узкой */
+.brand-card__tiles {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	margin-left: -40px;
+	padding-top: 10px;
+}
+
+.brand-card__row {
+	display: flex;
+	gap: var(--space-sm);
+}
+
+/* Отдельные слои GPU для всего, что двигается: без них каждый кадр дрейфа и hover
+   заново рисует тени и логотипы всех 87 плиток */
+.brand-card,
+.brand-card__row,
+.brand-tile {
+	will-change: transform;
+}
+
+.brand-card {
+	contain: paint;
+}
+
+/* Стартовое состояние до появления по скроллу */
+.js .brand-card {
+	opacity: 0;
+}
+
+.brand-tile {
+	flex: 0 0 128px;
+	width: 128px;
+	height: 128px;
+	border: 1px solid var(--tile-border);
+	border-radius: var(--radius-tile);
+	background: var(--bg-page);
+	box-shadow: var(--tile-shadow);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0 10px;
+}
+
+.brand-tile img {
+	max-width: 100%;
+	max-height: 72px;
+	border-radius: 16px;
+}
+
+.brand-tile__name {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--brand-tile-text);
+	text-align: center;
+	text-transform: uppercase;
+}
+
+.brand-card__plus {
+	position: absolute;
+	right: 24px;
+	bottom: 24px;
+	z-index: 2;
+	width: 40px;
+	height: 40px;
+	border-radius: 20px;
+	background: var(--accent-blue);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.brand-card__plus img {
+	width: 16px;
+	height: 16px;
+	filter: invert(1);
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+	.brands__inner {
+		padding-inline: 32px;
+	}
+
+	.brand-card__logos::before,
+	.brand-card__logos::after {
+		width: 56px;
+	}
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+	.brands__inner {
+		padding-inline: 32px;
+	}
+
+	.brand-card {
+		height: 540px;
+	}
+
+	.brand-card--wide,
+	.brand-card--narrow {
+		flex: 1 1 0;
+	}
+
+	.brand-card__headline {
+		font-size: 24px;
+	}
+
+	.brand-card__logos::before,
+	.brand-card__logos::after {
+		width: 48px;
+	}
+}
+
+@media (max-width: 767px) {
+	.brands__inner {
+		padding: 64px 20px;
+		gap: 28px;
+	}
+
+	.brands__title {
+		font-size: 32px;
+	}
+
+	.brands__grid {
+		gap: 28px;
+	}
+
+	.brands__row {
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	.brand-card {
+		height: 540px;
+	}
+
+	.brand-card--narrow {
+		flex-basis: auto;
+	}
+
+	.brand-card__text {
+		padding: 28px 80px 24px 24px;
+	}
+
+	.brand-card__headline {
+		font-size: 24px;
+	}
+
+	.brand-card__plus {
+		right: 20px;
+		bottom: 20px;
+	}
+}

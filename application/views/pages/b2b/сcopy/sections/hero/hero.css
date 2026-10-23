@@ -1,0 +1,200 @@
+.hero {
+	position: relative;
+	height: 780px;
+	overflow: hidden;
+	background: var(--bg-page);
+}
+
+/* Градиент отдельным слоем, чтобы анимировать его появление через opacity и scale */
+.hero__bg {
+	position: absolute;
+	inset: 0;
+	background: var(--hero-gradient);
+}
+
+/* Центрирование через margin, а не transform: transform занят анимацией скролла */
+.hero__text {
+	position: absolute;
+	left: 0;
+	right: 0;
+	margin-inline: auto;
+	top: 222.5px;
+	width: 760px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-md);
+	text-align: center;
+}
+
+.hero__eyebrow {
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--text-secondary);
+}
+
+.hero__title {
+	font-size: 56px;
+	font-weight: 600;
+	line-height: 1.08;
+	letter-spacing: -0.84px;
+	color: var(--text-primary);
+}
+
+.hero__description {
+	font-size: 19px;
+	color: var(--text-secondary);
+	width: 620px;
+}
+
+.hero__tagline {
+	font-size: 15px;
+	color: var(--text-secondary);
+}
+
+.hero__bags,
+.hero__boxes {
+	position: absolute;
+}
+
+.hero__layer,
+.hero__bags img,
+.hero__boxes img {
+	width: 100%;
+	height: 100%;
+}
+
+.hero__bags img,
+.hero__boxes img {
+	object-fit: cover;
+}
+
+/* Стартовое состояние до анимации загрузки; класс js ставится в <head> */
+.js .hero__bg,
+.js .hero__eyebrow,
+.js .hero__title,
+.js .hero__description,
+.js .hero__cta,
+.js .hero__tagline,
+.js .hero__bags img,
+.js .hero__boxes img {
+	opacity: 0;
+}
+
+/* Пакеты привязаны к левому краю, коробки к правому: при любой ширине не наезжают на текст.
+   Между 1280 и 1440 картинки уменьшаются: коробки ровно настолько, чтобы не заходить
+   на заголовок (его правый край ≈ 50vw + 340px, плюс запас на полосу прокрутки). */
+.hero__bags {
+	left: 43px;
+	top: 373px;
+	width: min(311px, 21.6vw);
+	height: min(311px, 21.6vw);
+}
+
+.hero__boxes {
+	right: 0;
+	top: 148px;
+	width: min(370px, 50vw - 350px);
+	height: min(370px, 50vw - 350px);
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+	.hero {
+		height: 700px;
+	}
+
+	.hero__text {
+		top: 193px;
+		width: 580px;
+	}
+
+	.hero__title {
+		font-size: 44px;
+		letter-spacing: -0.66px;
+	}
+
+	.hero__description {
+		width: 520px;
+	}
+
+	.hero__bags {
+		left: 16px;
+		top: 460px;
+		width: 200px;
+		height: 200px;
+	}
+
+	.hero__boxes {
+		right: -10px;
+		top: 110px;
+		width: 230px;
+		height: 230px;
+	}
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+	.hero {
+		height: 680px;
+	}
+
+	.hero__text {
+		top: 198px;
+		width: 520px;
+	}
+
+	.hero__title {
+		font-size: 40px;
+		letter-spacing: -0.6px;
+	}
+
+	.hero__description {
+		width: 460px;
+	}
+
+	.hero__bags {
+		left: 12px;
+		top: 480px;
+		width: 170px;
+		height: 170px;
+	}
+
+	.hero__boxes {
+		right: -10px;
+		top: 20px;
+		width: 190px;
+		height: 190px;
+	}
+}
+
+@media (max-width: 767px) {
+	.hero__text {
+		left: 20px;
+		right: 20px;
+		top: 210px;
+		width: auto;
+	}
+
+	.hero__title {
+		font-size: 40px;
+		letter-spacing: -0.8px;
+	}
+
+	.hero__description {
+		font-size: 17px;
+		width: auto;
+	}
+
+	.hero__bags {
+		left: -25px;
+		top: 545px;
+		width: 230px;
+		height: 230px;
+	}
+
+	.hero__boxes {
+		right: -5px;
+		top: 8px;
+		width: 190px;
+		height: 190px;
+	}
+}

@@ -331,6 +331,81 @@ class Promocodes_model extends BaseModel
         return $ids;
     }
 
+    /**
+     * The welcome campaign is displayed only when its admin-managed promo
+     * matches the advertised terms and all three excluded brands are linked.
+     */
+    public function isWelcomeOfferConfigured($promo)
+    {
+        if (
+            empty($promo)
+            || strtoupper(trim((string) $promo->code)) !== 'WELCOME18'
+            || (string) $promo->status !== 'active'
+            || (string) $promo->type !== 'percentage'
+            || (float) $promo->value !== 18.0
+            || (int) $promo->per_user_limit !== 1
+            || empty($promo->allow_discounted)
+            || (string) $promo->brand_scope !== 'all'
+            || $promo->min_amount !== null
+            || $promo->max_discount !== null
+        ) {
+            return false;
+        }
+
+        $now = time();
+
+        if (
+            !empty($promo->starts_at)
+            && strtotime($promo->starts_at) > $now
+        ) {
+            return false;
+        }
+
+        if (
+            !empty($promo->ends_at)
+            && strtotime($promo->ends_at) <= $now
+        ) {
+            return false;
+        }
+
+        $brandIds = $this->getExcludedBrandIds($promo->id);
+
+        if (count($brandIds) !== 3) {
+            return false;
+        }
+
+        $brands = $this->db
+            ->select('id, title')
+            ->where_in('id', $brandIds)
+            ->get('brands')
+            ->result();
+
+        if (count($brands) !== 3) {
+            return false;
+        }
+
+        $hasShik = false;
+        $hasMac = false;
+        $hasAnastasiaBeverlyHills = false;
+
+        foreach ($brands as $brand) {
+            $normalized = preg_replace(
+                '/[^A-Z0-9]/',
+                '',
+                strtoupper((string) $brand->title)
+            );
+
+            $hasShik = $hasShik || strpos($normalized, 'SHIK') !== false;
+            $hasMac = $hasMac
+                || $normalized === 'MAC'
+                || strpos($normalized, 'MACCOSMETICS') === 0;
+            $hasAnastasiaBeverlyHills = $hasAnastasiaBeverlyHills
+                || strpos($normalized, 'ANASTASIABEVERLYHILLS') !== false;
+        }
+
+        return $hasShik && $hasMac && $hasAnastasiaBeverlyHills;
+    }
+
     public function replaceExcludedBrands(
         $promoId,
         array $brandIds

@@ -10,21 +10,14 @@ foreach ($stores as $index => $store) {
 			: array();
 
 	$lat =
-		isset($coords[0])
+		isset($coords[0]) && is_numeric(trim($coords[0]))
 			? (float) trim($coords[0])
 			: null;
 
 	$lng =
-		isset($coords[1])
+		isset($coords[1]) && is_numeric(trim($coords[1]))
 			? (float) trim($coords[1])
 			: null;
-
-	if (
-		$lat === null
-		|| $lng === null
-	) {
-		continue;
-	}
 
 	$pickupStores[] =
 		array(
@@ -85,92 +78,36 @@ foreach ($stores as $index => $store) {
 			? 'Selectarea magazinului'
 			: 'Выбор магазина' ?>"
 	>
-		<div
-			class="checkout-pickup__map"
-			id="checkoutPickupMap"
-		></div>
-
-		<aside class="checkout-pickup__panel">
-
+		<header class="checkout-pickup__header">
+			<div>
+				<p class="checkout-pickup__eyebrow">
+					<?= $lclang === 'ro' ? 'Ridicare din magazin' : 'Самовывоз' ?>
+				</p>
+				<h2 class="checkout-pickup__title">
+					<?= $lclang === 'ro' ? 'Alegeți magazinul' : 'Выберите магазин' ?>
+				</h2>
+			</div>
 			<button
 				type="button"
 				class="checkout-pickup__close"
 				data-pickup-close
-				aria-label="<?= $lclang === 'ro'
-					? 'Închide'
-					: 'Закрыть' ?>"
+				aria-label="<?= $lclang === 'ro' ? 'Închide' : 'Закрыть' ?>"
 			>
-				<span></span>
-				<span></span>
+				<span></span><span></span>
 			</button>
+		</header>
 
-			<div class="checkout-pickup__panel-inner">
+		<div class="checkout-pickup__list" data-pickup-list></div>
 
-				<p class="checkout-pickup__eyebrow">
-					<?= $lclang === 'ro'
-						? 'Punct de ridicare'
-						: 'Самовывоз' ?>
-				</p>
-
-				<div class="checkout-pickup__store-number">
-					<span data-pickup-number>
-						01
-					</span>
-				</div>
-
-				<h2
-					class="checkout-pickup__title"
-					data-pickup-title
-				></h2>
-
-				<p
-					class="checkout-pickup__address"
-					data-pickup-address
-				></p>
-
-				<div class="checkout-pickup__meta">
-					<div class="checkout-pickup__meta-row">
-						<span>
-							<?= $lclang === 'ro'
-								? 'Cost'
-								: 'Стоимость' ?>
-						</span>
-
-						<strong>
-							<?= $lclang === 'ro'
-								? 'Gratuit'
-								: 'Бесплатно' ?>
-						</strong>
-					</div>
-
-					<div class="checkout-pickup__meta-row">
-						<span>
-							<?= $lclang === 'ro'
-								? 'Program'
-								: 'График работы' ?>
-						</span>
-
-						<strong
-							data-pickup-time
-						></strong>
-					</div>
-				</div>
-
-			</div>
-
-			<div class="checkout-pickup__footer">
-				<button
-					type="button"
-					class="checkout-pickup__confirm"
-					data-pickup-confirm
-				>
-					<?= $lclang === 'ro'
-						? 'Alege magazinul'
-						: 'Выбрать магазин' ?>
-				</button>
-			</div>
-
-		</aside>
+		<footer class="checkout-pickup__footer">
+			<button
+				type="button"
+				class="checkout-pickup__confirm"
+				data-pickup-confirm
+			>
+				<?= $lclang === 'ro' ? 'Alege magazinul' : 'Выбрать магазин' ?>
+			</button>
+		</footer>
 	</div>
 
 	<script

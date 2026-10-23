@@ -35,7 +35,7 @@
 }
 
 .cookie_text {
-	font-family: 'Jost', sans-serif;
+	font-family: 'Geist';
 	font-size: 15px;
 	line-height: 1.35;
 	color: rgba(255, 255, 255, 0.88);
@@ -58,7 +58,7 @@
 	min-width: 92px;
 	padding: 0 22px;
 	border-radius: 999px;
-	font-family: 'Jost', sans-serif;
+	font-family: 'Geist';
 	font-size: 13px;
 	font-weight: 500;
 	white-space: nowrap;
@@ -92,7 +92,7 @@
 	border: 0;
 	background: transparent;
 	color: rgba(255, 255, 255, 0.75);
-	font-family: 'Jost', sans-serif;
+	font-family: 'Geist';
 	font-size: 13px;
 	font-weight: 500;
 	text-decoration: underline;

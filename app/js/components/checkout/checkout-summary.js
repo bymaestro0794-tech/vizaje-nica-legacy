@@ -190,6 +190,48 @@
 		}
 	})
 
+	root.addEventListener('click', async function (event) {
+		const button = event.target.closest('[data-checkout-discount-choice]')
+		if (!button || !root.contains(button)) return
+
+		const choice = String(button.dataset.checkoutDiscountChoice || '')
+		if (!['promo', 'roulette'].includes(choice)) return
+
+		const buttons = Array.from(
+			root.querySelectorAll('[data-checkout-discount-choice]')
+		)
+		const error = root.querySelector('[data-checkout-discount-error]')
+		buttons.forEach((item) => (item.disabled = true))
+		if (error) {
+			error.hidden = true
+			error.textContent = ''
+		}
+
+		try {
+			const response = await fetch('/ajax/discount_choice', {
+				method: 'POST',
+				credentials: 'same-origin',
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+				},
+				body: new URLSearchParams({ choice, lang })
+			})
+			const result = await response.json()
+			if (!response.ok || result.status !== 'ok') {
+				throw new Error('discount_unavailable')
+			}
+			window.location.reload()
+		} catch (requestError) {
+			buttons.forEach((item) => (item.disabled = false))
+			if (error) {
+				error.textContent = lang === 'ro'
+					? 'Reducerea selectată nu mai este disponibilă.'
+					: 'Выбранная скидка больше недоступна.'
+				error.hidden = false
+			}
+		}
+	})
+
 	updateSummary()
 })()
 

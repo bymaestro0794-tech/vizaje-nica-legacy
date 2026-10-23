@@ -1,0 +1,415 @@
+.hero {
+	position: relative;
+	height: 780px;
+	overflow: hidden;
+	background: var(--bg-page);
+}
+
+/* Градиент отдельным слоем, чтобы анимировать его появление через opacity и scale */
+.hero__bg {
+	position: absolute;
+	inset: 0;
+	background: var(--hero-gradient);
+}
+
+/* Центрирование через margin, а не transform: transform занят анимацией скролла */
+.hero__text {
+	position: absolute;
+	left: 0;
+	right: 0;
+	margin-inline: auto;
+	top: 222.5px;
+	width: 760px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-md);
+	text-align: center;
+}
+
+.hero__eyebrow {
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--text-secondary);
+}
+
+.hero__title {
+	font-size: 56px;
+	font-weight: 600;
+	line-height: 1.08;
+	letter-spacing: -0.84px;
+	color: var(--text-primary);
+}
+
+.hero__description {
+	font-size: 19px;
+	color: var(--text-secondary);
+	width: 620px;
+}
+
+.hero__tagline {
+	font-size: 15px;
+	color: var(--text-secondary);
+}
+
+.hero__bags,
+.hero__boxes {
+	position: absolute;
+}
+
+.hero__layer,
+.hero__bags img,
+.hero__boxes img {
+	width: 100%;
+	height: 100%;
+}
+
+.hero__bags img,
+.hero__boxes img {
+	object-fit: cover;
+}
+
+/* Стартовое состояние до анимации загрузки; класс js ставится в <head> */
+.js .hero__bg,
+.js .hero__eyebrow,
+.js .hero__title,
+.js .hero__description,
+.js .hero__cta,
+.js .hero__tagline,
+.js .hero__bags img,
+.js .hero__boxes img {
+	opacity: 0;
+}
+
+/* Пакеты привязаны к левому краю, коробки к правому: при любой ширине не наезжают на текст.
+   Между 1280 и 1440 картинки уменьшаются: коробки ровно настолько, чтобы не заходить
+   на заголовок (его правый край ≈ 50vw + 340px, плюс запас на полосу прокрутки). */
+.hero__bags {
+	left: 43px;
+	top: 373px;
+	width: min(311px, 21.6vw);
+	height: min(311px, 21.6vw);
+}
+
+.hero__boxes {
+	right: 0;
+	top: 148px;
+	width: min(370px, 50vw - 350px);
+	height: min(370px, 50vw - 350px);
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+	.hero {
+		height: 700px;
+	}
+
+	.hero__text {
+		top: 193px;
+		width: 580px;
+	}
+
+	.hero__title {
+		font-size: 44px;
+		letter-spacing: -0.66px;
+	}
+
+	.hero__description {
+		width: 520px;
+	}
+
+	.hero__bags {
+		left: 16px;
+		top: 460px;
+		width: 200px;
+		height: 200px;
+	}
+
+	.hero__boxes {
+		right: -10px;
+		top: 110px;
+		width: 230px;
+		height: 230px;
+	}
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+	.hero {
+		height: 680px;
+	}
+
+	.hero__text {
+		top: 198px;
+		width: 520px;
+	}
+
+	.hero__title {
+		font-size: 40px;
+		letter-spacing: -0.6px;
+	}
+
+	.hero__description {
+		width: 460px;
+	}
+
+	.hero__bags {
+		left: 12px;
+		top: 480px;
+		width: 170px;
+		height: 170px;
+	}
+
+	.hero__boxes {
+		right: -10px;
+		top: 20px;
+		width: 190px;
+		height: 190px;
+	}
+}
+
+@media (max-width: 767px) {
+	.hero__text {
+		left: 20px;
+		right: 20px;
+		top: 210px;
+		width: auto;
+	}
+
+	.hero__title {
+		font-size: 40px;
+		letter-spacing: -0.8px;
+	}
+
+	.hero__description {
+		font-size: 17px;
+		width: auto;
+	}
+
+	.hero__bags {
+		left: -25px;
+		top: 545px;
+		width: 230px;
+		height: 230px;
+	}
+
+	.hero__boxes {
+		right: -5px;
+		top: 8px;
+		width: 190px;
+		height: 190px;
+	}
+}
+
+/* Full-viewport cinematic video hero */
+.hero {
+	position: relative;
+	display: flex;
+	align-items: flex-end;
+	min-height: 100vh;
+	min-height: 100svh;
+	height: 100vh;
+	height: 100svh;
+	padding: clamp(150px, 20vh, 220px) max(7vw, 32px) clamp(56px, 9vh, 104px);
+	background: #080808;
+	isolation: isolate;
+}
+
+.hero__bg,
+.hero__bags,
+.hero__boxes {
+	display: none;
+}
+
+.hero__text {
+	position: relative;
+	inset: auto;
+	width: min(820px, 100%);
+	margin: 0;
+	align-items: flex-start;
+	gap: 18px;
+	text-align: left;
+	color: #fff;
+	z-index: 2;
+}
+
+.hero__eyebrow {
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.16em;
+	color: rgba(255, 255, 255, 0.76);
+}
+
+.hero__title {
+	max-width: 900px;
+	font-size: clamp(44px, 6vw, 82px);
+	font-weight: 500;
+	line-height: 0.99;
+	letter-spacing: -0.065em;
+	color: #fff;
+}
+
+.hero__description {
+	width: min(590px, 100%);
+	font-size: clamp(16px, 1.3vw, 19px);
+	line-height: 1.55;
+	color: rgba(255, 255, 255, 0.8);
+}
+
+.hero__tagline {
+	margin-top: 4px;
+	font-size: 13px;
+	letter-spacing: 0.02em;
+	color: rgba(255, 255, 255, 0.72);
+}
+
+.hero .btn-dark {
+	background: #fff;
+	color: #111;
+}
+
+.js .hero__eyebrow,
+.js .hero__title,
+.js .hero__description,
+.js .hero__cta,
+.js .hero__tagline {
+	opacity: 0;
+}
+
+@media (max-width: 767px) {
+	.hero {
+		min-height: 100vh;
+		min-height: 100svh;
+		height: 100vh;
+		height: 100svh;
+		padding: 150px 24px 52px;
+	}
+
+	.hero__text {
+		left: auto;
+		right: auto;
+		top: auto;
+		width: 100%;
+		gap: 16px;
+	}
+
+	.hero__title {
+		font-size: clamp(42px, 11vw, 58px);
+		letter-spacing: -0.06em;
+	}
+
+	.hero__description {
+		font-size: 16px;
+	}
+}
+
+/* Responsive, framed video hero */
+.hero {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	min-height: 100vh;
+	min-height: 100svh;
+	height: auto;
+	overflow: hidden;
+	padding: clamp(118px, 14vh, 156px) clamp(24px, 5vw, 72px) 40px;
+	background: var(--bg-section);
+	isolation: isolate;
+}
+
+.hero__bg,
+.hero__bags,
+.hero__boxes {
+	display: none;
+}
+
+.hero__intro {
+	width: min(760px, 100%);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 14px;
+	text-align: center;
+}
+
+.hero .hero__eyebrow {
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.14em;
+	color: var(--text-secondary);
+}
+
+.hero .hero__title {
+	max-width: 760px;
+	font-size: clamp(42px, 5vw, 68px);
+	font-weight: 500;
+	line-height: 1.04;
+	letter-spacing: -0.06em;
+	color: var(--text-primary);
+}
+
+.hero .hero__description {
+	width: min(560px, 100%);
+	font-size: clamp(16px, 1.35vw, 19px);
+	line-height: 1.5;
+	color: var(--text-secondary);
+}
+
+/* The previous cinematic intro hid these elements until an animation ran. */
+.js .hero .hero__intro,
+.js .hero .hero__intro * {
+	opacity: 1 !important;
+	visibility: visible !important;
+	filter: none !important;
+	transform: none !important;
+}
+
+.hero__scroll {
+	position: relative;
+	left: auto;
+	bottom: auto;
+	width: 40px;
+	height: 40px;
+	margin: 22px auto 0;
+	color: var(--text-primary);
+	transform: none;
+	filter: none;
+}
+
+.hero__scroll img {
+	width: 22px;
+	height: 22px;
+}
+
+@media (max-width: 767px) {
+	.hero {
+		min-height: 100vh;
+		min-height: 100svh;
+		padding: 104px 20px 32px;
+	}
+
+	.hero__intro {
+		align-items: flex-start;
+		gap: 12px;
+		text-align: left;
+	}
+
+	.hero .hero__eyebrow {
+		font-size: 10px;
+		letter-spacing: 0.12em;
+	}
+
+	.hero .hero__title {
+		font-size: clamp(34px, 10vw, 44px);
+		line-height: 1.02;
+		letter-spacing: -0.055em;
+	}
+
+	.hero .hero__description {
+		font-size: 15px;
+		line-height: 1.48;
+	}
+
+	.hero__scroll {
+		margin-top: 14px;
+	}
+}

@@ -1,6 +1,32 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
+$isProductDetailPage = trim((string) ($inner_view ?? ''), '/') === 'pages/catalog/item';
+$isHalloweenTheme = ($site_theme_key ?? 'default') === 'halloween';
+$headerLogoImage = $isHalloweenTheme
+	? '/app/img/hellowen-logo.png'
+	: '/app/img/logo_v.png';
+
+$currentHeaderView = trim((string) ($inner_view ?? ''), '/');
+$isHomeTabActive = $currentHeaderView === 'pages/main/index';
+$isCatalogTabActive = in_array($currentHeaderView, [
+	'pages/catalog/index',
+	'pages/catalog/mobile_categories',
+	'pages/catalog/category',
+	'pages/catalog/best_sellers',
+	'pages/catalog/hits',
+	'pages/catalog/new_products',
+	'pages/catalog/search',
+	'pages/catalog/brand',
+], true);
+$isProfileTabActive =
+	strpos($currentHeaderView, 'pages/account/') === 0
+	&& !isset($_GET['favorite']);
+$isCartTabActive = strpos($currentHeaderView, 'pages/cart/') === 0;
+$isWishlistTabActive =
+	strpos($currentHeaderView, 'pages/account/') === 0
+	&& isset($_GET['favorite']);
+
 /*
 |--------------------------------------------------------------------------
 | Header navigation preparation
@@ -28,6 +54,7 @@ $cartUri = !empty($menu['all'][18]->uri)
     : ($lclang === 'ro' ? 'cos' : 'korzina');
 
 $isRomanian = $lclang === 'ro';
+$mobileCatalogUri = $isRomanian ? 'catalog-categories' : 'katalog-categories';
 
 /*
 |--------------------------------------------------------------------------
@@ -249,16 +276,100 @@ foreach ($desktopNavItems as $navItem) {
 $makeMobileScreenId = static function (string $level, string $uri): string {
     return 'mobile-' . $level . '-' . md5($uri);
 };
+
+$headerDiscountSlides = !empty($header_discount_products)
+    && is_array($header_discount_products)
+        ? $header_discount_products
+        : array();
+$headerDiscountCatalogUri = !empty($menu['all'][35]->uri)
+    ? trim((string) $menu['all'][35]->uri, '/')
+    : ($isRomanian ? 'reduceri' : 'skidki');
+$headerWheelEligible = !empty($client_info->id);
+$headerRouletteScope = $headerWheelEligible
+    ? hash('sha256', 'vn-roulette:' . (int) $client_info->id)
+    : '';
+$headerRouletteStateUrl = $headerWheelEligible
+    ? '/' . $lclang . '/roulette/state'
+    : '';
 ?>
 
-<header class="header" data-site-header>
-    <div class="header__announcement">
+<header
+	class="header<?= $isProductDetailPage ? ' header--product-detail' : '' ?>"
+	data-site-header
+	<?= $isProductDetailPage ? 'data-header-product-detail' : '' ?>
+>
+    <div
+        class="header__announcement"
+        data-header-promo
+        data-language="<?= $isRomanian ? 'ro' : 'ru' ?>"
+        data-roulette-scope="<?= htmlspecialchars($headerRouletteScope, ENT_QUOTES, 'UTF-8') ?>"
+        data-roulette-state-url="<?= htmlspecialchars($headerRouletteStateUrl, ENT_QUOTES, 'UTF-8') ?>"
+    >
         <div class="header__announcement-container _container">
-            <p class="header__announcement-text">
-                <?= $isRomanian
-                    ? 'Livrare gratuită de la 500 MDL'
-                    : 'Бесплатная доставка от 500 MDL' ?>
-            </p>
+            <?php if (!empty($headerDiscountSlides)) : ?>
+                <div class="header__promo-products" data-header-promo-products>
+                    <?php foreach ($headerDiscountSlides as $slideIndex => $promoProduct) : ?>
+                        <?php
+                        $promoTitle = trim((string) ($promoProduct->title ?? ''));
+                        $promoCategoryUri = trim((string) ($promoProduct->cat_uri ?? ''), '/');
+                        $promoProductUri = trim((string) ($promoProduct->uri ?? ''), '/');
+                        $promoHref = $promoCategoryUri !== '' && $promoProductUri !== ''
+                            ? '/' . $lclang . '/' . $catalogUri . '/' . $promoCategoryUri . '/' . $promoProductUri
+                            : '/' . $lclang . '/' . $headerDiscountCatalogUri;
+                        $promoPercent = max(0, (int) ($promoProduct->discount_percent ?? 0));
+                        ?>
+                        <a
+                            class="header__promo-slide"
+                            data-header-promo-slide
+                            href="<?= htmlspecialchars($promoHref, ENT_QUOTES, 'UTF-8') ?>"
+                            aria-label="<?= htmlspecialchars(($isRomanian ? 'Vezi produsul: ' : 'Перейти к товару: ') . $promoTitle, ENT_QUOTES, 'UTF-8') ?>"
+                            <?= $slideIndex > 0 ? 'hidden' : '' ?>
+                        >
+                            <p class="header__announcement-text header__promo-title" title="<?= htmlspecialchars($promoTitle, ENT_QUOTES, 'UTF-8') ?>">
+                                <?= htmlspecialchars($promoTitle, ENT_QUOTES, 'UTF-8') ?>
+                            </p>
+                            <strong class="header__promo-discount">−<?= $promoPercent ?>%</strong>
+                            <span
+                                class="header__promo-link"
+                            >
+                                <?= $isRomanian ? 'Vezi' : 'Перейти' ?>
+                                <span aria-hidden="true">→</span>
+                            </span>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+
+                <?php if (count($headerDiscountSlides) > 1) : ?>
+                    <div class="header__promo-controls" data-header-promo-controls>
+                        <button type="button" data-header-promo-previous aria-label="<?= $isRomanian ? 'Produsul anterior' : 'Предыдущий товар' ?>">
+                            <span aria-hidden="true">‹</span>
+                        </button>
+                        <button type="button" data-header-promo-next aria-label="<?= $isRomanian ? 'Produsul următor' : 'Следующий товар' ?>">
+                            <span aria-hidden="true">›</span>
+                        </button>
+                    </div>
+                <?php endif; ?>
+            <?php else : ?>
+                <div class="header__promo-fallback" data-header-promo-fallback>
+                    <p class="header__announcement-text">
+                        <?= $isRomanian
+                            ? 'Livrare gratuită de la 500 MDL'
+                            : 'Бесплатная доставка от 500 MDL' ?>
+                    </p>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($headerWheelEligible) : ?>
+                <div class="header__wheel-invite" data-header-wheel-invite hidden>
+                    <p class="header__announcement-text header__wheel-message" data-header-wheel-message></p>
+                    <button
+                        type="button"
+                        class="header__promo-link header__wheel-button"
+                        data-roulette-open
+                        data-header-wheel-button
+                    ></button>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -272,13 +383,15 @@ $makeMobileScreenId = static function (string $level, string $uri): string {
 
             <a
                 href="/<?= htmlspecialchars($lclang, ENT_QUOTES, 'UTF-8') ?>"
-                class="header__logo"
+                class="header__logo<?= $isHalloweenTheme ? ' header__logo--halloween' : '' ?>"
                 aria-label="Vizaje-Nica"
             >
                 <picture>
-                    <source srcset="/app/img/logo_v.webp" type="image/webp">
+                    <?php if (!$isHalloweenTheme) : ?>
+                        <source srcset="/app/img/logo_v.webp" type="image/webp">
+                    <?php endif; ?>
                     <img
-                        src="/app/img/logo_v.png"
+                        src="<?= htmlspecialchars($headerLogoImage, ENT_QUOTES, 'UTF-8') ?>"
                         alt="Vizaje-Nica"
                         width="240"
                         height="52"
@@ -408,6 +521,17 @@ $wishlistUrl = $isRomanian
 			data-header-user-panel
 			role="menu"
 		>
+			<?php if (($site_theme_key ?? 'default') === 'halloween') : ?>
+				<span
+					class="header-user__halloween-decoration header-user__halloween-web"
+					aria-hidden="true"
+				></span>
+				<span
+					class="header-user__halloween-decoration header-user__halloween-spider"
+					aria-hidden="true"
+				></span>
+			<?php endif; ?>
+
 			<div class="header-user__profile">
 				<div
 					class="header-user__avatar"
@@ -685,6 +809,74 @@ $wishlistUrl = $isRomanian
 						</svg>
 					</span>
 				</a>
+
+				<?php if ($headerWheelEligible) : ?>
+					<button
+						type="button"
+						class="header-user__link header-user__link--roulette"
+						role="menuitem"
+						aria-haspopup="dialog"
+						data-roulette-entry
+						data-roulette-open
+						hidden
+					>
+						<span class="header-user__link-icon">
+							<svg
+								width="22"
+								height="22"
+								viewBox="0 0 24 24"
+								fill="none"
+								aria-hidden="true"
+							>
+								<circle
+									cx="12"
+									cy="12"
+									r="8.5"
+									stroke="currentColor"
+									stroke-width="1.5"
+								/>
+
+								<path
+									d="M12 3.5V20.5M4.64 7.75L19.36 16.25M4.64 16.25L19.36 7.75"
+									stroke="currentColor"
+									stroke-width="1.35"
+									stroke-linecap="round"
+								/>
+
+								<circle
+									cx="12"
+									cy="12"
+									r="1.7"
+									fill="currentColor"
+								/>
+							</svg>
+						</span>
+
+						<span class="header-user__link-label">
+							<?= $isRomanian
+								? 'Roata norocului'
+								: 'Рулетка удачи' ?>
+						</span>
+
+						<span class="header-user__link-arrow">
+							<svg
+								width="8"
+								height="14"
+								viewBox="0 0 8 14"
+								fill="none"
+								aria-hidden="true"
+							>
+								<path
+									d="M1 1L7 7L1 13"
+									stroke="currentColor"
+									stroke-width="1.4"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								/>
+							</svg>
+						</span>
+					</button>
+				<?php endif; ?>
 			</nav>
 
 			<div class="header-user__footer">
@@ -739,6 +931,17 @@ $wishlistUrl = $isRomanian
 					</span>
 				</a>
 			</div>
+
+			<?php if (($site_theme_key ?? 'default') === 'halloween') : ?>
+				<span
+					class="header-user__halloween-decoration header-user__halloween-cat"
+					aria-hidden="true"
+				></span>
+				<span
+					class="header-user__halloween-decoration header-user__halloween-pumpkin"
+					aria-hidden="true"
+				></span>
+			<?php endif; ?>
 		</div>
 	<?php else : ?>
 		<button
@@ -989,78 +1192,119 @@ $wishlistUrl = $isRomanian
     </div>
 
     <div class="header__mobile">
-        <!-- <div class="mobile-header__group mobile-header__group--left"> -->
-            <button
-                type="button"
-                class="mobile-header__button mobile-header__burger"
-                aria-label="<?= $isRomanian ? 'Deschide meniul' : 'Открыть меню' ?>"
-                aria-expanded="false"
-                aria-controls="mobileNavigation"
-                data-mobile-menu-open
-            >
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
+        <?php if (!$isProductDetailPage) : ?>
+			<a
+				href="/<?= htmlspecialchars($lclang, ENT_QUOTES, 'UTF-8') ?>"
+				class="mobile-header__brand<?= $isHalloweenTheme ? ' mobile-header__brand--halloween' : '' ?>"
+				aria-label="Vizaje-Nica"
+			>
+				<img src="<?= htmlspecialchars($isHalloweenTheme ? '/app/img/hellowen-logo.png' : '/app/img/logo_v.webp', ENT_QUOTES, 'UTF-8') ?>" alt="Vizaje-Nica" width="240" height="52">
+			</a>
 
-           <button
-                type="button"
-                class="
-                    mobile-header__button
-                    mobile-header__button--search
-                    search-actions-main-header__icon
-                "
-                aria-label="<?= $isRomanian ? 'Căutare' : 'Поиск' ?>"
-            >
-                <img
-                    src="/app/img/icons/search.svg"
-                    alt=""
-                    width="22"
-                    height="22"
-                >
-            </button>
-        <!-- </div> -->
-
-        <a
-            href="/<?= htmlspecialchars($lclang, ENT_QUOTES, 'UTF-8') ?>"
-            class="mobile-header__logo"
-            aria-label="Vizaje-Nica"
-        >
-            <img src="/app/img/mini-logo.svg" alt="Vizaje-Nica" width="34" height="32">
-        </a>
-
-        <!-- <div class="mobile-header__group mobile-header__group--right"> -->
-            <a
-                href="/<?= $lclang ?>/<?= htmlspecialchars($wishlistUri, ENT_QUOTES, 'UTF-8') ?>"
-                class="mobile-header__button mobile-header__button--wishlist"
-                aria-label="<?= $isRomanian ? 'Favorite' : 'Избранное' ?>"
-            >
-                <img src="/app/img/icons/favorite.svg" alt="" width="22" height="22">
-
-                <?php if (!empty($count_wishlist)) : ?>
-                    <span class="mobile-header__badge">
-                        <?= (int) $count_wishlist ?>
-                    </span>
-                <?php endif; ?>
-            </a>
-
-            <a
-                href="/<?= $lclang ?>/<?= htmlspecialchars($cartUri, ENT_QUOTES, 'UTF-8') ?>"
-                class="mobile-header__button mobile-header__button--cart"
-                aria-label="<?= $isRomanian ? 'Coș' : 'Корзина' ?>"
-                data-cart-drawer-open
-            >
-                <img src="/app/img/icons/cart.svg" alt="" width="22" height="22">
-                <span
-                    class="mobile-header__badge"
-                    data-cart-count
-                    <?= empty($total_items_cart) ? 'hidden' : '' ?>
-                >
-                    <?= (int) $total_items_cart ?>
-                </span>
-            </a>
-        <!-- </div> -->
+			<div class="mobile-header__language language-main-header">
+				<?php select_language($clang, $lang_urls); ?>
+			</div>
+		<?php endif; ?>
     </div>
+
+	<nav
+		class="mobile-tabbar"
+		aria-label="<?= $isRomanian ? 'Navigare principală' : 'Основная навигация' ?>"
+	>
+		<a
+			href="/<?= htmlspecialchars($lclang, ENT_QUOTES, 'UTF-8') ?>"
+			class="mobile-tabbar__item mobile-tabbar__item--brand<?= $isHomeTabActive ? ' is-active' : '' ?>"
+			<?= $isHomeTabActive ? 'aria-current="page"' : '' ?>
+		>
+			<span class="mobile-tabbar__icon">
+				<span class="mobile-tabbar__asset-icon mobile-tabbar__asset-icon--brand" aria-hidden="true"></span>
+				<svg class="lucide lucide-house" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+					<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
+					<path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+				</svg>
+			</span>
+			<span class="mobile-tabbar__label"><?= $isRomanian ? 'Acasă' : 'Главная' ?></span>
+		</a>
+
+		<a
+			href="/<?= htmlspecialchars($lclang, ENT_QUOTES, 'UTF-8') ?>/<?= htmlspecialchars($mobileCatalogUri, ENT_QUOTES, 'UTF-8') ?>"
+			class="mobile-tabbar__item mobile-tabbar__item--catalog<?= $isCatalogTabActive ? ' is-active' : '' ?>"
+			aria-label="<?= $isRomanian ? 'Catalog' : 'Каталог' ?>"
+			<?= $isCatalogTabActive ? 'aria-current="page"' : '' ?>
+		>
+			<span class="mobile-tabbar__icon">
+				<span class="mobile-tabbar__asset-icon mobile-tabbar__asset-icon--catalog" aria-hidden="true"></span>
+				<svg class="lucide lucide-layout-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+					<rect x="3" y="3" width="7" height="7" rx="1" />
+					<rect x="14" y="3" width="7" height="7" rx="1" />
+					<rect x="14" y="14" width="7" height="7" rx="1" />
+					<rect x="3" y="14" width="7" height="7" rx="1" />
+				</svg>
+			</span>
+			<span class="mobile-tabbar__label"><?= $isRomanian ? 'Catalog' : 'Каталог' ?></span>
+		</a>
+
+		<a
+			href="/<?= htmlspecialchars($lclang, ENT_QUOTES, 'UTF-8') ?>/<?= htmlspecialchars($wishlistUri, ENT_QUOTES, 'UTF-8') ?>"
+			class="mobile-tabbar__item mobile-tabbar__item--wishlist<?= $isWishlistTabActive ? ' is-active' : '' ?>"
+			aria-label="<?= $isRomanian ? 'Favorite' : 'Избранное' ?>"
+			<?= $isWishlistTabActive ? 'aria-current="page"' : '' ?>
+		>
+			<span class="mobile-tabbar__icon">
+				<span class="mobile-tabbar__asset-icon mobile-tabbar__asset-icon--wishlist" aria-hidden="true"></span>
+			</span>
+		</a>
+
+		<?php if (!empty($client_info)) : ?>
+			<a
+				href="/<?= htmlspecialchars($lclang, ENT_QUOTES, 'UTF-8') ?>/<?= htmlspecialchars($accountUri, ENT_QUOTES, 'UTF-8') ?>"
+				class="mobile-tabbar__item mobile-tabbar__item--profile<?= $isProfileTabActive ? ' is-active' : '' ?>"
+				<?= $isProfileTabActive ? 'aria-current="page"' : '' ?>
+			>
+				<span class="mobile-tabbar__icon">
+					<span class="mobile-tabbar__asset-icon mobile-tabbar__asset-icon--profile" aria-hidden="true"></span>
+					<svg class="mobile-tabbar__header-icon mobile-tabbar__header-icon--profile" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+						<circle cx="12" cy="7" r="4.5" stroke="currentColor" stroke-width="1.6" />
+						<path d="M3.75 22C4.25 17.65 7.08 15.25 12 15.25S19.75 17.65 20.25 22" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+					</svg>
+				</span>
+				<span class="mobile-tabbar__label"><?= $isRomanian ? 'Profil' : 'Профиль' ?></span>
+			</a>
+		<?php else : ?>
+			<button
+				type="button"
+				class="mobile-tabbar__item mobile-tabbar__item--profile"
+				data-auth-trigger="login"
+			>
+				<span class="mobile-tabbar__icon">
+					<span class="mobile-tabbar__asset-icon mobile-tabbar__asset-icon--profile" aria-hidden="true"></span>
+					<svg class="mobile-tabbar__header-icon mobile-tabbar__header-icon--profile" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+						<circle cx="12" cy="7" r="4.5" stroke="currentColor" stroke-width="1.6" />
+						<path d="M3.75 22C4.25 17.65 7.08 15.25 12 15.25S19.75 17.65 20.25 22" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+					</svg>
+				</span>
+				<span class="mobile-tabbar__label"><?= $isRomanian ? 'Profil' : 'Профиль' ?></span>
+			</button>
+		<?php endif; ?>
+
+		<a
+			href="/<?= htmlspecialchars($lclang, ENT_QUOTES, 'UTF-8') ?>/<?= htmlspecialchars($cartUri, ENT_QUOTES, 'UTF-8') ?>"
+			class="mobile-tabbar__item mobile-tabbar__item--cart<?= $isCartTabActive ? ' is-active' : '' ?>"
+			<?= $isCartTabActive ? 'aria-current="page"' : '' ?>
+			data-cart-drawer-open
+		>
+			<span class="mobile-tabbar__icon">
+				<span class="mobile-tabbar__asset-icon mobile-tabbar__asset-icon--bag" aria-hidden="true"></span>
+				<svg class="mobile-tabbar__header-icon mobile-tabbar__header-icon--cart" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+					<path fill-rule="evenodd" clip-rule="evenodd" d="M11.14.072c-1.602.303-2.904 1.313-3.58 2.78-.25.541-.39 1.155-.421 1.847l-.026.598H5.809c-.807 0-1.353.019-1.435.05-.184.07-.379.267-.433.438-.025.08-.335 3.752-.687 8.16-.7 8.743-.678 8.304-.425 8.859.146.319.56.763.866.93.516.28.085.266 8.282.266 8.203 0 7.765.014 8.285-.269.293-.16.695-.593.847-.912.26-.55.282-.08-.411-8.764-.348-4.366-.645-8.027-.66-8.137a.746.746 0 0 0-.429-.557c-.117-.049-.462-.064-1.46-.064h-1.306l-.03-.574c-.083-1.635-.858-3.034-2.16-3.901a5.097 5.097 0 0 0-1.551-.688C12.595.01 11.636-.022 11.14.072zM12.822 1.5a3.449 3.449 0 0 1 2.6 3.362v.434H8.52l.022-.574c.018-.449.05-.656.145-.95a3.447 3.447 0 0 1 2.428-2.27c.48-.127 1.218-.127 1.707-.002zM7.125 8.056c0 1.325.002 1.355.105 1.507.17.25.334.346.59.346a.666.666 0 0 0 .606-.362c.071-.13.084-.323.096-1.496l.015-1.348h6.88l.015 1.38c.013 1.308.018 1.386.11 1.509.174.232.33.317.583.317.253 0 .41-.085.583-.317.092-.123.097-.2.11-1.51l.014-1.379h.935c.931 0 .934 0 .956.106.053.259 1.206 15.076 1.185 15.23a.662.662 0 0 1-.322.48c-.112.068-.862.075-7.607.075-8.266 0-7.662.023-7.856-.295a.786.786 0 0 1-.093-.361c-.002-.116.267-3.591.596-7.723l.599-7.512h1.9v1.353zm-.94 10.686a.703.703 0 0 0-.329 1.01c.206.334-.224.313 6.184.3l5.765-.013.125-.117c.372-.347.333-.872-.082-1.125-.15-.092-.245-.093-5.871-.09-3.146.002-5.752.017-5.791.035z" />
+				</svg>
+			</span>
+			<span class="mobile-tabbar__label"><?= $isRomanian ? 'Coș' : 'Корзина' ?></span>
+			<span class="mobile-tabbar__badge" data-cart-count <?= empty($total_items_cart) ? 'hidden' : '' ?>>
+				<?= (int) $total_items_cart ?>
+			</span>
+		</a>
+	</nav>
 
     <div
         id="mobileNavigation"

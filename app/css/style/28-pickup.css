@@ -1,6 +1,6 @@
-/* ==========================================================================
-   PICKUP PICKER
-   ========================================================================== */
+/* ========================================================================
+   CHECKOUT PICKUP STORE LIST
+   ======================================================================== */
 
 .checkout-pickup,
 .checkout-pickup *,
@@ -11,92 +11,83 @@
 
 .checkout-pickup {
 	position: fixed;
-	z-index: 14000000000;
+	z-index: 2147483647;
 	inset: 0;
-
+	display: grid;
+	place-items: center;
+	padding: 24px;
+	isolation: isolate;
 	visibility: hidden;
 	opacity: 0;
 	pointer-events: none;
-
-	transition:
-		opacity 220ms ease,
-		visibility 0s linear 220ms;
+	transition: opacity 180ms ease, visibility 0s linear 180ms;
 }
 
 .checkout-pickup.is-open {
 	visibility: visible;
 	opacity: 1;
 	pointer-events: auto;
-
-	transition:
-		opacity 220ms ease,
-		visibility 0s linear 0s;
+	transition: opacity 180ms ease, visibility 0s;
 }
 
 .checkout-pickup__backdrop {
 	position: absolute;
+	z-index: 0;
 	inset: 0;
-
 	width: 100%;
 	height: 100%;
 	padding: 0;
-
 	border: 0;
-	background: rgba(17, 17, 17, 0.3);
+	background: rgba(17, 17, 17, 0.42);
 }
 
 .checkout-pickup__dialog {
-	position: absolute;
-	inset: 0;
-
-	display: grid;
-	grid-template-columns:
-		minmax(0, 1fr)
-		420px;
-
-	background: #fff;
-}
-
-.checkout-pickup__map {
-	min-width: 0;
-	height: 100%;
-}
-
-.checkout-pickup__panel {
 	position: relative;
-
+	z-index: 1;
 	display: flex;
 	flex-direction: column;
-
-	min-width: 0;
-
-	border-left: 1px solid rgba(17, 17, 17, 0.09);
-
+	width: min(100%, 620px);
+	max-height: min(780px, calc(100dvh - 48px));
+	overflow: hidden;
+	border-radius: 16px;
 	background: #fff;
+	box-shadow: 0 24px 80px rgba(0, 0, 0, 0.2);
 }
 
-.checkout-pickup__panel-inner {
-	flex: 1;
+.checkout-pickup__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 24px;
+	padding: 26px 28px 22px;
+	border-bottom: 1px solid #e9e9e9;
+}
 
-	padding: 78px 34px 34px;
+.checkout-pickup__eyebrow {
+	margin: 0 0 7px;
+	color: #777;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+}
+
+.checkout-pickup__title {
+	margin: 0;
+	font-size: 24px;
+	font-weight: 500;
+	line-height: 1.2;
 }
 
 .checkout-pickup__close {
-	position: absolute;
-	z-index: 5;
-
-	top: 24px;
-	right: 24px;
-
-	width: 42px;
-	height: 42px;
+	position: relative;
+	flex: 0 0 40px;
+	width: 40px;
+	height: 40px;
 	padding: 0;
-
-	border: 1px solid rgba(17, 17, 17, 0.12);
+	border: 1px solid #e2e2e2;
 	border-radius: 50%;
-
 	background: #fff;
-
 	cursor: pointer;
 }
 
@@ -104,10 +95,8 @@
 	position: absolute;
 	top: 50%;
 	left: 50%;
-
-	width: 17px;
+	width: 16px;
 	height: 1px;
-
 	background: #111;
 }
 
@@ -119,263 +108,198 @@
 	transform: translate(-50%, -50%) rotate(-45deg);
 }
 
-.checkout-pickup__eyebrow {
-	margin: 0 0 30px;
+.checkout-pickup__list {
+	min-height: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: 0 28px;
+}
 
-	color: rgba(17, 17, 17, 0.5);
+.checkout-pickup__store {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 14px;
+	padding: 17px 0;
+	border-bottom: 1px solid #ededed;
+}
 
-	font-size: 11px;
-	font-weight: 600;
-
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
+.checkout-pickup__store-select {
+	display: grid;
+	grid-template-columns: 36px minmax(0, 1fr) 20px;
+	align-items: center;
+	gap: 14px;
+	min-width: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	text-align: left;
+	cursor: pointer;
 }
 
 .checkout-pickup__store-number {
-	margin-bottom: 22px;
+	display: grid;
+	width: 36px;
+	height: 36px;
+	place-items: center;
+	border-radius: 50%;
+	background: #f4f4f4;
+	color: #555;
+	font-size: 11px;
+	font-weight: 600;
+}
 
-	color: rgba(17, 17, 17, 0.45);
+.checkout-pickup__store-copy {
+	display: grid;
+	gap: 4px;
+	min-width: 0;
+}
 
+.checkout-pickup__store-title {
+	font-size: 15px;
+	font-weight: 600;
+	line-height: 1.35;
+}
+
+.checkout-pickup__store-address,
+.checkout-pickup__store-hours {
+	color: #707070;
 	font-size: 13px;
+	line-height: 1.4;
 }
 
-.checkout-pickup__title {
-	margin: 0;
-
-	font-size: 30px;
-	font-weight: 500;
-	line-height: 1.08;
-
-	letter-spacing: -0.025em;
+.checkout-pickup__store-radio {
+	width: 19px;
+	height: 19px;
+	border: 1px solid #aaa;
+	border-radius: 50%;
 }
 
-.checkout-pickup__address {
-	margin: 18px 0 0;
-
-	font-size: 14px;
-	line-height: 1.55;
+.checkout-pickup__store.is-selected .checkout-pickup__store-number {
+	background: #111;
+	color: #fff;
 }
 
-.checkout-pickup__meta {
-	margin-top: 36px;
-
-	border-top: 1px solid rgba(17, 17, 17, 0.1);
+.checkout-pickup__store.is-selected .checkout-pickup__store-radio {
+	border: 5px solid #111;
 }
 
-.checkout-pickup__meta-row {
-	display: flex;
-	align-items: flex-start;
-	justify-content: space-between;
-	gap: 24px;
-
-	padding: 17px 0;
-
-	border-bottom: 1px solid rgba(17, 17, 17, 0.08);
-
-	font-size: 13px;
+.checkout-pickup__route {
+	padding: 8px 12px;
+	border: 1px solid #d5d5d5;
+	border-radius: 999px;
+	color: #111;
+	font-size: 12px;
+	text-decoration: none;
+	white-space: nowrap;
 }
 
-.checkout-pickup__meta-row span {
-	color: rgba(17, 17, 17, 0.5);
-}
-
-.checkout-pickup__meta-row strong {
-	max-width: 210px;
-
-	font-weight: 500;
-	text-align: right;
+.checkout-pickup__route:hover {
+	border-color: #111;
 }
 
 .checkout-pickup__footer {
-	padding: 18px 34px 26px;
-
-	border-top: 1px solid rgba(17, 17, 17, 0.09);
+	padding: 18px 28px 24px;
+	border-top: 1px solid #e9e9e9;
 }
 
 .checkout-pickup__confirm {
 	width: 100%;
-	min-height: 54px;
-
+	min-height: 52px;
 	padding: 14px 20px;
-
 	border: 0;
-	border-radius: 0;
-
+	border-radius: 4px;
 	background: #111;
 	color: #fff;
-
-	font-size: 11px;
+	font-size: 12px;
 	font-weight: 600;
-
-	letter-spacing: 0.08em;
+	letter-spacing: 0.04em;
 	text-transform: uppercase;
-
 	cursor: pointer;
 }
 
-/* ==========================================================================
-   MARKERS
-   ========================================================================== */
-
-.checkout-pickup-marker {
-	position: relative;
-
-	display: flex;
-	align-items: center;
-	justify-content: center;
-
-	width: 42px;
-	height: 42px;
-	padding: 0;
-
-	border: 0;
-	border-radius: 50%;
-
-	background: #fff;
-	color: #111;
-
-	box-shadow: 0 4px 20px rgba(17, 17, 17, 0.13);
-
-	cursor: pointer;
-
-	transition:
-		transform 180ms ease,
-		background-color 180ms ease,
-		color 180ms ease;
-}
-
-.checkout-pickup-marker::after {
-	content: '';
-
-	position: absolute;
-
-	left: 50%;
-	bottom: -6px;
-
-	width: 12px;
-	height: 12px;
-
-	background: inherit;
-
-	transform: translateX(-50%) rotate(45deg);
-}
-
-.checkout-pickup-marker span {
-	position: relative;
-	z-index: 2;
-
-	font-size: 10px;
-	font-weight: 600;
-}
-
-.checkout-pickup-marker:hover {
-	transform: translateY(-2px);
-}
-
-.checkout-pickup-marker.is-active {
-	background: #111;
-	color: #fff;
-
-	transform: scale(1.08);
+.checkout-pickup__confirm:disabled {
+	background: #aaa;
+	cursor: not-allowed;
 }
 
 body.checkout-pickup-open {
 	overflow: hidden;
 }
 
-/* ==========================================================================
-   MOBILE
-   ========================================================================== */
+body.checkout-pickup-open #jivo-iframe-container,
+body.checkout-pickup-open #jivo-iframe-container iframe,
+body.checkout-pickup-open [id^='jivo-'],
+body.checkout-pickup-open [id*='jivo'],
+body.checkout-pickup-open jdiv[class*='wrap'],
+body.checkout-pickup-open jdiv[class*='widget'],
+body.checkout-pickup-open jdiv[class*='button'],
+body.checkout-pickup-open jdiv[class*='container'],
+body.checkout-pickup-open jdiv[class*='chat'],
+body.checkout-pickup-open iframe[src*='jivo'],
+body.checkout-pickup-open .notranslate,
+body.checkout-pickup-open .main__PcyDs {
+	z-index: 900 !important;
+	visibility: hidden !important;
+	opacity: 0 !important;
+	pointer-events: none !important;
+}
 
 @media (max-width: 767px) {
+	.checkout-pickup {
+		align-items: center;
+		padding: 16px;
+	}
+
 	.checkout-pickup__dialog {
-		display: flex;
-		flex-direction: column;
-
-		inset: 8px 0 0;
-
-		border-radius: 18px 18px 0 0;
-
-		overflow: hidden;
+		width: min(100%, 620px);
+		max-height: min(86dvh, 760px);
+		border-radius: 16px;
 	}
 
-	.checkout-pickup__map {
-		flex: 1;
-
-		min-height: 0;
-	}
-
-	.checkout-pickup__panel {
-		flex: 0 0 auto;
-
-		border-left: 0;
-		border-top: 1px solid rgba(17, 17, 17, 0.08);
-	}
-
-	.checkout-pickup__panel-inner {
-		padding: 20px 16px 14px;
-	}
-
-	.checkout-pickup__close {
-		top: 14px;
-		right: 14px;
-
-		width: 40px;
-		height: 40px;
-	}
-
-	.checkout-pickup__eyebrow,
-	.checkout-pickup__store-number {
-		display: none;
+	.checkout-pickup__header {
+		padding: 22px 20px 18px;
 	}
 
 	.checkout-pickup__title {
-		max-width: calc(100% - 55px);
-
-		font-size: 20px;
+		font-size: 21px;
 	}
 
-	.checkout-pickup__address {
-		margin-top: 8px;
-
-		font-size: 13px;
+	.checkout-pickup__list {
+		padding: 0 20px;
 	}
 
-	.checkout-pickup__meta {
-		display: flex;
-		gap: 18px;
-
-		margin-top: 14px;
-
-		border-top: 0;
+	.checkout-pickup__store {
+		gap: 9px;
+		padding: 15px 0;
 	}
 
-	.checkout-pickup__meta-row {
-		display: block;
+	.checkout-pickup__store-select {
+		grid-template-columns: 32px minmax(0, 1fr) 18px;
+		gap: 10px;
+	}
 
-		padding: 0;
+	.checkout-pickup__store-number {
+		width: 32px;
+		height: 32px;
+	}
 
-		border: 0;
+	.checkout-pickup__store-title {
+		font-size: 14px;
+	}
 
+	.checkout-pickup__store-address,
+	.checkout-pickup__store-hours {
+		font-size: 12px;
+	}
+
+	.checkout-pickup__route {
+		padding: 8px 10px;
 		font-size: 11px;
 	}
 
-	.checkout-pickup__meta-row span,
-	.checkout-pickup__meta-row strong {
-		display: block;
-
-		text-align: left;
-	}
-
-	.checkout-pickup__meta-row strong {
-		margin-top: 3px;
-	}
-
 	.checkout-pickup__footer {
-		padding: 12px 16px calc(14px + env(safe-area-inset-bottom));
-	}
-
-	.checkout-pickup__confirm {
-		min-height: 52px;
+		padding: 14px 20px 16px;
 	}
 }

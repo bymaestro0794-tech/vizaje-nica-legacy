@@ -106,6 +106,104 @@ if (title) {
 }
 //=================
 //Tabs
+const accountProfileShell = document.querySelector('.account__content--dashboard');
+if (accountProfileShell) {
+    const accountProfileTrigger = accountProfileShell.querySelector('[data-account-profile-open]');
+    const accountProfileDialog = accountProfileShell.querySelector('#account-profile-dialog');
+    const accountProfileClose = accountProfileShell.querySelector('[data-account-profile-close]');
+
+    if (accountProfileTrigger && accountProfileDialog && accountProfileClose) {
+        let accountProfilePlaceholder = null;
+
+        const openAccountProfile = function () {
+            if (accountProfileShell.classList.contains('account-profile-dialog-open')) {
+                return;
+            }
+
+            accountProfilePlaceholder = document.createComment('account-profile-dialog-placeholder');
+            accountProfileShell.parentNode.insertBefore(accountProfilePlaceholder, accountProfileShell);
+            accountProfileShell.classList.add('account-profile-dialog-open');
+            accountProfileShell.classList.add('is-entering');
+            document.body.appendChild(accountProfileShell);
+            document.documentElement.classList.add('account-profile-dialog-open');
+            accountProfileDialog.setAttribute('role', 'dialog');
+            accountProfileDialog.setAttribute('aria-modal', 'true');
+            accountProfileDialog.setAttribute('aria-label', accountProfileTrigger.textContent.trim());
+            accountProfileDialog.setAttribute('tabindex', '-1');
+            accountProfileDialog.focus();
+
+            window.requestAnimationFrame(function () {
+                window.requestAnimationFrame(function () {
+                    accountProfileShell.classList.remove('is-entering');
+                    accountProfileShell.classList.add('is-visible');
+                });
+            });
+        };
+
+        const closeAccountProfile = function () {
+            if (
+                !accountProfileShell.classList.contains('account-profile-dialog-open')
+                || accountProfileShell.classList.contains('is-closing')
+            ) {
+                return;
+            }
+
+            accountProfileShell.classList.remove('is-visible');
+            accountProfileShell.classList.add('is-closing');
+
+            const closeDelay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 240;
+            window.setTimeout(function () {
+                accountProfileShell.classList.remove(
+                    'account-profile-dialog-open',
+                    'is-entering',
+                    'is-visible',
+                    'is-closing'
+                );
+                document.documentElement.classList.remove('account-profile-dialog-open');
+                accountProfileDialog.removeAttribute('role');
+                accountProfileDialog.removeAttribute('aria-modal');
+                accountProfileDialog.removeAttribute('aria-label');
+                accountProfileDialog.removeAttribute('tabindex');
+
+                if (accountProfilePlaceholder && accountProfilePlaceholder.parentNode) {
+                    accountProfilePlaceholder.parentNode.insertBefore(
+                        accountProfileShell,
+                        accountProfilePlaceholder
+                    );
+                    accountProfilePlaceholder.parentNode.removeChild(accountProfilePlaceholder);
+                    accountProfilePlaceholder = null;
+                }
+
+                accountProfileTrigger.focus();
+            }, closeDelay);
+        };
+
+        accountProfileTrigger.addEventListener('click', function (event) {
+            if (window.matchMedia('(max-width: 767px)').matches) {
+                event.preventDefault();
+                openAccountProfile();
+            }
+        });
+
+        accountProfileClose.addEventListener('click', closeAccountProfile);
+
+        accountProfileShell.addEventListener('click', function (event) {
+            if (event.target === accountProfileShell) {
+                closeAccountProfile();
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (
+                event.key === 'Escape'
+                && accountProfileShell.classList.contains('account-profile-dialog-open')
+            ) {
+                closeAccountProfile();
+            }
+        });
+    }
+}
+
 let tabs = document.querySelectorAll("._tabs");
 for (let index = 0; index < tabs.length; index++) {
     let tab = tabs[index];

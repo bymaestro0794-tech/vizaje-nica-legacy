@@ -1,71 +1,14 @@
 @font-face {
-	font-family: 'Montserrat';
+	font-family: 'Geist';
 	font-display: swap;
-	src:
-		url('../../fonts/Montserrat-Light.woff') format('woff'),
-		url('../../fonts/Montserrat-Light.woff2') format('woff2');
-	font-weight: 300;
+	src: url('../../fonts/Geist-Variable.woff2') format('woff2');
 	font-style: normal;
+	font-weight: 100 900;
 }
 
-@font-face {
-	font-family: 'Montserrat';
-	font-display: swap;
-	src:
-		url('../../fonts/Montserrat-Regular.woff') format('woff'),
-		url('../../fonts/Montserrat-Regular.woff2') format('woff2');
-	font-weight: 400;
-	font-style: normal;
-}
-
-@font-face {
-	font-family: 'Montserrat';
-	font-display: swap;
-	src:
-		url('../../fonts/Montserrat-Medium.woff') format('woff'),
-		url('../../fonts/Montserrat-Medium.woff2') format('woff2');
-	font-weight: 500;
-	font-style: normal;
-}
-
-@font-face {
-	font-family: 'Montserrat';
-	font-display: swap;
-	src:
-		url('../../fonts/Montserrat-SemiBold.woff') format('woff'),
-		url('../../fonts//Montserrat-SemiBold.woff2') format('woff2');
-	font-weight: 600;
-	font-style: normal;
-}
-
-@font-face {
-	font-family: 'Lora';
-	font-display: swap;
-	src:
-		url('../../fonts/Lora-Regular.woff') format('woff'),
-		url('../../fonts/Lora-Regular.woff2') format('woff2');
-	font-weight: 400;
-	font-style: normal;
-}
-
-@font-face {
-	font-family: 'Lora';
-	font-display: swap;
-	src:
-		url('../../fonts/Lora-Medium.woff') format('woff'),
-		url('../../fonts/Lora-Medium.woff2') format('woff2');
-	font-weight: 500;
-	font-style: normal;
-}
-
-@font-face {
-	font-family: 'Lora';
-	font-display: swap;
-	src:
-		url('../../fonts/Lora-SemiBold.woff') format('woff'),
-		url('../../fonts/Lora-SemiBold.woff2') format('woff2');
-	font-weight: 600;
-	font-style: normal;
+:root {
+	--font-sans: 'Geist';
+	--font-title: 'Geist';
 }
 
 /*JIVO Chat zindex */
@@ -91,7 +34,73 @@ body.product-quick-view-open jdiv[class*='button'],
 body.product-quick-view-open jdiv[class*='container'],
 body.product-quick-view-open jdiv[class*='chat'],
 body.product-quick-view-open .notranslate,
-body.product-quick-view-open .main__PcyDs {
+body.product-quick-view-open .main__PcyDs,
+body:is(
+	.product-color-sheet-open,
+	.product-reading-drawer-open,
+	.product-lightbox-open,
+	.product-availability-drawer-open
+) #jivo-iframe-container,
+body:is(
+	.product-color-sheet-open,
+	.product-reading-drawer-open,
+	.product-lightbox-open,
+	.product-availability-drawer-open
+) #jivo-iframe-container iframe,
+body:is(
+	.product-color-sheet-open,
+	.product-reading-drawer-open,
+	.product-lightbox-open,
+	.product-availability-drawer-open
+) [id^='jivo-'],
+body:is(
+	.product-color-sheet-open,
+	.product-reading-drawer-open,
+	.product-lightbox-open,
+	.product-availability-drawer-open
+) [id*='jivo'],
+body:is(
+	.product-color-sheet-open,
+	.product-reading-drawer-open,
+	.product-lightbox-open,
+	.product-availability-drawer-open
+) jdiv[class*='wrap'],
+body:is(
+	.product-color-sheet-open,
+	.product-reading-drawer-open,
+	.product-lightbox-open,
+	.product-availability-drawer-open
+) jdiv[class*='widget'],
+body:is(
+	.product-color-sheet-open,
+	.product-reading-drawer-open,
+	.product-lightbox-open,
+	.product-availability-drawer-open
+) jdiv[class*='button'],
+body:is(
+	.product-color-sheet-open,
+	.product-reading-drawer-open,
+	.product-lightbox-open,
+	.product-availability-drawer-open
+) jdiv[class*='container'],
+body:is(
+	.product-color-sheet-open,
+	.product-reading-drawer-open,
+	.product-lightbox-open,
+	.product-availability-drawer-open
+) jdiv[class*='chat'],
+body:is(
+	.product-color-sheet-open,
+	.product-reading-drawer-open,
+	.product-lightbox-open,
+	.product-availability-drawer-open
+) .notranslate,
+body:is(
+	.product-color-sheet-open,
+	.product-reading-drawer-open,
+	.product-lightbox-open,
+	.product-availability-drawer-open
+) .main__PcyDs {
 	z-index: 900 !important;
 	opacity: 0 !important;
 	visibility: hidden !important;
@@ -141,7 +150,7 @@ body {
 
 body {
 	line-height: 1;
-	font-family: 'Montserrat';
+	font-family: 'Geist';
 	-ms-text-size-adjust: 100%;
 	-moz-text-size-adjust: 100%;
 	-webkit-text-size-adjust: 100%;
@@ -150,7 +159,7 @@ body {
 input,
 button,
 textarea {
-	font-family: 'Montserrat';
+	font-family: 'Geist';
 }
 
 input::-ms-clear {
@@ -191,7 +200,7 @@ h5,
 h6 {
 	font-weight: inherit;
 	font-size: inherit;
-	font-family: 'Lora';
+	font-family: 'Geist';
 }
 
 body {
@@ -1046,7 +1055,7 @@ body.ie ._ibg img {
 .qs-datepicker-container {
 	margin: 5px;
 	font-size: 1rem;
-	font-family: sans-serif;
+	font-family: 'Geist';
 	color: #fff;
 	position: absolute;
 	width: 15.625em;
@@ -1418,5 +1427,15 @@ body.ie ._ibg img {
 .qs-datepicker .qs-event.qs-disabled:after,
 .qs-datepicker .qs-event.qs-empty:after {
 	background: #cce4ff;
+}
+
+::selection {
+	background: #ede6e1;
+	color: #000;
+}
+
+::-moz-selection {
+	background: #ede6e1;
+	color: #000;
 }
 

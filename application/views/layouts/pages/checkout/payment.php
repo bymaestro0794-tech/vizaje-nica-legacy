@@ -69,7 +69,6 @@ $paymentIcons = array(
 	<div
 		class="vn-checkout-step__content"
 		data-checkout-step-content
-		hidden
 	>
 		<div class="vn-checkout-payment">
 
@@ -255,18 +254,12 @@ $paymentIcons = array(
 
 			</div>
 
-			<div class="vn-checkout-step__actions">
-				<button
-					type="button"
-					class="vn-checkout-step__continue"
-					data-checkout-payment-continue
-					disabled
-				>
-					<?= $isRomanian
-						? 'Continuă'
-						: 'Продолжить' ?>
-				</button>
-			</div>
+			<?php
+			$this->load->view(
+				'partials/telegram-support',
+				array('class' => 'vn-telegram-support--checkout')
+			);
+			?>
 
 			<p
 				class="vn-checkout-step__error"

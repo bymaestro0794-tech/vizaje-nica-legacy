@@ -1,0 +1,206 @@
+/* Центрирование через inset + margin auto: transform занят анимацией появления */
+.modal {
+	position: fixed;
+	inset: 0;
+	margin: auto;
+	height: fit-content;
+	border: 0;
+	width: 950px;
+	max-width: 90vw;
+	max-height: 90vh;
+	padding: 56px 48px var(--space-lg);
+	border-radius: var(--radius-card);
+	background: var(--bg-dark);
+	color: var(--text-inverse);
+	flex-direction: column;
+	gap: 32px;
+	overflow-y: auto;
+	scrollbar-width: thin;
+	scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.modal[open] {
+	display: flex;
+}
+
+.modal::-webkit-scrollbar {
+	width: 8px;
+}
+
+.modal::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.modal::-webkit-scrollbar-thumb {
+	background-color: rgba(255, 255, 255, 0.3);
+	border-radius: 999px;
+	border: 2px solid var(--bg-dark);
+	background-clip: padding-box;
+}
+
+.modal::-webkit-scrollbar-thumb:hover {
+	background-color: rgba(255, 255, 255, 0.5);
+}
+
+.modal::backdrop {
+	background: rgba(0, 0, 0, 0.6);
+}
+
+.modal[open]::backdrop {
+	animation: modal-backdrop-in 250ms ease-out;
+}
+
+.modal.is-closing::backdrop {
+	animation: modal-backdrop-out 250ms ease-in forwards;
+}
+
+@keyframes modal-backdrop-in {
+	from {
+		opacity: 0;
+	}
+}
+
+@keyframes modal-backdrop-out {
+	to {
+		opacity: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.modal[open]::backdrop,
+	.modal.is-closing::backdrop {
+		animation-duration: 150ms;
+	}
+}
+
+.modal__close {
+	position: absolute;
+	top: 28px;
+	right: 28px;
+	width: 36px;
+	height: 36px;
+	border-radius: 18px;
+	background: var(--text-primary);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.modal__close img {
+	width: 16px;
+	height: 16px;
+	filter: invert(1);
+}
+
+.modal__header {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+	flex-shrink: 0;
+}
+
+.modal__eyebrow {
+	font-size: 15px;
+	font-weight: 600;
+}
+
+.modal__title {
+	font-size: 48px;
+	font-weight: 600;
+	line-height: 1.08;
+	letter-spacing: -0.48px;
+}
+
+.modal__panel {
+	background: var(--text-primary);
+	border-radius: var(--radius-card);
+	padding: 40px 48px;
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	flex-shrink: 0;
+}
+
+.modal__panel p {
+	font-size: 19px;
+	color: var(--text-secondary);
+}
+
+.modal__panel strong {
+	color: var(--text-inverse);
+	font-weight: 600;
+}
+
+.modal__panel--columns {
+	gap: 24px;
+}
+
+.modal__columns {
+	display: flex;
+	gap: 24px;
+	width: 100%;
+}
+
+.modal__column {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	flex: 1;
+	min-width: 0;
+}
+
+.modal__column p {
+	font-size: 17px;
+	font-weight: 600;
+	color: var(--text-inverse);
+}
+
+.modal__panel--columns .modal__coming-soon {
+	font-size: 17px;
+	color: var(--text-secondary);
+}
+
+.modal__image {
+	height: 420px;
+	flex-shrink: 0;
+	border-radius: var(--radius-card);
+	overflow: hidden;
+	background: var(--text-secondary);
+}
+
+.modal__image img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+@media (max-width: 767px) {
+	.modal {
+		position: fixed;
+		inset: auto 0 0 0;
+		margin: 0;
+		overscroll-behavior: contain;
+		width: 100%;
+		max-width: 100%;
+		max-height: 85vh;
+		border-radius: 28px 28px 0 0;
+		padding: 40px 20px var(--space-md);
+	}
+
+	.modal__title {
+		font-size: 32px;
+	}
+
+	.modal__panel {
+		padding: 24px;
+	}
+
+	.modal__columns {
+		flex-direction: column;
+		gap: 20px;
+	}
+
+	.modal__image {
+		height: 240px;
+	}
+}

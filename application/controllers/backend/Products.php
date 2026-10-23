@@ -31,7 +31,7 @@ class Products extends BackEndController
 
     public function index()
     {
-        init_load_img($this->main_page);
+        init_load_img($this->main_page, true, 'jpg|jpeg|gif|png|svg|webp|avif');
         $search_get = $this->input->post_get('query');
         if (!empty($search_get)) {
             $objects = $this->products_model->search_get_products_admin($search_get);
@@ -108,11 +108,25 @@ class Products extends BackEndController
 
         $post = array();
 
-        init_load_img($this->main_page);
+        init_load_img($this->main_page, true, 'jpg|jpeg|gif|png|svg|webp|avif');
 
         try {
             foreach ($_POST as $index => $item) {
                 $post[$index] = $this->input->post($index);
+            }
+
+            if (array_key_exists('youtube_video_url', $post)) {
+                $youtubeUrl = trim((string) $post['youtube_video_url']);
+                $youtubeVideoId = $youtubeUrl === ''
+                    ? null
+                    : extract_youtube_video_id($youtubeUrl);
+
+                if ($youtubeUrl !== '' && $youtubeVideoId === false) {
+                    throw new Exception('Укажите корректную ссылку на видео YouTube.');
+                }
+
+                $post['youtube_video_id'] = $youtubeVideoId;
+                unset($post['youtube_video_url']);
             }
 
             if (!empty($post['categories'])) {
@@ -153,7 +167,7 @@ class Products extends BackEndController
                     // File upload configuration
                     $uploadPath = 'public/products';
                     $config['upload_path'] = $uploadPath;
-                    $config['allowed_types'] = 'jpg|jpeg|png';
+                    $config['allowed_types'] = 'jpg|jpeg|png|webp|avif';
                     $config['encrypt_name'] = true;
 
                     /// File size 2MB
@@ -238,16 +252,52 @@ class Products extends BackEndController
     public function item($id = 0)
     {
         $id = (int)$id;
+		$importChangeId = (int) ($this->input->post('import_change_id', true) ?: $this->input->get('import_change_id', true));
+		$importReturn = array();
+		foreach (array('status', 'action', 'brand_id', 'q', 'page') as $filterKey) {
+			$value = $this->input->post('import_' . $filterKey, true);
+			if ($value === null) $value = $this->input->get('import_' . $filterKey, true);
+			if ($value !== null && $value !== '') $importReturn[$filterKey] = $value;
+		}
 
-        init_load_img($this->main_page);
+        init_load_img($this->main_page, true, 'jpg|jpeg|gif|png|svg|webp|avif');
         $item = $this->products_model->find_first($id);
         if (empty($item)) throw_on_404();
+
+        $seoIndexableAvailable = $this->db->field_exists('seo_indexable', 'products');
+        $this->data['seo_indexable_available'] = $seoIndexableAvailable;
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
                 foreach ($_POST as $index => $post_data) {
                     $post[$index] = $this->input->post($index, TRUE);
                 }
+
+                if (array_key_exists('youtube_video_url', $post)) {
+                    $youtubeUrl = trim((string) $post['youtube_video_url']);
+                    $youtubeVideoId = $youtubeUrl === ''
+                        ? null
+                        : extract_youtube_video_id($youtubeUrl);
+
+                    if ($youtubeUrl !== '' && $youtubeVideoId === false) {
+                        throw new Exception('Укажите корректную ссылку на видео YouTube.');
+                    }
+
+                    $post['youtube_video_id'] = $youtubeVideoId;
+                    unset($post['youtube_video_url']);
+                }
+
+                if (array_key_exists('seo_indexable', $post)) {
+                    if (!$seoIndexableAvailable) {
+                        unset($post['seo_indexable']);
+                    } elseif ($post['seo_indexable'] === 'auto') {
+                        $post['seo_indexable'] = null;
+                    } else {
+                        $post['seo_indexable'] = (int) $post['seo_indexable'] === 1 ? 1 : 0;
+                    }
+                }
+
+				unset($post['import_change_id'], $post['import_status'], $post['import_action'], $post['import_brand_id'], $post['import_q'], $post['import_page']);
 
 
                 if (!empty($post['categories'])) {
@@ -370,7 +420,7 @@ class Products extends BackEndController
                                 // File upload configuration
                                 $uploadPath = 'public/products_variable_img';
                                 $config['upload_path'] = $uploadPath;
-                                $config['allowed_types'] = 'jpg|jpeg|png';
+                                $config['allowed_types'] = 'jpg|jpeg|png|webp|avif';
                                 $config['encrypt_name'] = true;
 
                                 // Load and initialize upload library
@@ -469,7 +519,7 @@ class Products extends BackEndController
                         // File upload configuration
                         $uploadPath = 'public/products';
                         $config['upload_path'] = $uploadPath;
-                        $config['allowed_types'] = 'jpg|jpeg|png';
+                        $config['allowed_types'] = 'jpg|jpeg|png|webp|avif';
                         $config['encrypt_name'] = true;
 
                         // Load and initialize upload library
@@ -495,6 +545,16 @@ class Products extends BackEndController
                 }
 
                 $_SESSION['success'] = $this->success_edit;
+				if ($importChangeId > 0 && $this->db->table_exists('product_import_changes') && $this->db->field_exists('status', 'product_import_changes')) {
+					$this->db
+						->where('id', $importChangeId)
+						->where('product_id', $id)
+						->update('product_import_changes', array('status' => 'edited', 'reviewed_at' => date('Y-m-d H:i:s')));
+					$url = '/' . ADM_CONTROLLER . '/product_imports';
+					if (!empty($importReturn)) $url .= '?' . http_build_query($importReturn);
+					redirect($url);
+					return;
+				}
             } catch
             (Exception $e) {
                 log_message('error', $e->getMessage());
@@ -589,6 +649,8 @@ class Products extends BackEndController
         $this->data['parent_url'] = $this->path;
         $this->data['parent_title'] = $this->index_title;
         $this->data['item'] = $item;
+		$this->data['import_change_id'] = $importChangeId;
+		$this->data['import_return_filters'] = $importReturn;
 
         $this->load->vars($this->data);
         $this->load->view($this->main_layout);

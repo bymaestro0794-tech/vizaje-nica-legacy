@@ -30,7 +30,7 @@
 
 .contacts__title {
 	margin: 0;
-	font-family: var(--font-title, 'Playfair Display', serif);
+	font-family: var(--font-title);
 	font-size: 56px;
 	line-height: 1.08;
 	font-weight: 500;
@@ -67,7 +67,7 @@
 
 .contacts__section-title {
 	margin: 0;
-	font-family: var(--font-title, 'Playfair Display', serif);
+	font-family: var(--font-title);
 	font-size: 34px;
 	line-height: 1.18;
 	font-weight: 500;
@@ -296,7 +296,7 @@
 
 .contacts__aside-title {
 	margin: 0;
-	font-family: var(--font-title, 'Playfair Display', serif);
+	font-family: var(--font-title);
 	font-size: 27px;
 	line-height: 1.25;
 	font-weight: 500;

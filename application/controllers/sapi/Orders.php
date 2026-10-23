@@ -64,6 +64,7 @@ class Orders extends CI_Controller
             $ins = [
                 'total' => $total,
                 'delivery_price' => $delivery_price,
+                'order_source' => 'app',
                 'order_id' => $this->getOrderId(),
                 'status' => 'new',
                 // 'client_id' => 99999,

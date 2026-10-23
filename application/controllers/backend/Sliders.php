@@ -26,7 +26,7 @@ class Sliders extends BackEndController {
     }
 
     public function index() {
-        init_load_img($this->main_page);
+        init_load_img($this->main_page, true, 'jpg|jpeg|gif|png|svg|webp|avif');
 
         $objects = $this->sliders_model->find();
 
@@ -42,11 +42,20 @@ class Sliders extends BackEndController {
 
         $post = array();
 
-        init_load_img($this->main_page);
+        init_load_img($this->main_page, true, 'jpg|jpeg|gif|png|svg|webp|avif');
 
         try {
             foreach ($_POST as $index => $item) {
                 $post[$index] = $this->input->post($index, TRUE);
+            }
+
+            $youtubeUrl = trim((string) ($post['youtube'] ?? ''));
+            if ($youtubeUrl !== '') {
+                $youtubeVideoId = extract_youtube_video_id($youtubeUrl);
+                if ($youtubeVideoId === false) {
+                    throw new Exception('Укажите корректную ссылку на видео YouTube.');
+                }
+                $post['youtube'] = $youtubeVideoId;
             }
 
             if (!empty($_FILES['img']['name'])) {
@@ -122,7 +131,7 @@ class Sliders extends BackEndController {
     public function item($id = 0) {
         $id = (int)$id;
 
-        init_load_img($this->main_page);
+        init_load_img($this->main_page, true, 'jpg|jpeg|gif|png|svg|webp|avif');
         $item = $this->sliders_model->find_first($id);
         if (empty($item)) throw_on_404();
 
@@ -130,6 +139,15 @@ class Sliders extends BackEndController {
             try {
                 foreach ($_POST as $index => $post_data) {
                     $post[$index] = $this->input->post($index, TRUE);
+                }
+
+                $youtubeUrl = trim((string) ($post['youtube'] ?? ''));
+                if ($youtubeUrl !== '') {
+                    $youtubeVideoId = extract_youtube_video_id($youtubeUrl);
+                    if ($youtubeVideoId === false) {
+                        throw new Exception('Укажите корректную ссылку на видео YouTube.');
+                    }
+                    $post['youtube'] = $youtubeVideoId;
                 }
 
                 if (!empty($_FILES['video']['name'])) {

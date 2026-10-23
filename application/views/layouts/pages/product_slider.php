@@ -61,6 +61,64 @@ $productImage = newthumbs(
 	'products'
 );
 
+$homeHoverGallery = $productImage ? [$productImage] : [];
+$seenHomeGalleryNames = array_filter([
+	trim((string) $displayImage),
+]);
+$galleryImageNames = explode(
+	'||',
+	(string) ($item->gallery_images ?? '')
+);
+
+foreach ($galleryImageNames as $galleryImageName) {
+	$galleryImageName = trim(
+		str_replace('\\', '/', (string) $galleryImageName),
+		'/'
+	);
+
+	if (
+		$galleryImageName === ''
+		|| in_array(
+			$galleryImageName,
+			$seenHomeGalleryNames,
+			true
+		)
+		|| count($homeHoverGallery) >= 4
+	) {
+		continue;
+	}
+
+	$pathSegments = explode('/', $galleryImageName);
+	if (in_array('..', $pathSegments, true)) {
+		continue;
+	}
+
+	$encodedImagePath = implode(
+		'/',
+		array_map('rawurlencode', $pathSegments)
+	);
+	$galleryImageUrl = '/public/products/' . $encodedImagePath;
+	if ($galleryImageUrl === $productImage) {
+		continue;
+	}
+
+	$homeHoverGallery[] = $galleryImageUrl;
+	$seenHomeGalleryNames[] = $galleryImageName;
+}
+
+$homeHoverGalleryAttribute = count($homeHoverGallery) > 1
+	? htmlspecialchars(
+		(string) json_encode(
+			$homeHoverGallery,
+			JSON_UNESCAPED_SLASHES
+				| JSON_UNESCAPED_UNICODE
+				| JSON_INVALID_UTF8_SUBSTITUTE
+		),
+		ENT_QUOTES,
+		'UTF-8'
+	)
+	: '';
+
 $displayPrice = isset($item->effective_price)
 	? (float) $item->effective_price
 	: (float) ($item->price ?? 0);
@@ -91,6 +149,10 @@ $displayWholesaleStock = isset($item->effective_stock_wholesale)
 $availableStock = $isB2B
 	? $displayWholesaleStock
 	: $displayStock;
+
+$isInStock = isset($item->has_available_stock)
+	? (int) $item->has_available_stock > 0
+	: $availableStock > 0;
 
 /*
 |--------------------------------------------------------------------------
@@ -141,13 +203,19 @@ $notificationPrice = number_format(
 ) . ' ' . MDL;
 
 $isRomanian = $lclang === 'ro';
+$isCatalogProductCard = !empty($is_catalog_product_card);
+$useHomeProductCardStyle = !$isCatalogProductCard && (!empty($is_home_product_tabs)
+	|| !empty($is_home_brand_products)
+	|| !empty($is_product_recommendation)
+	|| !empty($is_home_product_card));
 ?>
 
 <div
 	class="
 		products-slider__products
 		product
-		<?= $availableStock <= 0 ? 'stock_off' : '' ?>
+		<?= $isCatalogProductCard ? 'main-catalog__product' : '' ?>
+		<?= !$isInStock ? 'stock_off' : '' ?>
 	"
 	data-prod_id="<?= $productId ?>"
 	data-product-image="<?= htmlspecialchars(
@@ -180,6 +248,11 @@ $isRomanian = $lclang === 'ro';
 				'UTF-8'
 			) ?>"
 			class="head-product__image"
+			<?= $homeHoverGalleryAttribute !== ''
+				? 'data-home-hover-gallery="'
+					. $homeHoverGalleryAttribute
+					. '"'
+				: '' ?>
 			aria-label="<?= htmlspecialchars(
 				$productTitle,
 				ENT_QUOTES,
@@ -197,6 +270,9 @@ $isRomanian = $lclang === 'ro';
 				>
 
 				<img
+					<?= $homeHoverGalleryAttribute !== ''
+						? 'data-home-hover-primary'
+						: '' ?>
 					src="<?= htmlspecialchars(
 						$productImage,
 						ENT_QUOTES,
@@ -213,6 +289,12 @@ $isRomanian = $lclang === 'ro';
 			</picture>
 		</a>
 
+		<?php if ($useHomeProductCardStyle && !$isInStock) : ?>
+			<span class="home-product-tabs__stock-label" role="status">
+				<?= $isRomanian ? 'Indisponibil' : 'Нет в наличии' ?>
+			</span>
+		<?php endif; ?>
+
 		<div class="head-product__modificator">
 			<?php if (!empty($item->is_new)) : ?>
 				<p class="head-product__modificator_new">
@@ -220,7 +302,7 @@ $isRomanian = $lclang === 'ro';
 				</p>
 			<?php endif; ?>
 
-			<?php if ($hasDiscount) : ?>
+			<?php if ($hasDiscount && !$isCatalogProductCard) : ?>
 				<p class="head-product__modificator_sale">
 					<?= PRODUCTS_SALE ?>
 				</p>
@@ -239,7 +321,7 @@ $isRomanian = $lclang === 'ro';
 			<?php endif; ?>
 		</div>
 
-		<?php if ($availableStock > 0) : ?>
+		<?php if ($isInStock) : ?>
 		<a
 				href="javascript:;"
 				class="
@@ -281,6 +363,8 @@ $isRomanian = $lclang === 'ro';
 
 	<div class="product__body">
 		<div class="product__info">
+			<?php include APPPATH . 'views/layouts/pages/product-card-options.php'; ?>
+
 			<p class="product__brand">
 				<?= htmlspecialchars(
 					$productBrand,
@@ -336,6 +420,24 @@ $isRomanian = $lclang === 'ro';
 						</span>
 					</div>
 				<?php elseif ($hasDiscount) : ?>
+					<?php if ($useHomeProductCardStyle || $isCatalogProductCard) : ?>
+						<div class="price-product__discount-line">
+							<span class="price-product__discount-label">
+								<?= $isRomanian ? 'Cu reducere' : 'со скидкой' ?>
+								<?= $salePercent ?>%
+							</span>
+							<span class="price-product__old">
+								<?= number_format(
+									$displayPrice,
+									0,
+									'.',
+									' '
+								) ?>
+								<?= MDL ?>
+							</span>
+						</div>
+					<?php endif; ?>
+
 					<div class="price-product__prices">
 						<span class="price-product__value">
 							<?= number_format(
@@ -347,15 +449,17 @@ $isRomanian = $lclang === 'ro';
 							<?= MDL ?>
 						</span>
 
-						<span class="price-product__old">
-							<?= number_format(
-								$displayPrice,
-								0,
-								'.',
-								' '
-							) ?>
-							<?= MDL ?>
-						</span>
+						<?php if (!$useHomeProductCardStyle && !$isCatalogProductCard) : ?>
+							<span class="price-product__old">
+								<?= number_format(
+									$displayPrice,
+									0,
+									'.',
+									' '
+								) ?>
+								<?= MDL ?>
+							</span>
+						<?php endif; ?>
 					</div>
 				<?php else : ?>
 					<div class="price-product__prices">

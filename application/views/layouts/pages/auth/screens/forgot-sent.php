@@ -14,23 +14,15 @@ defined('BASEPATH') or exit('No direct script access allowed');
 				aria-hidden="true"
 			>
 				<svg
-					width="30"
-					height="30"
+					width="48"
+					height="48"
 					viewBox="0 0 30 30"
 					fill="none"
 				>
-					<rect
-						x="4.5"
-						y="7.5"
-						width="21"
-						height="16"
-						rx="1"
-						stroke="currentColor"
-					/>
-
 					<path
-						d="M5.5 9L15 16L24.5 9"
+						d="M7 15.5L12.5 21L23 9"
 						stroke="currentColor"
+						stroke-width="2"
 						stroke-linecap="round"
 						stroke-linejoin="round"
 					/>
@@ -39,14 +31,14 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 			<h2 class="auth-drawer__title">
 				<?= $isRomanian
-					? 'Mesaj trimis'
-					: 'Письмо отправлено' ?>
+					? 'Verifică emailul'
+					: 'Проверьте почту' ?>
 			</h2>
 
 			<p class="auth-drawer__description">
 				<?= $isRomanian
-					? 'Am trimis instrucțiunile de resetare a parolei la adresa dvs. de email.'
-					: 'Мы отправили инструкции по сбросу пароля на ваш email.' ?>
+					? 'Am trimis linkul pentru resetarea parolei. Deschide emailul și urmează instrucțiunile.'
+					: 'Мы отправили ссылку для сброса пароля. Откройте письмо и следуйте инструкции.' ?>
 			</p>
 
 			<button

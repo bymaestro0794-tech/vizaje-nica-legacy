@@ -51,6 +51,13 @@ $promo =
         ? $promo
         : array();
 
+$roulette = isset($roulette) && is_array($roulette) ? $roulette : array();
+$discountOptions = isset($discount_options) && is_array($discount_options)
+    ? $discount_options
+    : array();
+$discountChoice = isset($discount_choice) ? (string) $discount_choice : 'none';
+$selectedDiscount = isset($discount) && is_array($discount) ? $discount : array();
+
 $shipping =
     isset($shipping)
     && is_array($shipping)
@@ -87,6 +94,23 @@ $promoReason =
     !empty($promo['reason'])
         ? (string) $promo['reason']
         : null;
+
+$rouletteApplied = $discountChoice === 'roulette'
+    && (!empty($selectedDiscount['discount']) || !empty($discountOptions['roulette']['free_shipping']));
+$rouletteExpiresAt = $rouletteApplied && !empty($selectedDiscount['expires_at'])
+    ? (string) $selectedDiscount['expires_at']
+    : '';
+$selectedDiscountLabel = $rouletteApplied
+    ? ($isRomanian ? 'Reducere la ruletă' : 'Скидка рулетки')
+    : ($isRomanian ? 'Cod promoțional' : 'Промокод');
+$selectedDiscountCode = !empty($selectedDiscount['label'])
+    ? (string) $selectedDiscount['label']
+    : $promoCode;
+$promoChoiceAvailable = !empty($discountOptions['promo']['available']);
+$rouletteChoiceAvailable = !empty($discountOptions['roulette']['available']);
+$showDiscountChoice = ($promoChoiceAvailable && $rouletteChoiceAvailable)
+    || ($promoChoiceAvailable && $discountChoice !== 'promo')
+    || ($rouletteChoiceAvailable && $discountChoice !== 'roulette');
 
 
 $promoExcludedCartBrands =
@@ -321,6 +345,10 @@ if (
             <?= $isRomanian
                 ? 'Livrare gratuită'
                 : 'Бесплатная доставка' ?>
+            <span
+                class="cart-drawer__halloween-shipping-pumpkin"
+                aria-hidden="true"
+            ></span>
         </div>
     </div>
 </section>
@@ -707,6 +735,51 @@ if (
                 ? 'applied'
                 : 'form' ?>"
         >
+            <?php if ($rouletteApplied) : ?>
+                <div class="cart-drawer-promo__applied cart-drawer-promo__applied--roulette">
+                    <div class="cart-drawer-promo__applied-info">
+                        <span class="cart-drawer-promo__label">
+                            <?= $isRomanian ? 'Premiul ruletei este aplicat' : 'Приз рулетки применён' ?>
+                        </span>
+                        <strong><?= htmlspecialchars($selectedDiscountCode, ENT_QUOTES, 'UTF-8') ?></strong>
+                        <?php if ($rouletteExpiresAt !== '') : ?>
+                            <time
+                                class="cart-drawer-promo__countdown"
+                                data-roulette-cart-countdown
+                                data-roulette-expires-at="<?= htmlspecialchars($rouletteExpiresAt, ENT_QUOTES, 'UTF-8') ?>"
+                                aria-live="polite"
+                            ></time>
+                        <?php endif; ?>
+                    </div>
+                    <span class="cart-drawer-promo__discount">
+                        <?= !empty($discountOptions['roulette']['free_shipping'])
+                            ? ($isRomanian ? 'Livrare gratuită' : 'Бесплатная доставка')
+                            : '−' . number_format((float) $selectedDiscount['discount'], 0, '.', ' ') . ' ' . MDL ?>
+                    </span>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($showDiscountChoice) : ?>
+                <div class="cart-discount-choice" role="group" aria-label="<?= $isRomanian ? 'Alegeți reducerea' : 'Выберите скидку' ?>">
+                    <p class="cart-discount-choice__title"><?= $isRomanian ? 'Alegeți o singură reducere' : 'Выберите одну скидку' ?></p>
+                    <?php if ($promoChoiceAvailable) : ?>
+                        <button type="button" class="cart-discount-choice__option<?= $discountChoice === 'promo' ? ' is-selected' : '' ?>" data-cart-discount-choice="promo">
+                            <span><?= htmlspecialchars((string) $discountOptions['promo']['code'], ENT_QUOTES, 'UTF-8') ?></span>
+                            <strong>−<?= number_format((float) $discountOptions['promo']['discount'], 0, '.', ' ') ?> <?= MDL ?></strong>
+                        </button>
+                    <?php endif; ?>
+                    <?php if ($rouletteChoiceAvailable) : ?>
+                        <button type="button" class="cart-discount-choice__option<?= $discountChoice === 'roulette' ? ' is-selected' : '' ?>" data-cart-discount-choice="roulette">
+                            <span><?= htmlspecialchars((string) $discountOptions['roulette']['title'], ENT_QUOTES, 'UTF-8') ?></span>
+                            <strong><?= !empty($discountOptions['roulette']['free_shipping'])
+                                ? ($isRomanian ? 'Livrare gratuită' : 'Бесплатная доставка')
+                                : '−' . number_format((float) $discountOptions['roulette']['discount'], 0, '.', ' ') . ' ' . MDL ?></strong>
+                        </button>
+                    <?php endif; ?>
+                    <p class="cart-discount-choice__note"><?= $isRomanian ? 'Reducerile nu se cumulează.' : 'Скидки не суммируются.' ?></p>
+                </div>
+            <?php endif; ?>
+
             <?php if ($promoApplied) : ?>
 
                 <div
@@ -856,6 +929,11 @@ if (
                 </form>
 
             <?php endif; ?>
+
+            <span
+                class="cart-drawer__halloween-bats"
+                aria-hidden="true"
+            ></span>
         </section>
 
         <section class="cart-drawer-summary">
@@ -924,13 +1002,11 @@ if (
                         : '' ?>
                 >
                     <span>
-                        <?= $isRomanian
-                            ? 'Cod promoțional'
-                            : 'Промокод' ?>
+                        <?= htmlspecialchars($selectedDiscountLabel, ENT_QUOTES, 'UTF-8') ?>
 
                         <span data-cart-summary-promo-code>
                             <?= htmlspecialchars(
-                                $promoCode,
+                                $selectedDiscountCode,
                                 ENT_QUOTES,
                                 'UTF-8'
                             ) ?>
@@ -948,12 +1024,19 @@ if (
                     </span>
                 </div>
 
-                <div class="cart-drawer-summary__row">
+                <div
+                    class="cart-drawer-summary__row cart-drawer-summary__row--delivery"
+                >
                     <span>
                         <?= $isRomanian
                             ? 'Livrare'
                             : 'Доставка' ?>
                     </span>
+
+                    <span
+                        class="cart-drawer__halloween-summary-cat"
+                        aria-hidden="true"
+                    ></span>
 
                     <span
                         data-cart-summary-delivery

@@ -1,3 +1,12 @@
+<?php
+$storedYoutubeValue = trim((string) ($item->youtube ?? ''));
+$storedYoutubeId = preg_match('/^[A-Za-z0-9_-]{11}$/', $storedYoutubeValue)
+    ? $storedYoutubeValue
+    : extract_youtube_video_id($storedYoutubeValue);
+$storedYoutubeInput = $storedYoutubeId
+    ? 'https://youtu.be/' . $storedYoutubeId
+    : '';
+?>
 <!-- BEGIN PAGE HEADER-->
 <!-- BEGIN PAGE BAR -->
 <div class="page-bar">
@@ -119,14 +128,15 @@
                                     <tr>
                                         <td width="200"><?= lang('Youtube') ?></td>
                                         <td>
-                                            <input type="text" name="youtube" value="<?= $item->youtube ?>"
-                                                   class="form-control">
+                                            <input type="url" name="youtube" value="<?= htmlspecialchars($storedYoutubeInput, ENT_QUOTES, 'UTF-8') ?>"
+                                                   class="form-control" placeholder="https://youtu.be/XXXXXXXXXXX">
+                                            <p class="help-block">При нажатии на кнопку воспроизведения ролик откроется поверх слайда.</p>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td width="200"><?= lang('Photo') ?></td>
                                         <td>
-                                            <input type="file" name="img" id="file" class="form-control">
+                                            <input type="file" name="img" id="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.svg,.webp,.avif,.mp4,video/mp4">
                                             <div class="note note-warning"
                                                  style="margin-bottom: 0px; margin-top: 10px;">
                                                 <p>
@@ -210,7 +220,7 @@
                                     <tr>
                                         <td width="200"><?= lang('Photo') ?> Mob</td>
                                         <td>
-                                            <input type="file" name="imgMob" id="file" class="form-control">
+                                            <input type="file" name="imgMob" id="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.svg,.webp,.avif,.mp4,video/mp4">
                                             <div class="note note-warning"
                                                  style="margin-bottom: 0px; margin-top: 10px;">
                                                 <p>

@@ -92,6 +92,13 @@
                         ? 'Contactați-ne'
                         : 'Связаться с нами' ?>
                 </a>
+
+                <?php
+                $this->load->view(
+                    'partials/telegram-support',
+                    array('class' => 'vn-telegram-support--error')
+                );
+                ?>
             </div>
         </div>
     </section>
