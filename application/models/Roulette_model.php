@@ -16,9 +16,11 @@ class Roulette_model extends CI_Model
 		}
 
 		return $this->db->field_exists('is_enabled', 'roulette_settings')
+			&& $this->db->field_exists('is_visible', 'roulette_settings')
 			&& $this->db->field_exists('spin_interval_hours', 'roulette_settings')
 			&& $this->db->table_exists('roulette_account_state')
 			&& $this->db->table_exists('roulette_spins')
+			&& $this->db->field_exists('reward_payload_snapshot', 'roulette_spins')
 			&& $this->db->table_exists('roulette_payment_reservations');
 	}
 

@@ -27,6 +27,18 @@ foreach ($objects as $row) {
 
 <h1 class="page-title">Скидка после регистрации −18%</h1>
 
+<?php if (!empty($welcome_promo)) : ?>
+	<form method="post" action="/<?= ADM_CONTROLLER ?>/welcome_offers/toggle_visibility" class="margin-bottom-20">
+		<label>
+			<input type="hidden" name="show_on_site" value="0">
+			<input type="checkbox" name="show_on_site" value="1" <?= ($welcome_promo->status ?? '') === 'active' ? 'checked' : '' ?>>
+			Показывать скидку 18% после первой регистрации на сайте
+		</label>
+		<button type="submit" class="btn blue btn-sm">Сохранить</button>
+		<p class="help-block">Флажок управляет статусом WELCOME18. Уже выданные скидки не удаляются, но новые выдачи и применение выключаются.</p>
+	</form>
+<?php endif; ?>
+
 <?php if (!empty($migration_required)) : ?>
 	<div class="alert alert-warning">Не найдены поля приветственной скидки. Выполните <code>database/patches/2026-10-12-add-welcome-offer.sql</code>.</div>
 <?php else : ?>

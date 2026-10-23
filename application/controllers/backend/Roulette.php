@@ -13,7 +13,7 @@ class Roulette extends BackEndController
 		'discount_10',
 	);
 
-	private $supportedRewardTypes = array('discount_percent', 'free_shipping');
+	private $supportedRewardTypes = array('discount_percent', 'free_shipping', 'gift');
 
 	private $rewardTypeOptions = array(
 		'discount_percent' => 'Скидка, %',
@@ -38,6 +38,7 @@ class Roulette extends BackEndController
 	{
 		parent::__construct(__CLASS__);
 		$this->load->model('roulette_model');
+		$this->load->model('gifts_model');
 		$this->data['title'] = 'Рулетка удачи';
 	}
 
@@ -46,6 +47,10 @@ class Roulette extends BackEndController
 		$this->data['migration_required'] = !$this->roulette_model->isGameplayInstalled();
 		$this->data['settings'] = array();
 		$this->data['prizes'] = array();
+		$this->data['gifts'] = array();
+		if ($this->db->table_exists('gifts')) {
+			$this->data['gifts'] = $this->gifts_model->get_enabled();
+		}
 
 		if (!$this->data['migration_required']) {
 			$this->data['settings'] = $this->roulette_model->getSettings();
@@ -80,6 +85,7 @@ class Roulette extends BackEndController
 				'descriptionRO' => trim((string) ($settingsPost['descriptionRO'] ?? '')),
 				'rulesRU' => trim((string) ($settingsPost['rulesRU'] ?? '')),
 				'rulesRO' => trim((string) ($settingsPost['rulesRO'] ?? '')),
+				'is_visible' => !empty($settingsPost['is_visible']) ? 1 : 0,
 				'is_enabled' => !empty($settingsPost['is_enabled']) ? 1 : 0,
 				// The public rule is fixed: one spin per calendar week, Monday 00:00.
 				'spin_interval_hours' => 168,
@@ -126,6 +132,15 @@ class Roulette extends BackEndController
 				}
 				if (!isset($this->rewardTypeOptions[$rewardType])) {
 					throw new Exception('Выберите корректную категорию выигрыша для каждого сектора.');
+				}
+				if ($rewardType === 'gift' && $payloadRaw !== '') {
+					if (!ctype_digit($payloadRaw) || (int) $payloadRaw < 1 || !$this->db->table_exists('gifts') || empty($this->gifts_model->find_enabled((int) $payloadRaw))) {
+						throw new Exception('Выберите существующий активный подарок для сектора рулетки.');
+					}
+					$payloadRaw = (string) (int) $payloadRaw;
+				}
+				if ($enabled && $rewardType === 'gift' && $payloadRaw === '') {
+					throw new Exception('Для каждого включённого сектора с подарком выберите подарок.');
 				}
 
 				$isSupportedType = in_array($rewardType, $this->supportedRewardTypes, true);
@@ -193,7 +208,7 @@ class Roulette extends BackEndController
 				throw new Exception('Не удалось сохранить настройки рулетки.');
 			}
 
-			$_SESSION['success'] = 'Настройки рулетки сохранены. Доступны скидки и бесплатная доставка; остальные категории подготовлены для подключения.';
+			$_SESSION['success'] = 'Настройки рулетки сохранены. Доступны скидки, бесплатная доставка и подарки из каталога.';
 		} catch (Exception $e) {
 			log_message('error', 'Roulette settings save error: ' . $e->getMessage());
 			$_SESSION['error'] = array($e->getMessage());

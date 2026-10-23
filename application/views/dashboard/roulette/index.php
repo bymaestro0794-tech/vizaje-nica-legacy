@@ -14,6 +14,8 @@ $escape = function ($value) {
 	'surprise' => 'Сюрприз',
 );
 
+$gifts = isset($gifts) && is_array($gifts) ? $gifts : array();
+
 ?>
 
 <div class="page-bar">
@@ -55,7 +57,10 @@ $escape = function ($value) {
 		<code>database/patches/2026-10-16-create-roulette-admin-settings.sql</code>,
 		затем <code>database/patches/2026-10-16-roulette-gameplay-v1.sql</code>,
 		<code>database/patches/2026-10-22-roulette-weekly-window.sql</code> и
-		<code>database/patches/2026-10-22-roulette-reward-categories.sql</code>.
+		<code>database/patches/2026-10-23-roulette-visibility.sql</code>,
+		<code>database/patches/2026-10-22-roulette-reward-categories.sql</code>;
+		для подарков также примените <code>database/patches/2026-10-23-create-gifts.sql</code> и
+		<code>database/patches/2026-10-23-roulette-gift-fulfillment.sql</code>.
 	</div>
 <?php else : ?>
 	<?php if (empty($settings)) : ?>
@@ -79,12 +84,19 @@ $escape = function ($value) {
 						<div class="col-md-6">
 							<div class="checkbox">
 								<label>
+									<input type="hidden" name="settings[is_visible]" value="0">
+									<input type="checkbox" name="settings[is_visible]" value="1" <?= !empty($settings['is_visible']) ? 'checked' : '' ?>>
+									Показывать рулетку на сайте
+								</label>
+							</div>
+							<div class="checkbox">
+								<label>
 									<input type="hidden" name="settings[is_enabled]" value="0">
 									<input type="checkbox" name="settings[is_enabled]" value="1" <?= !empty($settings['is_enabled']) ? 'checked' : '' ?>>
 									Разрешить серверные вращения
 								</label>
 							</div>
-							<p class="help-block">Выключатель блокирует новые попытки, но не аннулирует уже выданные призы.</p>
+							<p class="help-block">Первый флажок скрывает рулетку на сайте. Второй блокирует новые попытки, но не аннулирует уже выданные призы.</p>
 						</div>
 					</div>
 					<div class="row">
@@ -152,7 +164,7 @@ $escape = function ($value) {
 										continue;
 									}
 					$rewardType = (string) ($prize['reward_type'] ?? 'discount_percent');
-					$supported = in_array($rewardType, array('discount_percent', 'free_shipping'), true);
+					$supported = in_array($rewardType, array('discount_percent', 'free_shipping', 'gift'), true);
 					$requiresValue = in_array($rewardType, array('discount_percent', 'bonus_points'), true);
 					$hasPayload = in_array($rewardType, array('gift', 'promo_code', 'surprise'), true);
 					$rewardPayload = (string) ($prize['reward_payload'] ?? '');
@@ -173,11 +185,13 @@ $escape = function ($value) {
 						</td>
 						<td style="min-width: 170px;">
 							<input class="form-control" type="number" min="0.01" max="100" step="0.01" name="prizes[<?= $escape($code) ?>][reward_value]" aria-label="Размер награды <?= $escape($code) ?>" value="<?= $requiresValue && $prize['reward_value'] !== null ? $escape($prize['reward_value']) : '' ?>" <?= $requiresValue ? '' : 'disabled' ?> data-requires-value="<?= $requiresValue ? '1' : '0' ?>">
-							<?php if ($hasPayload) : ?>
-								<input class="form-control" style="margin-top: 6px;" type="text" maxlength="120" name="prizes[<?= $escape($code) ?>][reward_payload]" aria-label="Параметры награды <?= $escape($code) ?>" placeholder="ID подарка, код или текст" value="<?= $escape($rewardPayload) ?>" data-reward-payload>
-							<?php else : ?>
-								<input class="form-control" style="margin-top: 6px;" type="text" maxlength="120" name="prizes[<?= $escape($code) ?>][reward_payload]" aria-label="Параметры награды <?= $escape($code) ?>" placeholder="ID подарка, код или текст" value="<?= $escape($rewardPayload) ?>" data-reward-payload hidden disabled>
+							<?php if (!empty($gifts)) : ?>
+								<select class="form-control" style="margin-top: 6px;" name="prizes[<?= $escape($code) ?>][reward_payload]" aria-label="Подарок <?= $escape($code) ?>" data-reward-payload-gift <?= $rewardType === 'gift' ? '' : 'hidden disabled' ?>>
+									<option value="">Выберите подарок</option>
+									<?php foreach ($gifts as $gift) : ?><option value="<?= (int) $gift->id ?>" <?= $rewardType === 'gift' && (string) $gift->id === $rewardPayload ? 'selected' : '' ?>>#<?= (int) $gift->id ?> — <?= $escape($gift->titleRU) ?></option><?php endforeach; ?>
+								</select>
 							<?php endif; ?>
+							<input class="form-control" style="margin-top: 6px;" type="text" maxlength="120" name="prizes[<?= $escape($code) ?>][reward_payload]" aria-label="Параметры награды <?= $escape($code) ?>" placeholder="Код или текст" value="<?= $escape($rewardPayload) ?>" data-reward-payload <?= $rewardType !== 'promo_code' && $rewardType !== 'surprise' ? 'hidden disabled' : '' ?>>
 										</td>
 										<td style="min-width: 100px;">
 			<input class="form-control" type="number" min="0" max="100" step="0.01" name="prizes[<?= $escape($code) ?>][probability]" aria-label="Вероятность сектора <?= $escape($code) ?>" placeholder="не задано" value="<?= $prize['probability'] === null ? '' : $escape($prize['probability']) ?>" data-reward-probability>
@@ -191,7 +205,7 @@ $escape = function ($value) {
 							</tbody>
 						</table>
 					</div>
-			<p class="help-block">Выберите категорию выигрыша в каждом секторе. Сейчас можно включать скидку и бесплатную доставку; подарок, промокод, бонусы и сюрприз уже подготовлены для дальнейшей автоматической выдачи. Сумма вероятностей включённых секторов должна равняться 100%.</p>
+			<p class="help-block">Выберите категорию выигрыша в каждом секторе. Подарок выбирается из общего каталога и добавляется в заказ бесплатной строкой. Сумма вероятностей включённых секторов должна равняться 100%.</p>
 				</div>
 			</div>
 
@@ -209,20 +223,27 @@ document.addEventListener('DOMContentLoaded', function () {
 		var checkbox = row.querySelector('[data-reward-enabled]');
 		var valueInput = row.querySelector('input[name$="[reward_value]"]');
 		var payloadInput = row.querySelector('[data-reward-payload]');
+		var giftSelect = row.querySelector('[data-reward-payload-gift]');
 		var probabilityInput = row.querySelector('[data-reward-probability]');
 		var hint = row.querySelector('[data-reward-hint]');
 		if (!typeSelect || !checkbox || !valueInput || !probabilityInput) return;
 
 		function syncRewardFields() {
-			var supported = typeSelect.value === 'discount_percent' || typeSelect.value === 'free_shipping';
+			var supported = typeSelect.value === 'discount_percent' || typeSelect.value === 'free_shipping' || typeSelect.value === 'gift';
 			var requiresValue = typeSelect.value === 'discount_percent' || typeSelect.value === 'bonus_points';
 			var hasPayload = typeSelect.value === 'gift' || typeSelect.value === 'promo_code' || typeSelect.value === 'surprise';
 			valueInput.disabled = !requiresValue;
 			valueInput.dataset.requiresValue = requiresValue ? '1' : '0';
 			valueInput.max = typeSelect.value === 'bonus_points' ? '1000000' : '100';
 			if (payloadInput) {
-				payloadInput.hidden = !hasPayload;
-				payloadInput.disabled = !hasPayload;
+				var showTextPayload = typeSelect.value === 'promo_code' || typeSelect.value === 'surprise';
+				payloadInput.hidden = !showTextPayload;
+				payloadInput.disabled = !showTextPayload;
+			}
+			if (giftSelect) {
+				var showGiftPayload = typeSelect.value === 'gift';
+				giftSelect.hidden = !showGiftPayload;
+				giftSelect.disabled = !showGiftPayload;
 			}
 			if (hint) hint.hidden = supported;
 			if (!supported) checkbox.checked = false;

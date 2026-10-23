@@ -227,7 +227,21 @@
 }
 
 .offers-page .stock--offers .stock__offer-badge--offline {
-	background: #292929;
+	background: #c51bd6;
+}
+
+.offers-page .stock--offers .stock__offer-badges {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 2;
+	display: flex;
+	align-items: stretch;
+	gap: 2px;
+}
+
+.offers-page .stock--offers .stock__offer-badges .stock__offer-badge {
+	position: static;
 }
 
 .offers-page .stock--offers .stock__date--offer {

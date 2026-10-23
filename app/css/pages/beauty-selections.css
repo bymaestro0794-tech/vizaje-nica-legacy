@@ -1,19 +1,268 @@
-.beauty-selections__title,
-.beauty-selection__title { text-align: center; margin-bottom: 42px; }
-.beauty-selections__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px 28px; }
-.beauty-selection-card { display: block; color: #000; }
-.beauty-selection-card__image { aspect-ratio: 15 / 8; overflow: hidden; background: #f3f3f3; }
-.beauty-selection-card__image img { width: 100%; height: 100%; object-fit: cover; transition: transform .35s ease; }
-.beauty-selection-card h2 { margin: 22px 0 8px; font-size: 30px; font-weight: 600; line-height: 1.1; }
-.beauty-selection-card p { font-size: 17px; line-height: 1.45; }
-.beauty-selection-card:hover .beauty-selection-card__image img { transform: scale(1.02); }
-.beauty-selection__hero { width: 100%; max-height: 620px; overflow: hidden; background: #f3f3f3; }
-.beauty-selection__hero img { display: block; width: 100%; max-height: 620px; object-fit: cover; }
-.beauty-selection__lead { max-width: 900px; margin: 28px auto 0; font-size: 20px; line-height: 1.5; }
-.beauty-selection__text { max-width: 900px; margin: 28px auto 48px; font-size: 17px; line-height: 1.6; }
-.beauty-selection__products { margin-top: 44px; }
-@media (max-width: 720px) {
-    .beauty-selections__grid { grid-template-columns: 1fr; gap: 34px; }
-    .beauty-selection-card h2 { font-size: 24px; }
-    .beauty-selection__lead { font-size: 17px; }
+.beauty-selections-page .breadcrums,
+.beauty-selection-page .breadcrums {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+/* The fixed header reduces its height while scrolling. The legacy wrapper
+ * keeps the full initial offset, which leaves a blank strip above the poster.
+ */
+@media (min-width: 992px) {
+    /* 19-articles.css reserves an 85px article lead-in on the legacy page
+     * shell. The selection hero is the lead-in itself, so remove that space.
+     */
+    body:has(.beauty-selection-page) .beauty-selection-page {
+        margin-top: -85px;
+    }
+
+    body:has(.beauty-selection-page) .wrapper:has(> .header._scroll) {
+        padding-top: 96px !important;
+    }
+
+    body:has(.beauty-selection-page) .wrapper:has(> .header.is-scrolling-down) {
+        padding-top: 56px !important;
+    }
+
+    /* Keep the page content aligned with the compact fixed header even when
+     * another legacy rule has already set the wrapper's initial 136px offset.
+     */
+    body:has(.beauty-selection-page):has(.header._scroll) .beauty-selection-page {
+        margin-top: -40px;
+    }
+
+    body:has(.beauty-selection-page):has(.header.is-scrolling-down) .beauty-selection-page {
+        margin-top: -80px;
+    }
+}
+
+.beauty-selections,
+.beauty-selection {
+    color: #111;
+}
+
+.beauty-selections {
+    padding: clamp(42px, 6vw, 86px) 0 110px;
+}
+
+.beauty-selections__header {
+    display: flex;
+    justify-content: center;
+    margin-bottom: clamp(42px, 5vw, 78px);
+}
+
+.beauty-selections__title {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin: 0;
+    font-size: clamp(40px, 5.4vw, 82px);
+    font-weight: 400;
+    line-height: .92;
+    letter-spacing: -.06em;
+    text-transform: lowercase;
+}
+
+.beauty-selections__title small {
+    font-size: .36em;
+    font-weight: 500;
+    letter-spacing: -.04em;
+}
+
+.beauty-selections__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(44px, 5vw, 88px) clamp(24px, 3.2vw, 64px);
+}
+
+.beauty-selection-card {
+    display: block;
+    min-width: 0;
+    color: #111;
+}
+
+.beauty-selection-card__image {
+    aspect-ratio: 1.62 / 1;
+    overflow: hidden;
+    background: #f3f3f1;
+}
+
+.beauty-selection-card__image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .5s cubic-bezier(.2, .7, .2, 1);
+}
+
+.beauty-selection-card__content {
+    position: relative;
+    z-index: 1;
+    margin: -1px 0 0;
+    padding: 0 24px 0 0;
+    background: #fff;
+}
+
+.beauty-selection-card h2 {
+    max-width: 95%;
+    margin: -15px 0 12px;
+    font-size: clamp(28px, 3.15vw, 56px);
+    font-weight: 600;
+    line-height: .98;
+    letter-spacing: -.055em;
+}
+
+.beauty-selection-card p {
+    max-width: 90%;
+    margin: 0;
+    font-size: clamp(15px, 1.15vw, 20px);
+    line-height: 1.35;
+}
+
+.beauty-selection-card:hover .beauty-selection-card__image img {
+    transform: scale(1.025);
+}
+
+.beauty-selection__hero {
+    position: relative;
+    height: 400px;
+    min-height: 400px;
+    overflow: hidden;
+    background: #6d4934;
+}
+
+.beauty-selection__hero > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.beauty-selection__hero-copy {
+    position: absolute;
+    top: 50%;
+    right: 7vw;
+    width: min(42vw, 660px);
+    transform: translateY(-50%);
+}
+
+.beauty-selection__hero-copy h1 {
+    margin: 0;
+    font-size: clamp(38px, 5.2vw, 88px);
+    font-weight: 600;
+    line-height: .94;
+    letter-spacing: -.065em;
+}
+
+.beauty-selection__hero-copy p {
+    max-width: 520px;
+    margin: 28px 0 0;
+    font-size: clamp(16px, 1.35vw, 22px);
+    line-height: 1.35;
+}
+
+.beauty-selection__container {
+    padding-top: clamp(42px, 6vw, 92px);
+    padding-bottom: 110px;
+}
+
+.beauty-selection__text {
+    max-width: 760px;
+    margin: 0 auto clamp(50px, 7vw, 100px);
+    font-size: clamp(17px, 1.35vw, 22px);
+    line-height: 1.55;
+}
+
+.beauty-selection__text p {
+    margin: 0 0 24px;
+}
+
+.beauty-selection__text p:last-child {
+    margin-bottom: 0;
+}
+
+.beauty-selection__products {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: min(100%, 1260px);
+    margin: 0 auto;
+}
+
+@media (max-width: 767px) {
+    .beauty-selections {
+        padding-top: 34px;
+        padding-bottom: 72px;
+    }
+
+    .beauty-selections__header {
+        justify-content: flex-start;
+        margin-bottom: 36px;
+    }
+
+    .beauty-selections__title {
+        font-size: 42px;
+    }
+
+    .beauty-selections__grid {
+        grid-template-columns: 1fr;
+        gap: 48px;
+    }
+
+    .beauty-selection-card__content {
+        padding-right: 0;
+    }
+
+    .beauty-selection-card h2 {
+        max-width: 100%;
+        margin-top: -10px;
+        font-size: 34px;
+    }
+
+    .beauty-selection__hero {
+        height: 320px;
+        min-height: 320px;
+        margin-top: -30px;
+        background: #fff;
+    }
+
+    .beauty-selection__hero > img {
+        object-fit: cover;
+    }
+
+    .beauty-selection__hero-copy {
+        position: static;
+        width: auto;
+        padding: 24px 16px 30px;
+        transform: none;
+    }
+
+    .beauty-selection__hero-copy h1 {
+        font-size: 42px;
+        line-height: .96;
+    }
+
+    .beauty-selection__hero-copy p {
+        margin-top: 20px;
+        font-size: 17px;
+    }
+
+    .beauty-selection__container {
+        padding-top: 0;
+        padding-bottom: 72px;
+    }
+
+    .beauty-selection__text {
+        margin: 0 16px 46px;
+        font-size: 17px;
+        line-height: 1.55;
+    }
+
+    .beauty-selection__products {
+        gap: 0;
+        margin: 0;
+    }
 }

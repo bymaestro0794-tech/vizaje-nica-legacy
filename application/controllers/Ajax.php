@@ -121,6 +121,7 @@ class Ajax extends CI_Controller
 
     $this->load->library(['cart']);
     $this->load->model('products_model');
+    $this->load->library('CartCalculator');
     $this->_define_constants();
 
     $post = $add_item
@@ -258,8 +259,12 @@ class Ajax extends CI_Controller
     $existingQuantity = 0;
 
     foreach ($this->cart->contents() as $cartItem) {
+        if (CartCalculator::isGift($cartItem['options'] ?? null)) {
+            continue;
+        }
+
         $cartVariableId = !empty($cartItem['options'])
-            ? (int) $cartItem['options']
+            ? CartCalculator::getCartVariableId($cartItem['options'])
             : 0;
 
         if (
@@ -370,6 +375,10 @@ class Ajax extends CI_Controller
     );
 }
 
+$this->load->library('CartCalculator');
+$this->cartcalculator->syncRouletteGiftCart($this->lclang);
+$giftPromotions = $this->cartcalculator->syncGiftPromotions($this->lclang);
+
 /*
 |--------------------------------------------------------------------------
 | Успешный ответ
@@ -404,6 +413,8 @@ $response['max_quantity'] =
 $response['total_items'] =
     $this->cart->total_items();
 
+$response['gift_promotions'] = $giftPromotions;
+
 $response['cart_total'] =
     number_format(
         $this->cart->total(),
@@ -412,12 +423,157 @@ $response['cart_total'] =
         ''
     );
 
-return $this->cartAddResponse(
-    $response,
-    $add_item,
-    200
-);
+    return $this->cartAddResponse(
+        $response,
+        $add_item,
+        200
+    );
 }
+
+/**
+ * Adds a selected variant of a conditional gift after the server has
+ * reported that the promotion is eligible. The regular cart_add endpoint
+ * intentionally cannot create this protected row.
+ */
+public function gift_promotion_add()
+{
+    check_if_POST();
+
+    $language = strtolower(trim((string) $this->input->post('lang', true)));
+    $language = in_array($language, array('ru', 'ro'), true) ? $language : 'ru';
+    $promotionId = (int) $this->input->post('promotion_id');
+    $variantId = (int) $this->input->post('variable');
+
+    $this->_define_constants($language);
+    $this->_is_logged_in();
+    $this->load->library('cart');
+    $this->load->library('CartCalculator');
+    $this->load->model('gift_promotions_model');
+    $this->load->model('gifts_model');
+    $this->load->model('products_model');
+
+    $state = $this->cartcalculator->calculate($language);
+    $pendingPromotion = null;
+    foreach ((array) ($state['gift_promotions'] ?? array()) as $promotion) {
+        if ((int) ($promotion['promotion_id'] ?? 0) === $promotionId) {
+            $pendingPromotion = $promotion;
+            break;
+        }
+    }
+
+    if (empty($pendingPromotion)) {
+        return $this->output->set_status_header(409)->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode(array('status' => 'error', 'code' => 'GIFT_PROMOTION_NOT_AVAILABLE', 'message' => 'Подарочная акция больше недоступна.'), JSON_UNESCAPED_UNICODE));
+    }
+
+    $promotion = $this->gift_promotions_model->find_frontend($promotionId, $language);
+    $gift = !empty($promotion) ? $this->gifts_model->find_enabled((int) $promotion->gift_id) : null;
+    $productId = !empty($gift->product_id) ? (int) $gift->product_id : 0;
+    $fixedVariantId = !empty($gift->variant_id) ? (int) $gift->variant_id : 0;
+
+    if (empty($promotion) || empty($gift) || $productId <= 0 || $productId !== (int) $pendingPromotion['product_id']) {
+        return $this->output->set_status_header(409)->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode(array('status' => 'error', 'code' => 'GIFT_PROMOTION_NOT_AVAILABLE'), JSON_UNESCAPED_UNICODE));
+    }
+
+    if ($fixedVariantId > 0 && $variantId !== $fixedVariantId) {
+        $variantId = $fixedVariantId;
+    }
+
+    $product = $this->products_model->findFirstCart($productId);
+    if (empty($product)) {
+        return $this->output->set_status_header(404)->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode(array('status' => 'error', 'code' => 'GIFT_PRODUCT_NOT_FOUND'), JSON_UNESCAPED_UNICODE));
+    }
+    $giftVariants = $this->products_model->get_product_variable(
+        strtoupper($language),
+        $productId,
+        true
+    );
+    if ($fixedVariantId <= 0 && !empty($giftVariants) && $variantId <= 0) {
+        return $this->output->set_status_header(422)->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode(array('status' => 'error', 'code' => 'GIFT_VARIANT_REQUIRED', 'message' => 'Выберите вариант подарка.'), JSON_UNESCAPED_UNICODE));
+    }
+    $variable = null;
+    if ($variantId > 0) {
+        $variable = $this->products_model->get_product_variable_by_id(
+            strtoupper($language),
+            $variantId,
+            $productId
+        );
+        if (empty($variable) || (int) ($variable->qty ?? 0) <= 0) {
+            return $this->output->set_status_header(409)->set_content_type('application/json', 'utf-8')
+                ->set_output(json_encode(array('status' => 'error', 'code' => 'GIFT_VARIANT_UNAVAILABLE', 'message' => 'Выбранный вариант подарка недоступен.'), JSON_UNESCAPED_UNICODE));
+        }
+    }
+
+    // Reuse a matching paid row when the customer had already added the
+    // future gift before completing the promotion conditions.
+    foreach ($this->cart->contents() as $cartItem) {
+        if (CartCalculator::isGift($cartItem['options'] ?? null)) {
+            continue;
+        }
+
+        $cartVariableId = CartCalculator::getCartVariableId($cartItem['options'] ?? null);
+        if (
+            (int) ($cartItem['id'] ?? 0) !== $productId
+            || $cartVariableId !== $variantId
+        ) {
+            continue;
+        }
+
+        if ($this->cartcalculator->promotePaidRowToGift($cartItem, $product, $promotionId, $variantId)) {
+            $giftPromotions = $this->cartcalculator->syncGiftPromotions($language);
+            $giftRowId = null;
+
+            foreach ($this->cart->contents() as $giftRow) {
+                if (CartCalculator::getPromotionGiftId($giftRow['options'] ?? null) === $promotionId) {
+                    $giftRowId = $giftRow['rowid'];
+                    break;
+                }
+            }
+
+            return $this->output->set_content_type('application/json', 'utf-8')
+                ->set_output(json_encode(array(
+                    'status' => 'ok',
+                    'code' => 'GIFT_ADDED',
+                    'row_id' => $giftRowId,
+                    'total_items' => $this->cart->total_items(),
+                    'gift_promotions' => $giftPromotions,
+                ), JSON_UNESCAPED_UNICODE));
+        }
+
+        break;
+    }
+
+    $productName = !empty($product->titleRO) ? $product->titleRO : $product->titleRU;
+    $rowId = $this->cart->insert(array(
+        'id' => $productId,
+        'name' => str_replace('=', '', transliteration($productName)),
+        'price' => 1,
+        'qty' => 1,
+        'options' => array(
+            'sku_id' => $variantId,
+            'gift_promotion_id' => $promotionId,
+        ),
+    ));
+
+    if (empty($rowId)) {
+        return $this->output->set_status_header(500)->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode(array('status' => 'error', 'code' => 'GIFT_CART_SAVE_FAILED'), JSON_UNESCAPED_UNICODE));
+    }
+
+    $giftPromotions = $this->cartcalculator->syncGiftPromotions($language);
+    return $this->output->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode(array(
+            'status' => 'ok',
+            'code' => 'GIFT_ADDED',
+            'row_id' => $rowId,
+            'total_items' => $this->cart->total_items(),
+            'gift_promotions' => $giftPromotions,
+        ), JSON_UNESCAPED_UNICODE));
+}
+
 private function cartAddResponse(
     array $response,
     $internalCall = null,
@@ -602,6 +758,9 @@ private function _cart_ui_state(
         'roulette' =>
             $state['roulette'],
 
+        'gift_promotions' =>
+            !empty($state['gift_promotions']) ? $state['gift_promotions'] : array(),
+
         'discount_choice' =>
             $state['discount_choice'],
 
@@ -649,6 +808,7 @@ private function _cart_ui_state(
 
     $this->load->library('cart');
     $this->load->model('products_model');
+    $this->load->library('CartCalculator');
 
     /*
     |--------------------------------------------------------------------------
@@ -743,6 +903,19 @@ private function _cart_ui_state(
             );
     }
 
+    if (CartCalculator::isGift($item['options'] ?? null)) {
+        $isPromotionGift = CartCalculator::getPromotionGiftId($item['options'] ?? null) > 0;
+        $response['code'] = $isPromotionGift ? 'PROMOTION_GIFT_LOCKED' : 'ROULETTE_GIFT_LOCKED';
+        $response['message'] = $isPromotionGift
+            ? 'Подарок акции нельзя изменить отдельно от условия.'
+            : 'Подарок рулетки нельзя изменить отдельно от заказа.';
+
+        return $this->output
+            ->set_status_header(409)
+            ->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($response, JSON_UNESCAPED_UNICODE));
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Product
@@ -787,7 +960,7 @@ private function _cart_ui_state(
 
     $variableId =
         !empty($item['options'])
-            ? (int) $item['options']
+            ? CartCalculator::getCartVariableId($item['options'])
             : 0;
 
     if ($variableId > 0) {
@@ -959,6 +1132,9 @@ private function _cart_ui_state(
         'promo' =>
             $state['promo'],
 
+        'gift_promotions' =>
+            !empty($state['gift_promotions']) ? $state['gift_promotions'] : array(),
+
         'shipping' =>
             $state['shipping'],
 
@@ -1057,6 +1233,7 @@ private function _cart_ui_state(
     check_if_POST();
 
     $this->load->library('cart');
+    $this->load->library('CartCalculator');
 
     /*
     |--------------------------------------------------------------------------
@@ -1156,6 +1333,20 @@ private function _cart_ui_state(
             );
     }
 
+    if (CartCalculator::isGift($item['options'] ?? null)) {
+        $isPromotionGift = CartCalculator::getPromotionGiftId($item['options'] ?? null) > 0;
+        return $this->output
+            ->set_status_header(409)
+            ->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode(array(
+                'status' => 'error',
+                'code' => $isPromotionGift ? 'PROMOTION_GIFT_LOCKED' : 'ROULETTE_GIFT_LOCKED',
+                'message' => $isPromotionGift
+                    ? 'Подарок акции нельзя удалить отдельно от условия.'
+                    : 'Подарок рулетки нельзя удалить отдельно от основного товара.',
+            ), JSON_UNESCAPED_UNICODE));
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Remove
@@ -1223,6 +1414,9 @@ private function _cart_ui_state(
 
         'promo' =>
             $state['promo'],
+
+        'gift_promotions' =>
+            !empty($state['gift_promotions']) ? $state['gift_promotions'] : array(),
 
         'shipping' =>
             $state['shipping'],
@@ -2379,12 +2573,13 @@ public function cart_drawer()
         $cartItems[$key]['variable'] =
             null;
 
-        if (!empty($item['options'])) {
+        $variableId = CartCalculator::getCartVariableId($item['options'] ?? null);
+        if ($variableId > 0) {
             $cartItems[$key]['variable'] =
                 $this->products_model
                     ->get_product_variable_by_id(
                         $clang,
-                        (int) $item['options'],
+                        $variableId,
                         (int) $item['id']
                     );
         }
@@ -2518,6 +2713,9 @@ public function cart_drawer()
                 'discount_options' =>
                     $state['discount_options'],
 
+                'gift_promotions' =>
+                    !empty($state['gift_promotions']) ? $state['gift_promotions'] : array(),
+
                 /*
                 |--------------------------------------------------------------------------
                 | Shipping
@@ -2585,6 +2783,9 @@ public function cart_drawer()
 
             'promo' =>
                 $state['promo'],
+
+            'gift_promotions' =>
+                !empty($state['gift_promotions']) ? $state['gift_promotions'] : array(),
 
             'shipping' =>
                 $state['shipping'],

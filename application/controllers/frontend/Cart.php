@@ -41,6 +41,16 @@ class Cart extends FrontEndController
 
     public function index()
     {
+        $this->load->library('CartCalculator');
+        $cartState = $this->cartcalculator->calculate($this->lclang);
+        $calculatedRows = array();
+        foreach ((array) ($cartState['rows'] ?? array()) as $calculatedRow) {
+            $calculatedRows[(string) $calculatedRow['row_id']] = $calculatedRow;
+        }
+        $this->data['cart_items'] = $this->cart->contents();
+        $this->data['total_items_cart'] = $this->cart->total_items();
+        $this->data['total_price_cart'] = $this->cart->total();
+
         $page = $this->menu_model->get_page_data_by_id($this->clang, $this->page_id);
         if (empty($page)) throw_on_404();
 
@@ -64,9 +74,15 @@ class Cart extends FrontEndController
         $bonus_total = 0;
         if (!empty($this->data['cart_items'])) {
             foreach ($this->data['cart_items'] as $key => $item) {
+                $this->data['cart_items'][$key]['calculated'] = $calculatedRows[(string) $item['rowid']] ?? array();
                 $this->data['cart_items'][$key]['products'] = $this->products_model->product_item_cart($this->clang, $item['rowid']);
-                if (!empty($item['options'])) {
-                    $this->data['cart_items'][$key]['variable'] = $this->products_model->get_product_variable_by_id($this->clang, $item['options'], $item['id']);
+                $variableId = CartCalculator::getCartVariableId($item['options'] ?? null);
+                if ($variableId > 0) {
+                    $this->data['cart_items'][$key]['variable'] = $this->products_model->get_product_variable_by_id(
+                        $this->clang,
+                        $variableId,
+                        $item['id']
+                    );
                     if (!empty($this->data['client_info'])) {
                         if (empty($_SESSION['isb2b'])) {
                             if (empty($this->data['cart_items'][$key]['variable']->discount_price)) {
@@ -1186,6 +1202,7 @@ public function checkout()
                         ? $_SESSION['isb2b']
                         : 0,
             );
+			$rouletteGiftReward = null;
             if ($rouletteSpinId > 0) {
                 $this->db->trans_begin();
             }
@@ -1211,6 +1228,21 @@ public function checkout()
                     redirect('/' . $this->lclang . '/' . $page->uri);
                     return;
                 }
+
+				$rouletteGiftReward = $this->roulette_game_model->getGiftRewardForOrder(
+					$client_id,
+					$rouletteSpinId,
+					$order_id
+				);
+				if ($rouletteGiftReward === false) {
+					$this->db->trans_rollback();
+					$_SESSION['checkout_error'] =
+						$this->lclang === 'ro'
+							? 'Cadoul ruletei nu mai este disponibil.'
+							: 'Подарок рулетки больше недоступен.';
+					redirect('/' . $this->lclang . '/' . $page->uri);
+					return;
+				}
 
                 $this->db->trans_commit();
                 if ($this->db->trans_status() === false) {
@@ -1298,6 +1330,19 @@ public function checkout()
                         */
                         'options' =>
                             $variableId,
+
+                        /*
+                        | Explicit marker for roulette gift rows in the order.
+                        */
+                        'roulette_gift_id' =>
+                            !empty($row['roulette_gift_id'])
+                                ? (int) $row['roulette_gift_id']
+                                : null,
+
+                        'gift_promotion_id' =>
+                            !empty($row['gift_promotion_id'])
+                                ? (int) $row['gift_promotion_id']
+                                : null,
 
                         /*
                         | Promo discount allocated to this whole row.

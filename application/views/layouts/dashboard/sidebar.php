@@ -25,6 +25,8 @@ $sidebar_menu = array(
         'ico' => '<i class="fa fa-gift"></i>',
         'childs' => [
             'promocodes' => ['name' => 'Коды промокодов', 'ico' => '<i class="fa fa-ticket"></i>'],
+            'gifts' => ['name' => 'Подарки', 'ico' => '<i class="fa fa-gift"></i>'],
+            'gift_promotions' => ['name' => 'Подарочные акции', 'ico' => '<i class="fa fa-star"></i>'],
             'roulette' => ['name' => 'Рулетка удачи', 'ico' => '<i class="fa fa-life-ring"></i>'],
             'roulette_history' => ['name' => 'История рулетки', 'ico' => '<i class="fa fa-history"></i>'],
             'welcome_offers' => ['name' => 'Скидка после регистрации −18%', 'ico' => '<i class="fa fa-user-plus"></i>'],

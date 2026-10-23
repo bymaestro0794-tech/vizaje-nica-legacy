@@ -40,7 +40,7 @@
     }
 ?>
 
-<main class="page offer-item-page articles-item-page">
+<main class="page offer-item-page articles-item-page catalog-category-page catalog-discounts-page">
 
     <section class="breacrums">
         <div class="breacrums__container _container">
@@ -213,6 +213,90 @@
         </div>
     </section>
 
-    <!--  -->
+    <?php
+        $offerProducts = !empty($products) && is_array($products)
+            ? $products
+            : array();
+
+        $offerProductsCount = isset($products_count)
+            ? (int) $products_count
+            : count($offerProducts);
+
+        $offerProductsTitle = $lclang === 'ro'
+            ? 'Produsele promoției'
+            : 'Товары акции';
+
+        $offerProductsLabel = $lclang === 'ro'
+            ? 'Produse incluse în ofertă'
+            : 'Товары, участвующие в акции';
+
+        $offerProductsEmpty = $lclang === 'ro'
+            ? 'În această promoție nu există produse disponibile.'
+            : 'В этой акции пока нет доступных товаров.';
+    ?>
+
+    <section class="offer-catalog" aria-labelledby="offer-catalog-title">
+        <div class="offer-catalog__container _container">
+            <header class="offer-catalog__header">
+                <div>
+                    <p class="offer-catalog__eyebrow">
+                        <?= htmlspecialchars(
+                            $offerProductsLabel,
+                            ENT_QUOTES,
+                            'UTF-8'
+                        ) ?>
+                    </p>
+
+                    <h2
+                        id="offer-catalog-title"
+                        class="offer-catalog__title"
+                    >
+                        <?= htmlspecialchars(
+                            $offerProductsTitle,
+                            ENT_QUOTES,
+                            'UTF-8'
+                        ) ?>
+                    </h2>
+                </div>
+
+                <p class="offer-catalog__count">
+                    <?= $offerProductsCount ?>
+                </p>
+            </header>
+
+            <?php if (!empty($offerProducts)) { ?>
+                <div class="products_catalog">
+                    <div class="main-catalog__body">
+                        <?php foreach ($offerProducts as $product) { ?>
+                            <?php
+                                $this->load->view(
+                                    'layouts/pages/product_main',
+                                    array(
+                                        'item' => $product,
+                                        'is_home_product_card' => true,
+                                        'is_catalog_editorial_card' => true,
+                                        'is_discount_catalog_card' => true,
+                                        'enable_catalog_hover_gallery' => true,
+                                    )
+                                );
+                            ?>
+                        <?php } ?>
+                    </div>
+                </div>
+
+                <div class="main-catalog__paggination paggination-main-catalog">
+                    <?php $this->load->view('layouts/pages/paginator'); ?>
+                </div>
+            <?php } else { ?>
+                <p class="offer-catalog__empty">
+                    <?= htmlspecialchars(
+                        $offerProductsEmpty,
+                        ENT_QUOTES,
+                        'UTF-8'
+                    ) ?>
+                </p>
+            <?php } ?>
+        </div>
+    </section>
 
 </main>

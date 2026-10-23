@@ -1448,6 +1448,41 @@ $hasBrandDescription = !empty(
 
 <?php endif; ?>
 
+<?php if (!empty($product_offer)) : ?>
+	<?php
+	$offerRoute = $lclang === 'ro' ? 'promotii' : 'aktsii';
+	$offerTitle = (string) ($product_offer->title ?? '');
+	$offerDeadline = !empty($product_offer->date_to)
+		? $product_offer->date_to . 'T23:59:59'
+		: '';
+	?>
+	<section
+		class="product-promotion"
+		data-product-promotion
+		data-product-promotion-deadline="<?= htmlspecialchars($offerDeadline, ENT_QUOTES, 'UTF-8') ?>"
+	>
+		<div class="product-promotion__heading">
+			<span class="product-promotion__label">
+				<?= $lclang === 'ro' ? 'PROMOȚIE' : 'АКЦИЯ' ?>
+			</span>
+			<span class="product-promotion__timer" data-product-promotion-timer></span>
+		</div>
+		<a
+			href="/<?= $lclang ?>/<?= $offerRoute ?>/<?= rawurlencode((string) $product_offer->uri) ?>"
+			class="product-promotion__title"
+		>
+			<?= htmlspecialchars($offerTitle, ENT_QUOTES, 'UTF-8') ?>
+		</a>
+		<a
+			href="/<?= $lclang ?>/<?= $offerRoute ?>/<?= rawurlencode((string) $product_offer->uri) ?>"
+			class="product-promotion__link"
+		>
+			<?= $lclang === 'ro' ? 'Vezi condițiile promoției' : 'Узнать условия акции' ?>
+			<span aria-hidden="true">→</span>
+		</a>
+	</section>
+<?php endif; ?>
+
 						<!-- =================================================
 						     COLOR VARIANTS
 						     ================================================= -->

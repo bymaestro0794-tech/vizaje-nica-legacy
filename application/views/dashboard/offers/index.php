@@ -92,6 +92,7 @@
                                                     <select name="is_online" class="form-control" required>
                                                         <option value="1" selected>Онлайн</option>
                                                         <option value="0">Офлайн</option>
+                                                        <option value="2">Онлайн + офлайн</option>
                                                     </select>
                                                 </td>
                                             </tr>
@@ -191,6 +192,15 @@
                                     </td>
                                     <td class="align-middle"><a style="font-weight: 900;"
                                                                 href="<?= $e_path . $item->id; ?>"><?= $item->{'title' . get_language_for_admin(true)} ?></a>
+                                        <?php if (!empty($item->gift_promotion_count)) : ?>
+                                            <br>
+                                            <span style="display:inline-block;background:#ff1493;color:#fff;font-size:11px;font-weight:700;padding:3px 6px;margin-top:5px;">
+                                                ПОДАРОК АКЦИИ
+                                            </span>
+                                            <small style="display:block;color:#777;margin-top:3px;">
+                                                Условий: <?= (int) $item->gift_promotion_count ?>
+                                            </small>
+                                        <?php endif; ?>
                                     </td>
                                     <td class="align-middle">
                                         <?php $cmod = (!empty($item->isShown)) ? 'checked' : '' ?>

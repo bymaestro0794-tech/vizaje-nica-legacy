@@ -237,8 +237,19 @@
 
                                                         <tbody>
                                                             <?php foreach ($products as $product) { ?>
+                                                                <?php $isRouletteGift = !empty($product->roulette_gift_id); $isPromotionGift = !empty($product->gift_promotion_id); $isGift = $isRouletteGift || $isPromotionGift; ?>
                                                                 <tr>
                                                                     <td>
+                                                                        <?php if ($isRouletteGift) { ?>
+                                                                            <span style="display:inline-block;background:#f6c500;color:#111;font-size:11px;font-weight:700;padding:3px 6px;margin:0 6px 4px 0;">
+                                                                                ПОДАРОК РУЛЕТКИ
+                                                                            </span><br>
+                                                                        <?php } ?>
+                                                                        <?php if ($isPromotionGift) { ?>
+                                                                            <span style="display:inline-block;background:#ff1493;color:#fff;font-size:11px;font-weight:700;padding:3px 6px;margin:0 6px 4px 0;">
+                                                                                ПОДАРОК АКЦИИ
+                                                                            </span><br>
+                                                                        <?php } ?>
                                                                         <?php if (!empty($product->product->variable)) { ?>
                                                                             <?= $product->product->variable->SKU ?>
                                                                         <?php } else { ?>

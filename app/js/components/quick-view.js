@@ -16,6 +16,7 @@
 	let controller = null
 	let previousActiveElement = null
 	let currentProductId = null
+	let currentGiftMode = null
 
 	/* ======================================================================
 	   GLOBAL EVENTS
@@ -30,7 +31,7 @@
 			const productId = Number(trigger.dataset.productId)
 
 			if (productId > 0) {
-				open(productId, trigger)
+				open(productId, trigger, null)
 			}
 
 			return
@@ -55,7 +56,7 @@
 	   OPEN
 	   ====================================================================== */
 
-	async function open(productId, trigger) {
+	async function open(productId, trigger, giftMode) {
 		if (!body) {
 			return
 		}
@@ -63,6 +64,12 @@
 		previousActiveElement = trigger || document.activeElement
 
 		currentProductId = productId
+		currentGiftMode = giftMode && Number(giftMode.promotionId) > 0
+			? {
+				promotionId: Number(giftMode.promotionId),
+				title: giftMode.title || ''
+			}
+			: null
 
 		/*
 		|--------------------------------------------------------------------------
@@ -174,6 +181,7 @@
 		}
 
 		currentProductId = null
+		currentGiftMode = null
 
 		drawer.classList.remove('is-open')
 
@@ -656,9 +664,16 @@
 		   ================================================================== */
 
 		function initAddToCart() {
-			root
-				.querySelector('[data-quick-view-add]')
-				?.addEventListener('click', addToCart)
+			const button = root.querySelector('[data-quick-view-add]')
+
+			if (currentGiftMode && button) {
+				button.textContent = data.language === 'ro'
+					? 'ALEGE CADOU'
+					: 'ВЫБРАТЬ ПОДАРОК'
+				button.setAttribute('data-gift-mode', 'true')
+			}
+
+			button?.addEventListener('click', addToCart)
 		}
 
 		function addToCart() {
@@ -678,20 +693,25 @@
 
 			button.classList.add('is-loading')
 
+			const requestData = {
+				product_id: data.product.id,
+				variable: state.selectedVariationId,
+				quantity: 1,
+				lang: data.language
+			}
+
+			if (currentGiftMode) {
+				requestData.promotion_id = currentGiftMode.promotionId
+			}
+
 			$.ajax({
-				url: '/cart_add',
+				url: currentGiftMode ? '/gift/promotion/add' : '/cart_add',
 
 				type: 'POST',
 
 				dataType: 'json',
 
-				data: {
-					product_id: data.product.id,
-
-					variable: state.selectedVariationId,
-
-					quantity: 1
-				},
+				data: requestData,
 
 				success: function (response) {
 					if (!response || response.status !== 'ok') {
@@ -705,6 +725,10 @@
 						.toggleClass('d_none', Number(response.total_items) <= 0)
 
 					close()
+
+					if (window.VNGiftPromotions && response.gift_promotions) {
+						window.VNGiftPromotions.handle(response.gift_promotions)
+					}
 
 					window.setTimeout(function () {
 						if (
@@ -813,8 +837,8 @@
 	   ====================================================================== */
 
 	window.VNQuickView = {
-		open: function (productId) {
-			open(Number(productId), null)
+		open: function (productId, options) {
+			open(Number(productId), null, options || null)
 		},
 
 		close: close

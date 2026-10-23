@@ -31,6 +31,27 @@ class Offers extends BackEndController {
 
         $objects = $this->offers_model->find();
 
+        // Подарочная акция может быть привязана к странице скидки. Не делаем
+        // join обязательным: старые установки без gift_promotions должны
+        // продолжать открывать обычный список скидок.
+        $giftOfferCounts = array();
+        if ($this->db->table_exists('gift_promotions')) {
+            $giftRows = $this->db
+                ->select('offer_id, COUNT(*) AS gift_promotion_count')
+                ->where('offer_id IS NOT NULL', null, false)
+                ->group_by('offer_id')
+                ->get('gift_promotions')
+                ->result();
+
+            foreach ($giftRows as $giftRow) {
+                $giftOfferCounts[(int) $giftRow->offer_id] = (int) $giftRow->gift_promotion_count;
+            }
+        }
+
+        foreach ((array) $objects as $object) {
+            $object->gift_promotion_count = $giftOfferCounts[(int) $object->id] ?? 0;
+        }
+
         $this->data['inner_view'] = $this->index_view;
         $this->data['objects'] = $objects;
 
@@ -50,8 +71,8 @@ class Offers extends BackEndController {
                 $post[$index] = $this->input->post($index, TRUE);
             }
 
-            if (!isset($post['is_online']) || !in_array((string) $post['is_online'], array('0', '1'), true)) {
-                throw new Exception('Выберите формат акции: онлайн или офлайн.');
+            if (!isset($post['is_online']) || !in_array((string) $post['is_online'], array('0', '1', '2'), true)) {
+                throw new Exception('Выберите формат акции: онлайн, офлайн или оба канала.');
             }
             $post['is_online'] = (int) $post['is_online'];
 
@@ -149,8 +170,8 @@ class Offers extends BackEndController {
                     $post[$index] = $this->input->post($index, TRUE);
                 }
 
-                if (!isset($post['is_online']) || !in_array((string) $post['is_online'], array('0', '1'), true)) {
-                    throw new Exception('Выберите формат акции: онлайн или офлайн.');
+                if (!isset($post['is_online']) || !in_array((string) $post['is_online'], array('0', '1', '2'), true)) {
+                    throw new Exception('Выберите формат акции: онлайн, офлайн или оба канала.');
                 }
                 $post['is_online'] = (int) $post['is_online'];
 
@@ -200,6 +221,16 @@ class Offers extends BackEndController {
 
         $products_alt = $this->offers_model->gat_products_offers($id);
         $this->data['products_alt'] = $products_alt;
+        $this->data['product_brands'] = $this->db
+            ->select('id, title')
+            ->order_by('title', 'ASC')
+            ->get('brands')
+            ->result();
+        $this->data['product_categories'] = $this->db
+            ->select('id, titleRU, titleRO')
+            ->order_by('titleRU', 'ASC')
+            ->get('categories')
+            ->result();
 
         $this->data['inner_view'] = $this->item_view;
         $this->data['title'] = lang('Edit') . $item->{'title'.get_language_for_admin(true)};
@@ -277,5 +308,132 @@ class Offers extends BackEndController {
         $id = $_POST['id'];
         $this->db->where('id', $id);
         $this->db->delete('offers_products');
+    }
+
+    public function product_lookup()
+    {
+        $offerId = (int) $this->input->get_post('offer_id', true);
+        $query = trim((string) $this->input->get_post('q', true));
+        $brandId = (int) $this->input->get_post('brand_id', true);
+        $categoryId = (int) $this->input->get_post('category_id', true);
+
+        if ($offerId < 1) {
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_output(json_encode(array('items' => array()), JSON_UNESCAPED_UNICODE));
+        }
+
+        $attachedRows = $this->db
+            ->select('product_id')
+            ->where('offers_id', $offerId)
+            ->get('offers_products')
+            ->result_array();
+        $attached = array();
+        foreach ($attachedRows as $row) {
+            $attached[(int) $row['product_id']] = true;
+        }
+
+        $this->db
+            ->select('p.id, p.SKU, p.titleRU, p.titleRO, b.title AS brand_title')
+            ->from('products p')
+            ->join('brands b', 'b.id = p.brand_id', 'left')
+            ->where('p.isShown', 1);
+
+        if ($brandId > 0) {
+            $this->db->where('p.brand_id', $brandId);
+        }
+        if ($categoryId > 0) {
+            $this->db->where('p.category_id', $categoryId);
+        }
+        if ($query !== '') {
+            $this->db->group_start()
+                ->like('p.titleRU', $query)
+                ->or_like('p.titleRO', $query)
+                ->or_like('p.SKU', $query)
+                ->or_where('p.id', ctype_digit($query) ? (int) $query : 0)
+                ->group_end();
+        }
+
+        $items = $this->db
+            ->order_by('p.titleRU', 'ASC')
+            ->limit(80)
+            ->get()
+            ->result();
+
+        $response = array();
+        foreach ($items as $item) {
+            $response[] = array(
+                'id' => (int) $item->id,
+                'sku' => (string) $item->SKU,
+                'title' => (string) ($item->titleRU ?: $item->titleRO),
+                'brand' => (string) ($item->brand_title ?? ''),
+                'attached' => !empty($attached[(int) $item->id]),
+            );
+        }
+
+        return $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode(array('items' => $response), JSON_UNESCAPED_UNICODE));
+    }
+
+    public function products_bulk_add()
+    {
+        check_if_POST();
+
+        $offerId = (int) $this->input->post('offer_id', true);
+        $productIds = $this->input->post('product_ids');
+        $productIds = is_array($productIds) ? array_values(array_unique(array_filter(array_map('intval', $productIds)))) : array();
+
+        if ($offerId < 1 || empty($productIds)) {
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_status_header(422)
+                ->set_output(json_encode(array('message' => 'Выберите товары.'), JSON_UNESCAPED_UNICODE));
+        }
+
+        $products = $this->db
+            ->select('id, SKU, titleRU, titleRO')
+            ->where_in('id', $productIds)
+            ->where('isShown', 1)
+            ->get('products')
+            ->result();
+
+        $maxOrderRow = $this->db
+            ->select_max('sorder')
+            ->where('offers_id', $offerId)
+            ->get('offers_products')
+            ->row();
+        $nextOrder = !empty($maxOrderRow->sorder) ? (int) $maxOrderRow->sorder + 1 : 1;
+        $added = array();
+
+        foreach ($products as $product) {
+            $exists = $this->db
+                ->where('offers_id', $offerId)
+                ->where('product_id', (int) $product->id)
+                ->count_all_results('offers_products');
+            if ($exists > 0) {
+                continue;
+            }
+
+            $this->db->insert('offers_products', array(
+                'offers_id' => $offerId,
+                'product_id' => (int) $product->id,
+                'title' => (string) ($product->titleRU ?: $product->titleRO),
+                'SKU' => (string) $product->SKU,
+                'sorder' => $nextOrder++,
+            ));
+
+            $added[] = array(
+                'id' => (int) $this->db->insert_id(),
+                'product_id' => (int) $product->id,
+                'sku' => (string) $product->SKU,
+                'title' => (string) ($product->titleRU ?: $product->titleRO),
+                'sorder' => $nextOrder - 1,
+            );
+        }
+
+        return $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode(array('items' => $added), JSON_UNESCAPED_UNICODE));
     }
 }

@@ -1449,6 +1449,14 @@
 					return
 				}
 
+				// Changing a paid row can add or remove its dependent gift.
+				// Reload the drawer so both rows and all totals reflect the
+				// authoritative server-side promotion state.
+				if (Array.isArray(response.gift_promotions)) {
+					load({ skeleton: false })
+					return
+				}
+
 				if (!response.row || !response.cart) {
 					load({
 						skeleton: false
@@ -1541,6 +1549,15 @@
 								: 'Не удалось удалить товар.'
 						)
 
+						return
+					}
+
+					// Deleting a qualifying product may remove its gift or
+					// expose a new gift selection. Re-render the drawer from
+					// the server instead of leaving a stale gift row visible.
+					if (Array.isArray(response.gift_promotions)) {
+						sendRemoveFromCart(analyticsItem)
+						load({ skeleton: false })
 						return
 					}
 					/*

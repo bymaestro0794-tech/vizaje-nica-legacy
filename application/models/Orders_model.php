@@ -43,8 +43,45 @@ class Orders_model extends BaseModel
 
         $products = $this->db->select('*')->where('order_id', $id)->get('orders_products')->result();
 
+        // Older orders may not have the explicit marker column yet. Resolve
+        // the roulette gift from the redeemed spin so the admin still shows
+        // the gift correctly for those orders.
+        $rouletteGift = null;
+        if ($this->db->table_exists('roulette_spins') && $this->db->table_exists('gifts')) {
+            $rouletteGift = $this->db
+                ->select('g.id, g.product_id, g.variant_id')
+                ->from('roulette_spins s')
+                ->join('gifts g', 'g.id = CAST(s.reward_payload_snapshot AS UNSIGNED)', 'inner')
+                ->where('s.order_id', (int) $id)
+                ->where('s.reward_type_snapshot', 'gift')
+                ->where_in('s.status', array('reserved', 'redeemed'))
+                ->order_by('s.id', 'DESC')
+                ->limit(1)
+                ->get()
+                ->row();
+        }
+
         if (!empty($products)) {
             foreach ($products as $key => $product) {
+                $products[$key]->roulette_gift_id = !empty($product->roulette_gift_id)
+                    ? (int) $product->roulette_gift_id
+                    : 0;
+                $products[$key]->gift_promotion_id = !empty($product->gift_promotion_id)
+                    ? (int) $product->gift_promotion_id
+                    : 0;
+
+                if (
+                    $products[$key]->roulette_gift_id <= 0
+                    && !empty($rouletteGift)
+                    && (int) $product->product_id === (int) $rouletteGift->product_id
+                    && (
+                        empty($rouletteGift->variant_id)
+                        || (int) $product->options === (int) $rouletteGift->variant_id
+                    )
+                ) {
+                    $products[$key]->roulette_gift_id = (int) $rouletteGift->id;
+                }
+
                 if (!empty($product->options)){
                     $products[$key]->product = $this->db->select('uri' . $lang . ' AS uri, SKU, title' . $lang . ' AS title,volume,barcode,WarehouseName,
                     (SELECT categories.uri' . $lang . ' FROM categories WHERE categories.id=products.category_id) as cat_uri,

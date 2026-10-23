@@ -16,6 +16,7 @@ class Catalog extends FrontEndController
         $this->load->model('products_model');
         $this->load->model('brands_model');
         $this->load->model('categories_model');
+        $this->load->model('offers_model');
 
         $this->data['body_class'] = 'catalog_page';
     }
@@ -1105,6 +1106,12 @@ class Catalog extends FrontEndController
 
     $this->data['product'] =
         $product;
+
+    $this->data['product_offer'] =
+        $this->offers_model->get_active_offer_for_product(
+            $this->clang,
+            $product->id
+        );
 
     $this->data['features'] =
         $this->products_model

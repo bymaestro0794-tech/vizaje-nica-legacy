@@ -98,6 +98,11 @@ $('body').on('click', '.quantity__button_plus', function (e) {
 		data: { rowid: rowid, quantity: quantity, lang: lang },
 		success: function (data) {
 			if (data.status == 'ok') {
+				if (Array.isArray(data.gift_promotions)) {
+					window.location.reload()
+					return
+				}
+
 				$('.actions-main-header__counts').html(data.total_items)
 
 				$('.items_count').html(data.total_items)
@@ -128,6 +133,11 @@ $('body').on('click', '.quantity__button_minus', function (e) {
 		data: { rowid: rowid, quantity: quantity, lang: lang },
 		success: function (data) {
 			if (data.status == 'ok') {
+				if (Array.isArray(data.gift_promotions)) {
+					window.location.reload()
+					return
+				}
+
 				$('.actions-main-header__counts').html(data.total_items)
 
 				$('.items_count').html(data.total_items)
@@ -208,6 +218,11 @@ $('body').on('click', '._delete', function (e) {
 
 			success: function (data) {
 				if (data && data.status === 'ok') {
+					if (Array.isArray(data.gift_promotions)) {
+						window.location.reload()
+						return
+					}
+
 					row.addClass('is-removing')
 
 					setTimeout(function () {

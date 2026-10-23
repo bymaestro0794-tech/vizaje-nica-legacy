@@ -96,10 +96,11 @@
                                     <tr>
                                         <td width="200">Формат акции</td>
                                         <td>
-                                            <?php $offerIsOnline = !isset($item->is_online) || (int) $item->is_online === 1; ?>
+                                            <?php $offerChannel = isset($item->is_online) ? (int) $item->is_online : 1; ?>
                                             <select name="is_online" class="form-control" required>
-                                                <option value="1" <?= $offerIsOnline ? 'selected' : '' ?>>Онлайн</option>
-                                                <option value="0" <?= !$offerIsOnline ? 'selected' : '' ?>>Офлайн</option>
+                                                <option value="1" <?= $offerChannel === 1 ? 'selected' : '' ?>>Онлайн</option>
+                                                <option value="0" <?= $offerChannel === 0 ? 'selected' : '' ?>>Офлайн</option>
+                                                <option value="2" <?= $offerChannel === 2 ? 'selected' : '' ?>>Онлайн + офлайн</option>
                                             </select>
                                         </td>
                                     </tr>
@@ -258,6 +259,38 @@
                             </div>
                         </div>
                         <div class="tab-pane fade" id="tab_1_3">
+                            <div class="offer-product-picker" data-offer-product-picker data-offer-id="<?= (int) $item->id ?>" style="margin-bottom:20px;padding:15px;background:#f7f7f7;border:1px solid #ddd;">
+                                <h4 style="margin-top:0;">Добавить товары без перезагрузки</h4>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <input type="search" class="form-control" data-offer-product-query placeholder="Название, SKU или ID">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-control" data-offer-product-brand>
+                                            <option value="">Все бренды</option>
+                                            <?php foreach (($product_brands ?? array()) as $brand) : ?>
+                                                <option value="<?= (int) $brand->id ?>"><?= htmlspecialchars((string) $brand->title, ENT_QUOTES, 'UTF-8') ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-control" data-offer-product-category>
+                                            <option value="">Все категории</option>
+                                            <?php foreach (($product_categories ?? array()) as $category) : ?>
+                                                <option value="<?= (int) $category->id ?>"><?= htmlspecialchars((string) ($category->titleRU ?: $category->titleRO), ENT_QUOTES, 'UTF-8') ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn green" data-offer-product-select-all>Выбрать все</button>
+                                    </div>
+                                </div>
+                                <div data-offer-product-results style="margin-top:12px;max-height:320px;overflow:auto;background:#fff;border:1px solid #ddd;"></div>
+                                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;">
+                                    <span data-offer-product-count>Выбрано: 0</span>
+                                    <button type="button" class="btn blue" data-offer-product-add>Добавить выбранные</button>
+                                </div>
+                            </div>
                             <div class="table-scrollable">
                                 <table class="table table-bordered table-striped table-hover">
                                     <thead>
@@ -360,4 +393,111 @@
             }
         });
     }
+</script>
+<script>
+    (function () {
+        var picker = document.querySelector('[data-offer-product-picker]');
+        if (!picker) return;
+
+        var query = picker.querySelector('[data-offer-product-query]');
+        var brand = picker.querySelector('[data-offer-product-brand]');
+        var category = picker.querySelector('[data-offer-product-category]');
+        var results = picker.querySelector('[data-offer-product-results]');
+        var count = picker.querySelector('[data-offer-product-count]');
+        var timer = null;
+
+        function escapeHtml(value) {
+            return String(value || '').replace(/[&<>'"]/g, function (char) {
+                return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[char];
+            });
+        }
+
+        function updateCount() {
+            count.textContent = 'Выбрано: ' + results.querySelectorAll('input[type="checkbox"]:checked').length;
+        }
+
+        function loadProducts() {
+            var params = new URLSearchParams({
+                offer_id: picker.dataset.offerId,
+                q: query.value,
+                brand_id: brand.value,
+                category_id: category.value
+            });
+
+            fetch('/cp/offers/product_lookup?' + params.toString(), { credentials: 'same-origin' })
+                .then(function (response) { return response.json(); })
+                .then(function (payload) {
+                    var items = payload.items || [];
+                    if (!items.length) {
+                        results.innerHTML = '<div style="padding:14px;color:#777;">Товары не найдены.</div>';
+                        updateCount();
+                        return;
+                    }
+
+                    results.innerHTML = items.map(function (item) {
+                        var disabled = item.attached ? ' disabled' : '';
+                        var badge = item.attached ? '<span style="color:#198754;margin-left:8px;">уже добавлен</span>' : '';
+                        return '<label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #eee;cursor:pointer;">'
+                            + '<input type="checkbox" value="' + item.id + '"' + disabled + '>'
+                            + '<strong>#' + item.id + '</strong> '
+                            + escapeHtml(item.title) + ' <small style="color:#777;">' + escapeHtml(item.sku) + (item.brand ? ' · ' + escapeHtml(item.brand) : '') + '</small>'
+                            + badge + '</label>';
+                    }).join('');
+                    results.querySelectorAll('input[type="checkbox"]').forEach(function (input) {
+                        input.addEventListener('change', updateCount);
+                    });
+                    updateCount();
+                });
+        }
+
+        function scheduleLoad() {
+            window.clearTimeout(timer);
+            timer = window.setTimeout(loadProducts, 250);
+        }
+
+        query.addEventListener('input', scheduleLoad);
+        brand.addEventListener('change', loadProducts);
+        category.addEventListener('change', loadProducts);
+
+        picker.querySelector('[data-offer-product-select-all]').addEventListener('click', function () {
+            results.querySelectorAll('input[type="checkbox"]:not(:disabled)').forEach(function (input) {
+                input.checked = true;
+            });
+            updateCount();
+        });
+
+        picker.querySelector('[data-offer-product-add]').addEventListener('click', function () {
+            var selected = Array.from(results.querySelectorAll('input[type="checkbox"]:checked'));
+            if (!selected.length) return;
+
+            var body = new URLSearchParams();
+            body.append('offer_id', picker.dataset.offerId);
+            selected.forEach(function (input) { body.append('product_ids[]', input.value); });
+
+            fetch('/cp/offers/products_bulk_add', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+                body: body.toString()
+            })
+                .then(function (response) { return response.json(); })
+                .then(function (payload) {
+                    (payload.items || []).reverse().forEach(function (item) {
+                        var table = document.createElement('table');
+                        table.className = 'table table-bordered table-striped table-hover';
+                        table.id = 'prodalt' + item.id;
+                        table.innerHTML = '<tbody><tr>'
+                            + '<td width="80"><input type="text" name="sorder[' + item.id + ']" value="' + item.sorder + '" class="form-control" style="text-align:center;"></td>'
+                            + '<td width="150">SKU: ' + escapeHtml(item.sku) + '</td>'
+                            + '<td>' + escapeHtml(item.title) + '</td>'
+                            + '<td width="100"><a onclick="DeleteProdAlt(' + item.id + ')" class="btn btn-xs default btn-editable red-stripe"><i class="glyphicon glyphicon-remove-circle"></i> Удалить</a></td>'
+                            + '</tr></tbody>';
+                        document.querySelector('.products_list').prepend(table);
+                    });
+                    loadProducts();
+                });
+        });
+
+        loadProducts();
+    }());
 </script>

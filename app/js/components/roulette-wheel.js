@@ -37,6 +37,8 @@
 			hours: 'ч',
 			minutes: 'м',
 			seconds: 'с',
+			gift: 'ПОДАРОК',
+			freeShipping: 'ДОСТАВКА',
 		},
 		ro: {
 			title: 'Roata norocului',
@@ -65,6 +67,8 @@
 			hours: 'h',
 			minutes: 'm',
 			seconds: 's',
+			gift: 'CADOU',
+			freeShipping: 'LIVRARE',
 		},
 	}
 	const copy = translations[language]
@@ -201,6 +205,7 @@
 					cooldown: copy.spinError,
 					weekly_window_not_started: copy.weeklyWindowNotStarted,
 					weekly_spin_used: copy.weeklySpinUsed,
+					roulette_hidden: copy.spinError,
 					roulette_disabled: copy.spinError,
 					interval_not_configured: copy.spinError,
 					prizes_not_configured: copy.spinError,
@@ -355,28 +360,38 @@
 			iconSvg.setAttribute('stroke-width', '1.5')
 			iconSvg.setAttribute('stroke-linecap', 'round')
 			iconSvg.setAttribute('stroke-linejoin', 'round')
-			const tagPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-			tagPath.setAttribute('d', 'M20 10.59 13.41 4A2 2 0 0 0 12 3.41H5a2 2 0 0 0-2 2v7a2 2 0 0 0 .59 1.41l6.59 6.59a2 2 0 0 0 2.82 0L20 13.41a2 2 0 0 0 0-2.82Z')
-			const tagHole = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
-			tagHole.setAttribute('cx', '7.5')
-			tagHole.setAttribute('cy', '7.5')
-			tagHole.setAttribute('r', '0.75')
-			iconSvg.append(tagPath, tagHole)
+			if (prize.type === 'gift') {
+				const giftBox = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+				giftBox.setAttribute('d', 'M4 10h16v11H4zM2.5 6.5h19v4h-19zM12 6.5V21M12 6.5C9.5 6.5 7 5.5 7 3.5 7 1.7 9.4 1 12 6.5Zm0 0c2.5-5.5 5-4.8 5-3 0 2-2.5 3-5 3Z')
+				iconSvg.appendChild(giftBox)
+			} else {
+				const tagPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+				tagPath.setAttribute('d', 'M20 10.59 13.41 4A2 2 0 0 0 12 3.41H5a2 2 0 0 0-2 2v7a2 2 0 0 0 .59 1.41l6.59 6.59a2 2 0 0 0 2.82 0L20 13.41a2 2 0 0 0 0-2.82Z')
+				const tagHole = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+				tagHole.setAttribute('cx', '7.5')
+				tagHole.setAttribute('cy', '7.5')
+				tagHole.setAttribute('r', '0.75')
+				iconSvg.append(tagPath, tagHole)
+			}
 			icon.appendChild(iconSvg)
 			const label = document.createElement('span')
 			label.className = 'roulette-wheel__sector-label'
-			label.textContent = prize.type === 'free_shipping'
-				? (language === 'ro' ? 'LIVRARE' : 'ДОСТАВКА')
-				: `−${Number(prize.value)}%`
+			label.textContent = prize.type === 'gift'
+				? copy.gift
+				: prize.type === 'free_shipping'
+					? copy.freeShipping
+					: `−${Number(prize.value)}%`
 			sector.append(icon, label)
 			labels.appendChild(sector)
 			startAngle = endAngle
 		})
 
 		disc.style.background = `conic-gradient(${stops.join(', ')})`
-		wheel.setAttribute('aria-label', state.prizes.map(prize => prize.type === 'free_shipping'
-			? (language === 'ro' ? 'Livrare gratuită' : 'Бесплатная доставка')
-			: `−${Number(prize.value)}%`).join(', '))
+		wheel.setAttribute('aria-label', state.prizes.map(prize => prize.type === 'gift'
+			? (language === 'ro' ? 'Cadou' : 'Подарок')
+			: prize.type === 'free_shipping'
+				? (language === 'ro' ? 'Livrare gratuită' : 'Бесплатная доставка')
+				: `−${Number(prize.value)}%`).join(', '))
 		setRotation(0)
 	}
 
@@ -453,7 +468,7 @@
 		// Profile/offers links are an intentional manual entry point. The server
 		// decides inside the dialog whether the weekly window is open. Automatic
 		// teaser/opening remains controlled by emitAvailability and auto-open.
-		const canOpenManually = Boolean(state.api)
+		const canOpenManually = Boolean(state.api?.visible)
 		entryCards.forEach(entry => { entry.hidden = !canOpenManually })
 	}
 
@@ -603,7 +618,7 @@
 
 		updateCartCountdowns()
 		if (state.activePrize) updateCountdown()
-		if (state.autoOpened || state.activeBrowseMs < activeBrowseDelayMs || !state.api) return
+		if (state.autoOpened || state.activeBrowseMs < activeBrowseDelayMs || !state.api || !state.api.visible) return
 		if (storage.get('dismissed_session', true)) {
 			state.autoOpened = true
 			return

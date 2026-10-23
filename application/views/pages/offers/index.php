@@ -82,14 +82,16 @@
                             }
 
                             $isAboveTheFold = $index < 3;
-                            $offerIsOnline = !isset($offer->is_online)
-                                || (int) $offer->is_online === 1;
-                            $offerBadgeText = $offerIsOnline
-                                ? 'ON<br>LINE'
-                                : 'OFF<br>LINE';
+                            $offerChannel = isset($offer->is_online)
+                                ? (int) $offer->is_online
+                                : 1;
+                            $offerIsOnline = $offerChannel === 1;
+                            $offerIsOffline = $offerChannel === 0;
                             $offerBadgeLabel = $offerIsOnline
                                 ? ($lclang === 'ro' ? 'Online' : 'Онлайн')
-                                : ($lclang === 'ro' ? 'Offline' : 'Офлайн');
+                                : ($offerIsOffline
+                                    ? ($lclang === 'ro' ? 'Offline' : 'Офлайн')
+                                    : ($lclang === 'ro' ? 'Online și offline' : 'Онлайн и офлайн'));
                         ?>
 
                         <article class="stock__item stock__item--offer">
@@ -126,9 +128,16 @@
                                     </span>
                                 <?php } ?>
 
-                                <span class="stock__offer-badge <?= $offerIsOnline ? 'stock__offer-badge--online' : 'stock__offer-badge--offline' ?>" aria-label="<?= $offerBadgeLabel ?>">
-                                    <?= $offerBadgeText ?>
-                                </span>
+                                <?php if ($offerChannel === 2) { ?>
+                                    <span class="stock__offer-badges" aria-label="<?= htmlspecialchars($offerBadgeLabel, ENT_QUOTES, 'UTF-8') ?>">
+                                        <span class="stock__offer-badge stock__offer-badge--online">ON<br>LINE</span>
+                                        <span class="stock__offer-badge stock__offer-badge--offline">OFF<br>LINE</span>
+                                    </span>
+                                <?php } else { ?>
+                                    <span class="stock__offer-badge <?= $offerIsOnline ? 'stock__offer-badge--online' : 'stock__offer-badge--offline' ?>" aria-label="<?= htmlspecialchars($offerBadgeLabel, ENT_QUOTES, 'UTF-8') ?>">
+                                        <?= $offerIsOnline ? 'ON<br>LINE' : 'OFF<br>LINE' ?>
+                                    </span>
+                                <?php } ?>
 
                             </a>
 

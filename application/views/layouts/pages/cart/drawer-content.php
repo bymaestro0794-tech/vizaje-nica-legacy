@@ -96,12 +96,18 @@ $promoReason =
         : null;
 
 $rouletteApplied = $discountChoice === 'roulette'
-    && (!empty($selectedDiscount['discount']) || !empty($discountOptions['roulette']['free_shipping']));
+    && (
+        !empty($selectedDiscount['discount'])
+        || !empty($discountOptions['roulette']['free_shipping'])
+        || !empty($discountOptions['roulette']['gift_id'])
+    );
 $rouletteExpiresAt = $rouletteApplied && !empty($selectedDiscount['expires_at'])
     ? (string) $selectedDiscount['expires_at']
     : '';
 $selectedDiscountLabel = $rouletteApplied
-    ? ($isRomanian ? 'Reducere la ruletă' : 'Скидка рулетки')
+    ? (!empty($discountOptions['roulette']['gift_id'])
+        ? ($isRomanian ? 'Premiul ruletei' : 'Приз рулетки')
+        : ($isRomanian ? 'Reducere la ruletă' : 'Скидка рулетки'))
     : ($isRomanian ? 'Cod promoțional' : 'Промокод');
 $selectedDiscountCode = !empty($selectedDiscount['label'])
     ? (string) $selectedDiscount['label']
@@ -445,6 +451,10 @@ if (
                         ? (float) $calculated['promo_discount']
                         : 0;
 
+                $isRouletteGift = !empty($calculated['is_roulette_gift']);
+                $isPromotionGift = !empty($calculated['gift_promotion_id']);
+                $isGift = $isRouletteGift || $isPromotionGift;
+
                 $productUrl =
                     '/'
                     . $lclang
@@ -561,11 +571,15 @@ if (
                         <div class="cart-drawer-item__top">
                             <div>
                                 <p class="cart-drawer-item__brand">
-                                    <?= htmlspecialchars(
+                                    <?= $isRouletteGift
+                                        ? ($isRomanian ? 'CADOU RULETĂ' : 'ПОДАРОК РУЛЕТКИ')
+                                        : ($isPromotionGift
+                                            ? ($isRomanian ? 'CADOU PROMOȚIONAL' : 'ПОДАРОК АКЦИИ')
+                                        : htmlspecialchars(
                                         $product->brand_title,
                                         ENT_QUOTES,
                                         'UTF-8'
-                                    ) ?>
+                                    )) ?>
                                 </p>
 
                                 <a
@@ -603,6 +617,7 @@ if (
                                 aria-label="<?= $isRomanian
                                     ? 'Șterge produsul'
                                     : 'Удалить товар' ?>"
+                                <?= $isGift ? 'disabled aria-disabled="true"' : '' ?>
                             >
                                 <svg
                                     width="20"
@@ -626,6 +641,7 @@ if (
                                 aria-label="<?= $isRomanian
                                     ? 'Acțiuni produs'
                                     : 'Действия с товаром' ?>"
+                                <?= $isGift ? 'disabled aria-disabled="true"' : '' ?>
                             >
                                 <span></span>
                                 <span></span>
@@ -645,7 +661,7 @@ if (
 																		aria-label="<?= $isRomanian
 																				? 'Micșorează cantitatea'
 																				: 'Уменьшить количество' ?>"
-																		<?= (int) $item['qty'] <= 1
+																		<?= $isGift || (int) $item['qty'] <= 1
 																				? 'disabled'
 																				: '' ?>
 																>
@@ -672,7 +688,7 @@ if (
 																		aria-label="<?= $isRomanian
 																				? 'Mărește cantitatea'
 																				: 'Увеличить количество' ?>"
-																		<?= (int) $item['qty'] >= (int) $maxStock
+																		<?= $isGift || (int) $item['qty'] >= (int) $maxStock
 																				? 'disabled'
 																				: '' ?>
 																>
@@ -681,7 +697,11 @@ if (
 														</div>
 
                             <div class="cart-drawer-item__price">
-                                <?php if ($discountAmount > 0) : ?>
+                                <?php if ($isGift) : ?>
+                                    <span class="cart-drawer-item__discount">
+                                        <?= $isRomanian ? 'Cadou · 1 MDL' : 'Подарок · 1 MDL' ?>
+                                    </span>
+                                <?php elseif ($discountAmount > 0) : ?>
                                     <span class="cart-drawer-item__discount">
                                         <?= $isRomanian
                                             ? 'Reducere'
@@ -752,9 +772,11 @@ if (
                         <?php endif; ?>
                     </div>
                     <span class="cart-drawer-promo__discount">
-                        <?= !empty($discountOptions['roulette']['free_shipping'])
-                            ? ($isRomanian ? 'Livrare gratuită' : 'Бесплатная доставка')
-                            : '−' . number_format((float) $selectedDiscount['discount'], 0, '.', ' ') . ' ' . MDL ?>
+                        <?= !empty($discountOptions['roulette']['gift_id'])
+                            ? ($isRomanian ? 'Cadou' : 'Подарок')
+                            : (!empty($discountOptions['roulette']['free_shipping'])
+                                ? ($isRomanian ? 'Livrare gratuită' : 'Бесплатная доставка')
+                                : '−' . number_format((float) $selectedDiscount['discount'], 0, '.', ' ') . ' ' . MDL) ?>
                     </span>
                 </div>
             <?php endif; ?>

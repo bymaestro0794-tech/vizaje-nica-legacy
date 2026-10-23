@@ -42,6 +42,8 @@ class Roulette_game_model extends CI_Model
 			$reason = 'completed_order_required';
 		} elseif (!empty($activeSpin)) {
 			$reason = 'active_prize';
+		} elseif (empty($configuration['visible'])) {
+			$reason = 'roulette_hidden';
 		} elseif (empty($configuration['enabled'])) {
 			$reason = 'roulette_disabled';
 		} elseif (!$configuration['valid']) {
@@ -66,6 +68,7 @@ class Roulette_game_model extends CI_Model
 
 		return array(
 			'eligible' => $qualified,
+			'visible' => !empty($configuration['visible']),
 			'can_spin' => $qualified && $weeklyWindowOpen && empty($outstandingSpin) && empty($weeklySpin) && $reason === null,
 			'reason' => $reason,
 			'server_time' => $this->toIso8601($now),
@@ -142,6 +145,8 @@ class Roulette_game_model extends CI_Model
 				$errorReason = 'completed_order_required';
 			} elseif (!empty($activeSpin)) {
 				$errorReason = $activeSpin['status'] === 'reserved' ? 'payment_pending' : 'active_prize';
+			} elseif (empty($configuration['visible'])) {
+				$errorReason = 'roulette_hidden';
 			} elseif (empty($configuration['enabled'])) {
 				$errorReason = 'roulette_disabled';
 			} elseif (!$configuration['valid']) {
@@ -174,6 +179,7 @@ class Roulette_game_model extends CI_Model
 				'prize_code_snapshot' => $prize['code'],
 				'reward_type_snapshot' => $prize['reward_type'],
 				'reward_value_snapshot' => $prize['reward_value'],
+				'reward_payload_snapshot' => !empty($prize['reward_payload']) ? $prize['reward_payload'] : null,
 				'titleRU_snapshot' => $prize['titleRU'],
 				'titleRO_snapshot' => $prize['titleRO'],
 				'probability_snapshot' => $prize['probability'],
@@ -223,7 +229,7 @@ class Roulette_game_model extends CI_Model
 		}
 
 		$spin = $this->db->query(
-			'SELECT id, client_id, status, order_id, expires_at, reward_type_snapshot, prize_code_snapshot
+			'SELECT id, client_id, status, order_id, expires_at, reward_type_snapshot, reward_payload_snapshot, prize_code_snapshot
 			 FROM roulette_spins WHERE id = ? AND client_id = ? FOR UPDATE',
 			array($spinId, $clientId)
 		)->row_array();
@@ -239,7 +245,8 @@ class Roulette_game_model extends CI_Model
 			$spin['status'] !== 'active'
 			|| !empty($spin['order_id'])
 			|| $spin['expires_at'] <= $this->databaseUtcNow()
-			|| !in_array($spin['reward_type_snapshot'], array('discount_percent', 'free_shipping'), true)
+			|| !in_array($spin['reward_type_snapshot'], array('discount_percent', 'free_shipping', 'gift'), true)
+			|| ($spin['reward_type_snapshot'] === 'gift' && (!ctype_digit((string) $spin['reward_payload_snapshot']) || (int) $spin['reward_payload_snapshot'] < 1))
 		) {
 			return false;
 		}
@@ -252,6 +259,35 @@ class Roulette_game_model extends CI_Model
 			));
 
 		return $this->db->affected_rows() === 1;
+	}
+
+	/** Return the catalog product that must be added as a free gift to this order. */
+	public function getGiftRewardForOrder($clientId, $spinId, $orderId)
+	{
+		if (!$this->isReady() || !$this->db->table_exists('gifts')) {
+			return null;
+		}
+
+		$spin = $this->db->select('reward_type_snapshot, reward_payload_snapshot, status, order_id')
+			->where('id', (int) $spinId)
+			->where('client_id', (int) $clientId)
+			->where('order_id', (int) $orderId)
+			->where_in('status', array('reserved', 'redeemed'))
+			->get('roulette_spins')
+			->row_array();
+		if (empty($spin) || $spin['reward_type_snapshot'] !== 'gift') {
+			return null;
+		}
+
+		$gift = $this->db->select('g.id, g.titleRU, g.titleRO, g.product_id, g.variant_id, p.SKU, p.titleRU AS product_title_ru, p.titleRO AS product_title_ro')
+			->from('gifts g')
+			->join('products p', 'p.id = g.product_id', 'inner')
+			->where('g.id', (int) $spin['reward_payload_snapshot'])
+			->where('p.isShown', 1)
+			->get()
+			->row_array();
+
+		return !empty($gift) ? $gift : false;
 	}
 
 	/** Create one fixed Paynet reservation; retries reuse its ExternalID and deadline. */
@@ -602,7 +638,7 @@ class Roulette_game_model extends CI_Model
 			return array('enabled' => false, 'interval_hours' => null, 'valid' => false, 'prizes' => array());
 		}
 
-		$settingsQuery = 'SELECT is_enabled, spin_interval_hours, titleRU, titleRO, descriptionRU, descriptionRO, rulesRU, rulesRO FROM roulette_settings WHERE id = 1';
+		$settingsQuery = 'SELECT is_visible, is_enabled, spin_interval_hours, titleRU, titleRO, descriptionRU, descriptionRO, rulesRU, rulesRO FROM roulette_settings WHERE id = 1';
 		if ($lockRows) {
 			$settingsQuery .= ' FOR UPDATE';
 		}
@@ -634,10 +670,20 @@ class Roulette_game_model extends CI_Model
 			$probabilityBasisPoints = (int) round($probability * 100);
 			$isDiscountPrize = $prize['reward_type'] === 'discount_percent';
 			$isFreeShippingPrize = $prize['reward_type'] === 'free_shipping';
+			$isGiftPrize = $prize['reward_type'] === 'gift';
+			$giftValid = false;
+			if ($isGiftPrize && $this->db->table_exists('gifts') && ctype_digit((string) ($prize['reward_payload'] ?? ''))) {
+				$giftQuery = $this->db->where('id', (int) $prize['reward_payload'])->where('is_enabled', 1);
+				if ($this->db->field_exists('show_on_site', 'gifts')) {
+					$giftQuery->where('show_on_site', 1);
+				}
+				$giftValid = !empty($giftQuery->get('gifts')->row());
+			}
 
 			if (
-				(!$isDiscountPrize && !$isFreeShippingPrize)
+				(!$isDiscountPrize && !$isFreeShippingPrize && !$isGiftPrize)
 				|| ($isDiscountPrize && ($value <= 0 || $value > 100))
+				|| ($isGiftPrize && !$giftValid)
 				|| $probability <= 0
 				|| $probability > 100
 				|| $probabilityBasisPoints < 1
@@ -656,6 +702,7 @@ class Roulette_game_model extends CI_Model
 		}
 
 		return array(
+			'visible' => (int) $settings['is_visible'] === 1,
 			'enabled' => (int) $settings['is_enabled'] === 1,
 			// Kept in the response for compatibility with the existing frontend;
 			// the actual eligibility check is the fixed Monday 00:00 period above.
@@ -774,6 +821,7 @@ class Roulette_game_model extends CI_Model
 			'code' => $spin['prize_code_snapshot'],
 			'type' => $spin['reward_type_snapshot'],
 			'value' => (float) $spin['reward_value_snapshot'],
+			'gift_id' => $spin['reward_type_snapshot'] === 'gift' ? (int) $spin['reward_payload_snapshot'] : null,
 			'title' => $spin[$titleField],
 			'spun_at' => $this->toIso8601($spin['spun_at']),
 			'expires_at' => $this->toIso8601($spin['expires_at']),

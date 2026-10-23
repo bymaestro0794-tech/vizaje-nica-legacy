@@ -101,6 +101,7 @@ $route[$langs.'/subscribe'] = "ajax/subscription";
 $route['wishlist_add'] = 'frontend/wishlist/add';
 
 $route['cart_add'] = 'ajax/cart_add';
+$route['gift/promotion/add'] = 'ajax/gift_promotion_add';
 $route['cart/delete'] = 'ajax/cart_delete';
 $route['cart/update_cart'] = 'ajax/cart_update';
 

@@ -174,6 +174,41 @@ class Offers_model extends BaseModel
         return $offers;
     }
 
+    public function get_active_offer_for_product($lang, $productId)
+    {
+        if (empty($lang) || empty($productId)) {
+            return null;
+        }
+
+        $today = date('Y-m-d');
+        $this->db->select(
+            'o.id, o.date_from, o.date_to, '
+            . 'o.title' . $lang . ' AS title, '
+            . 'o.uri' . $lang . ' AS uri, '
+            . 'o.sale, o.is_online'
+        );
+        $this->db->from('offers o');
+        $this->db->join('offers_products op', 'op.offers_id = o.id', 'inner');
+        $this->db->where('op.product_id', (int) $productId);
+        $this->db->where('o.isShown', 1);
+        $this->db->where_in('o.is_online', array(1, 2));
+        $this->db->group_start()
+            ->where('o.date_from <=', $today)
+            ->or_where('o.date_from IS NULL', null, false)
+            ->or_where('o.date_from', '')
+            ->or_where('o.date_from', '0000-00-00')
+            ->group_end();
+        $this->db->group_start()
+            ->where('o.date_to >=', $today)
+            ->or_where('o.date_to IS NULL', null, false)
+            ->or_where('o.date_to', '')
+            ->or_where('o.date_to', '0000-00-00')
+            ->group_end();
+        $this->db->order_by('o.date_to ASC, o.id DESC');
+
+        return $this->db->limit(1)->get()->row();
+    }
+
     public function products_offers($lang, $products_id)
     {
         $this->db->select("

@@ -22,6 +22,9 @@ class Welcome_offers extends BackEndController
 		}
 
 		$this->data['migration_required'] = !$this->welcome_offers_model->isInstalled();
+		$this->data['welcome_promo'] = $this->data['migration_required']
+			? null
+			: $this->welcome_offers_model->getCampaign();
 		$this->data['filters'] = $filters;
 		$this->data['objects'] = $this->data['migration_required']
 			? array()
@@ -30,5 +33,30 @@ class Welcome_offers extends BackEndController
 
 		$this->load->vars($this->data);
 		$this->load->view($this->main_layout);
+	}
+
+	public function toggle_visibility()
+	{
+		check_if_POST();
+		try {
+			if (!$this->welcome_offers_model->isInstalled() || empty($this->welcome_offers_model->getCampaign())) {
+				throw new Exception('Сначала примените SQL-патчи приветственной скидки и убедитесь, что существует WELCOME18.');
+			}
+
+			if (!$this->welcome_offers_model->setCampaignVisible($this->input->post('show_on_site'))) {
+				throw new Exception('Не удалось изменить видимость скидки WELCOME18.');
+			}
+			$this->load->driver('cache', array(
+				'adapter' => 'file',
+				'backup' => 'dummy',
+				'key_prefix' => 'vn_frontend_',
+			));
+			$this->cache->delete('welcome_promo_18');
+			$_SESSION['success'] = 'Настройка показа скидки после регистрации сохранена.';
+		} catch (Exception $e) {
+			log_message('error', $e->getMessage());
+			$_SESSION['error'] = array($e->getMessage());
+		}
+		redirect($this->path);
 	}
 }

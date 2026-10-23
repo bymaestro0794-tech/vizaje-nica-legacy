@@ -440,7 +440,8 @@ switch ($currentView) {
         break;
     case 'pages/beauty_selections/index':
     case 'pages/beauty_selections/item':
-        $pageCss[] = '/app/css/pages/beauty-selections.css?v=20261023-1';
+        $pageCss[] = 'app/css/style/19-articles.css';
+        $pageCss[] = '/app/css/pages/beauty-selections.css?v=20261023-5';
         break;
     case 'pages/main/contacts':
         $pageCss[] = 'app/css/style/22-contactpage.css';
@@ -537,6 +538,12 @@ if (strpos($currentView, 'pages/brands/') === 0) {
 if (strpos($currentView, 'pages/offers/') === 0) {
     $pageCss[] = 'app/css/style/12-promotions.css';
     $pageCss[] = 'app/css/style/19-articles.css';
+
+    if ($currentView === 'pages/offers/items') {
+        $pageCss[] = 'app/css/style/05-home.css';
+        $pageCss[] = 'app/css/style/06-catalog.css';
+        $pageCss[] = '/app/css/pages/catalog/discount-cards.css?v=20261022-discount-cards';
+    }
 }
 
 if (!empty($is_privacy_policy_page)) {
@@ -870,6 +877,10 @@ if (!empty($is_privacy_policy_page)) {
         defer
     ></script>
     <script
+        src="<?= asset_url('app/js/components/gift-promotions.js') ?>"
+        defer
+    ></script>
+    <script
         src="<?= asset_url('app/js/components/notifications.js') ?>"
         defer
     ></script>
@@ -890,6 +901,10 @@ if (!empty($is_privacy_policy_page)) {
 
     <script
         src="<?= asset_url('app/js/components/product.js') ?>"
+        defer
+    ></script>
+    <script
+        src="<?= asset_url('app/js/components/product-promotion.js') ?>"
         defer
     ></script>
     <script

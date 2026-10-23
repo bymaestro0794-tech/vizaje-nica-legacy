@@ -13,6 +13,28 @@ class Welcome_offers_model extends BaseModel
 			&& $this->db->table_exists('orders');
 	}
 
+	public function getCampaign()
+	{
+		if (!$this->db->table_exists('promocodes')) {
+			return null;
+		}
+
+		return $this->db
+			->where('code', 'WELCOME18')
+			->get('promocodes')
+			->row();
+	}
+
+	public function setCampaignVisible($visible)
+	{
+		return $this->db
+			->where('code', 'WELCOME18')
+			->update('promocodes', array(
+				'status' => !empty($visible) ? 'active' : 'disabled',
+				'updated_at' => gmdate('Y-m-d H:i:s'),
+			));
+	}
+
 	public function getAdminItems(array $filters = array())
 	{
 		if (!$this->isInstalled()) {
