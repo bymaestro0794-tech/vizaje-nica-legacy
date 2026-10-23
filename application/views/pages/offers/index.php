@@ -35,21 +35,6 @@
                 </h1>
             </header>
 
-            <?php if (!empty($client_info->id)) { ?>
-                <aside class="roulette-offer-entry" data-roulette-entry hidden>
-                    <div>
-                        <strong><?= $lclang === 'ro' ? 'Roata norocului' : 'Рулетка удачи' ?></strong>
-                        <p><?= $lclang === 'ro'
-                            ? 'Ai o comandă finalizată? Verifică dacă ai o rotire disponibilă.'
-                            : 'Есть завершённый заказ? Проверьте, доступно ли вам вращение.' ?></p>
-                    </div>
-                    <button type="button" data-roulette-open>
-                        <?= $lclang === 'ro' ? 'Deschide' : 'Открыть' ?>
-                        <span class="icon-arrow-right" aria-hidden="true"></span>
-                    </button>
-                </aside>
-            <?php } ?>
-
             <?php if (!empty($offers)) { ?>
                 <div class="stock__content">
                     <?php foreach ($offers as $index => $offer) { ?>
