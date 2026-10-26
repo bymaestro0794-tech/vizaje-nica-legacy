@@ -1,5 +1,7 @@
 <?php
-$productImage = !empty($product->img) ? newthumbs($product->img, 'products') : '';
+$productImage = !empty($product->img)
+    ? newthumbs($product->img, 'products', 800, 800, 'selection-800', 0)
+    : '';
 $productUrl = '/'
     . $lclang
     . '/'

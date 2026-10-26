@@ -17,6 +17,7 @@
 	let previousActiveElement = null
 	let currentProductId = null
 	let currentGiftMode = null
+	let giftPromotionInterval = null
 
 	/* ======================================================================
 	   GLOBAL EVENTS
@@ -64,10 +65,17 @@
 		previousActiveElement = trigger || document.activeElement
 
 		currentProductId = productId
+		if (giftPromotionInterval) {
+			window.clearInterval(giftPromotionInterval)
+			giftPromotionInterval = null
+		}
 		currentGiftMode = giftMode && Number(giftMode.promotionId) > 0
 			? {
 				promotionId: Number(giftMode.promotionId),
-				title: giftMode.title || ''
+				title: giftMode.title || '',
+				progressMode: giftMode.progressMode || 'time',
+				dateTo: giftMode.dateTo || '',
+				remainingStock: Number(giftMode.remainingStock) || 0
 			}
 			: null
 
@@ -182,6 +190,10 @@
 
 		currentProductId = null
 		currentGiftMode = null
+		if (giftPromotionInterval) {
+			window.clearInterval(giftPromotionInterval)
+			giftPromotionInterval = null
+		}
 
 		drawer.classList.remove('is-open')
 
@@ -236,6 +248,7 @@
 		initGallery()
 		initColorSelect()
 		initVariations()
+		initGiftPromotionProgress()
 		initAddToCart()
 
 		/* ==================================================================
@@ -657,6 +670,67 @@
 				formatNumber(amount, 1) +
 				' ' +
 				(data.language === 'ro' ? 'bonusuri' : 'бонусов')
+		}
+
+		function initGiftPromotionProgress() {
+			const element = root.querySelector('[data-quick-view-gift-promotion]')
+			const value = root.querySelector('[data-quick-view-gift-promotion-value]')
+
+			if (!element || !value || !currentGiftMode) {
+				return
+			}
+
+			const mode = ['time', 'stock', 'none'].includes(currentGiftMode.progressMode)
+				? currentGiftMode.progressMode
+				: 'time'
+
+			if (mode === 'none') {
+				return
+			}
+
+			if (mode === 'stock') {
+				if (currentGiftMode.remainingStock <= 0) {
+					return
+				}
+
+				value.textContent = getCurrentLanguage() === 'ro'
+					? 'Au rămas: ' + currentGiftMode.remainingStock + ' buc.'
+					: 'Осталось: ' + currentGiftMode.remainingStock + ' шт.'
+				element.hidden = false
+				return
+			}
+
+			if (!currentGiftMode.dateTo) {
+				return
+			}
+
+			const deadline = Date.parse(currentGiftMode.dateTo + 'T23:59:59')
+			if (Number.isNaN(deadline)) {
+				return
+			}
+
+			const update = function () {
+				const remaining = Math.max(0, deadline - Date.now())
+				const totalSeconds = Math.floor(remaining / 1000)
+				const days = Math.floor(totalSeconds / 86400)
+				const hours = Math.floor((totalSeconds % 86400) / 3600)
+				const minutes = Math.floor((totalSeconds % 3600) / 60)
+				const seconds = totalSeconds % 60
+				const pad = function (number) { return String(number).padStart(2, '0') }
+
+				value.textContent = days > 0
+					? days + ' д ' + pad(hours) + ':' + pad(minutes) + ':' + pad(seconds)
+					: pad(hours) + ':' + pad(minutes) + ':' + pad(seconds)
+				element.hidden = false
+
+				if (remaining <= 0 && giftPromotionInterval) {
+					window.clearInterval(giftPromotionInterval)
+					giftPromotionInterval = null
+				}
+			}
+
+			update()
+			giftPromotionInterval = window.setInterval(update, 1000)
 		}
 
 		/* ==================================================================

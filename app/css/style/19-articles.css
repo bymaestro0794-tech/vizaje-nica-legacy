@@ -604,6 +604,17 @@
 	line-height: 1.3;
 }
 
+/*
+ * Long beauty selections can contain many product groups. Keep the first
+ * screen identical, but defer layout/paint work for groups below the fold
+ * until the browser needs to display them.
+ */
+.beauty-selection__products > .blog-product-embed,
+.beauty-selection__products > .blog-product-group {
+	content-visibility: auto;
+	contain-intrinsic-size: 520px;
+}
+
 .blog-product-group--with-recommendations {
 	display: grid;
 	grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);

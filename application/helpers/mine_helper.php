@@ -7,12 +7,13 @@ if (!function_exists('newthumbs')) {
 
         $timg = realpath('public/' . $dir) . '/' . $photo;
 		$extension = strtolower(pathinfo($photo, PATHINFO_EXTENSION));
-		if (in_array($extension, array('webp', 'avif'), true) && is_file($timg)) {
+        $hasRequestedSize = (int) $width > 0 || (int) $height > 0;
+        if (in_array($extension, array('webp', 'avif'), true) && is_file($timg) && !$hasRequestedSize) {
 			return '/public/' . trim($dir, '/') . '/' . $photo;
 		}
 
         if(in_array($dir, [ 'products', 'sliders']) and $version !== 'mobile' and
-            is_file($timg)) {
+            is_file($timg) && !$hasRequestedSize) {
             return createWebp($photo, $dir, false);
         }
 
@@ -728,6 +729,17 @@ if (!function_exists('sync_cart')) {
             $cart_product = $CI->products_model->product_item_cart('ro', $cart_items_item['rowid']);
             if (!empty($cart_product)) {
 
+                $options = isset($cart_items_item['options'])
+                    ? $cart_items_item['options']
+                    : null;
+                $isGift = is_array($options)
+                    && (!empty($options['roulette_gift_id']) || !empty($options['gift_promotion_id']));
+                $variableId = is_array($options)
+                    ? (!empty($options['sku_id'])
+                        ? (int) $options['sku_id']
+                        : (!empty($options['variant_id']) ? (int) $options['variant_id'] : 0))
+                    : (!empty($options) ? (int) $options : 0);
+
                 if (!empty($_SESSION['isb2b'])) {
                     $cart_product->price = $cart_product->priceWH;
                 } else {
@@ -735,8 +747,36 @@ if (!function_exists('sync_cart')) {
                         $cart_product->price = $cart_product->discount_price;
                     }
                 }
-                if (!empty($cart_items_item['options'])) {
-                    $variable =  $CI->products_model->get_product_variable_by_id('RO', $cart_items_item['options'], $cart_product->id);
+
+                if ($isGift) {
+                    // Gift rows are fulfilled through a promotion/roulette and
+                    // must stay at the fixed 1 MDL cart price on every request.
+                    $cart_product->price = 1;
+                    if ($variableId > 0) {
+                        $variable = $CI->products_model->get_product_variable_by_id(
+                            'RO',
+                            $variableId,
+                            $cart_product->id
+                        );
+                        if (empty($variable)) {
+                            $CI->cart->remove($cart_items_item['rowid']);
+                            continue;
+                        }
+                        $cart_product->on_stock = !empty($_SESSION['isb2b'])
+                            ? $variable->qtyWH
+                            : $variable->qty;
+                        $cart_product->on_stockWH = $variable->qtyWH;
+                    }
+                } elseif ($variableId > 0) {
+                    $variable = $CI->products_model->get_product_variable_by_id(
+                        'RO',
+                        $variableId,
+                        $cart_product->id
+                    );
+                    if (empty($variable)) {
+                        $CI->cart->remove($cart_items_item['rowid']);
+                        continue;
+                    }
                     if (!empty($_SESSION['isb2b'])) {
                         $cart_product->price = $cart_product->priceWH;
                     } else {
@@ -751,6 +791,7 @@ if (!function_exists('sync_cart')) {
                     } else {
                         $cart_product->on_stock = $variable->qty;
                     }
+                    $cart_product->on_stockWH = $variable->qtyWH;
                 }
                 $row_id = $cart_items_item['rowid'];
                 $quantity = $cart_items_item['qty'];
@@ -763,7 +804,11 @@ if (!function_exists('sync_cart')) {
                         if ($quantity > $cart_product->on_stock) $quantity = $cart_product->on_stock;
                     }
 
-                    $CI->cart->update(array('rowid' => $row_id, 'qty' => $quantity, 'price' => $cart_product->price));
+                    if ($quantity <= 0) {
+                        $CI->cart->remove($row_id);
+                    } else {
+                        $CI->cart->update(array('rowid' => $row_id, 'qty' => $quantity, 'price' => $cart_product->price));
+                    }
                 }
             }else{
                 $CI->cart->remove($cart_items_item['rowid']);

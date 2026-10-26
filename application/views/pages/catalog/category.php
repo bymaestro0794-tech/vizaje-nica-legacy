@@ -136,6 +136,7 @@ $catalogBackUrl = $catalogBackCategory
                 <div class="main-catalog__body">
                     <?php foreach ($products as $product) { $this->load->view('layouts/pages/product_main', array('item' => $product, 'is_home_product_card' => true, 'is_catalog_editorial_card' => true, 'enable_catalog_hover_gallery' => true)); } ?>
                 </div>
+                <?php $this->load->view('pages/catalog/_lazy_sentinel'); ?>
                 <div class="main-catalog__paggination paggination-main-catalog"><?php $this->load->view('layouts/pages/paginator'); ?></div>
             </div>
             <?php if (!empty($category->seo_text) && trim(strip_tags((string) $category->seo_text)) !== '') { ?>

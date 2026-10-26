@@ -14,6 +14,24 @@ class Categories_model extends BaseModel
         return $this->db->select(['id', 'title' . $lang . ' AS title', 'parent_id', 'uri' . $lang . ' AS uri', 'parent_id', 'step'])->where(['isShown' => 1])->order_by('sorder ASC, id DESC')->get($this->tblname)->result();
     }
 
+    /**
+     * Flat category records used to build scoped catalog navigation.
+     * The frontend can then keep the same category tree for a brand or a
+     * discount listing while limiting it to categories that contain products
+     * in that listing.
+     */
+    public function get_category_listing_nodes($lang)
+    {
+        if (empty($lang)) return array();
+
+        return $this->db
+            ->select("id, parent_id, step, title{$lang} AS title, uri{$lang} AS uri, img, sorder")
+            ->where('isShown', 1)
+            ->order_by('sorder ASC, id DESC')
+            ->get($this->tblname)
+            ->result();
+    }
+
     public function get_category_parents()
     {
         $this->db->select("id as id, titleRU as titleRU, titleRO as titleRO, parent_id as parent_id");

@@ -65,8 +65,24 @@ class Products_model extends BaseModel
      * - может иметь нулевую цену у родителя;
      * - должен иметь хотя бы один вариант с ценой и остатком.
      */
-    private function applySellableCondition()
+    /**
+     * Gift products are catalogue records for admin and gift fulfillment,
+     * not public merchandise. Keep the rule in the model so a new public
+     * listing cannot accidentally expose them.
+     */
+    private function applyPublicProductCondition()
     {
+        if ($this->db->field_exists('isGift', $this->tblname)) {
+            $this->db->where($this->tblname . '.isGift', 0);
+        }
+    }
+
+    private function applySellableCondition($includeGiftProducts = false)
+    {
+        if (!$includeGiftProducts) {
+            $this->applyPublicProductCondition();
+        }
+
         if (!empty($_SESSION['isb2b'])) {
             $this->db->where("\n                (\n                    products.priceWH > 0\n                    OR EXISTS (\n                        SELECT 1\n                        FROM products_variable pv\n                        WHERE pv.product_id = products.id\n                          AND pv.priceWH > 0\n                          AND pv.qtyWH > 0\n                    )\n                )\n            ", null, false);
 
@@ -78,6 +94,8 @@ class Products_model extends BaseModel
 
     private function applyAvailableStockCondition()
     {
+        $this->applyPublicProductCondition();
+
         if (!empty($_SESSION['isb2b'])) {
             $this->db->where("(
                 products.on_stockWH > 0
@@ -139,6 +157,8 @@ class Products_model extends BaseModel
      */
     private function applyEffectivePriceRange($priceMin, $priceMax)
     {
+        $this->applyPublicProductCondition();
+
         $priceMin = max(0, (float) $priceMin);
         $priceMax = max($priceMin, (float) $priceMax);
 
@@ -245,6 +265,8 @@ class Products_model extends BaseModel
         'products.isShown',
         1
     );
+
+    $this->applyPublicProductCondition();
 
     $this->db->where(
         "uri$lang",
@@ -364,6 +386,7 @@ public function get_product_by_id_for_quick_view(
             1
         );
     }
+    $this->applyPublicProductCondition();
 
     $this->db->where(
         'products.id',
@@ -586,10 +609,15 @@ public function get_product_by_id_for_quick_view(
             ) AS cat_title
         ", false);
 
-        $this->db->where($this->tblname . '.isShown', 1);
+        $this->db->group_start()
+            ->where($this->tblname . '.isShown', 1);
+        if ($this->db->field_exists('isGift', $this->tblname)) {
+            $this->db->or_where($this->tblname . '.isGift', 1);
+        }
+        $this->db->group_end();
         $this->db->where($this->tblname . '.id', (int) $productIdRow->product_id);
 
-        $this->applySellableCondition();
+        $this->applySellableCondition(true);
         $this->applyProductImageCondition();
 
         return $this->db
@@ -605,6 +633,7 @@ public function get_product_by_id_for_quick_view(
         $this->db->select("
             id as id,
             SKU as SKU,
+            brand_id as brand_id,
             titleRU as title,
         ");
         $this->db->where("$this->tblname.isShown", 1);
@@ -1459,6 +1488,7 @@ private function decodeVariantColorData($colorData)
         'products.isShown',
         1
     );
+    $this->applyPublicProductCondition();
 
     $this->db->where(
         'products.id !=',
@@ -2128,6 +2158,7 @@ if (!empty($_SESSION['isb2b'])) {
             false
         );
         $this->db->where('products.isShown', 1);
+        $this->applyPublicProductCondition();
         $this->db->where('products.discount_price >', 0);
         $this->db->where("products.discount_price < products.price", null, false);
         $this->db->where('products.price >', 0);
@@ -2673,6 +2704,7 @@ if (!empty($_SESSION['isb2b'])) {
         } else {
             $this->applySellableCondition();
         }
+            $this->applyAvailableStockCondition();
 
         if (!empty($_GET['category']) && is_array($_GET['category'])) {
             $categoryIds = array_map('intval', $_GET['category']);
@@ -2806,6 +2838,7 @@ if (!empty($_SESSION['isb2b'])) {
         } else {
             $this->applySellableCondition();
         }
+        $this->applyAvailableStockCondition();
 
         if (!empty($_GET['category']) && is_array($_GET['category'])) {
             $categories = array_map('intval', $_GET['category']);
@@ -2966,6 +2999,7 @@ if (!empty($_SESSION['isb2b'])) {
         } else {
             $this->applySellableCondition();
         }
+            $this->applyAvailableStockCondition();
             if (!empty($_GET['brand']) && is_array($_GET['brand'])) {
                 $this->db->where_in('products.brand_id', $_GET['brand']);
             }
@@ -3019,6 +3053,7 @@ if (!empty($_SESSION['isb2b'])) {
         } else {
             $this->applySellableCondition();
         }
+        $this->applyAvailableStockCondition();
 
         if (!empty($_GET['brand']) && is_array($_GET['brand'])) {
             $brandIds = array_values(array_filter(array_map(function ($value) {
@@ -3083,6 +3118,39 @@ if (!empty($_SESSION['isb2b'])) {
 
         return $this->db->get()->result();
     }
+
+    /**
+     * Count category products without materialising the complete result set.
+     *
+     * Category pages used to load every matching product into PHP and then
+     * call count(). On large categories that made the first request expensive
+     * even though the page renders only one pagination slice.
+     */
+    public function count_category_products($categories_id = array())
+    {
+        $this->db->select('COUNT(DISTINCT products.id) AS total', false);
+        $this->db->from($this->tblname);
+        $this->db->join('products_img', 'products_img.product_id = products.id', 'inner');
+
+        if (!empty($categories_id)) {
+            $this->db->join('product_categories pc', 'pc.product_id = products.id', 'inner');
+            $this->db->where_in('pc.category_id', array_values(array_map('intval', $categories_id)));
+        }
+
+        $this->db->where('products.isShown', 1);
+
+        if (isset($_GET['price_min'], $_GET['price_max']) && is_numeric($_GET['price_min']) && is_numeric($_GET['price_max'])) {
+            $this->applyEffectivePriceRange($_GET['price_min'], $_GET['price_max']);
+        } else {
+            $this->applySellableCondition();
+        }
+
+        $this->applyCategoryListingFilters();
+
+        $row = $this->db->get()->row();
+        return !empty($row) ? (int) $row->total : 0;
+    }
+
     public function get_category_products_pag($lang, $categories_id = array(), $offset, $limit, $sort = '')
     {
         if (empty($lang)) {
@@ -3619,6 +3687,7 @@ if (!empty($_SESSION['isb2b'])) {
     {
         $this->db->select_max('price', 'price');
         $this->db->where("$this->tblname.isShown", 1);
+        $this->applyPublicProductCondition();
         $this->db->where_in('category_id', $categories_id);
         return $this->db->get($this->tblname)->row();
     }
@@ -3627,6 +3696,7 @@ if (!empty($_SESSION['isb2b'])) {
     {
         $this->db->select_min('price', 'price');
         $this->db->where("$this->tblname.isShown", 1);
+        $this->applyPublicProductCondition();
         $this->db->where_in('category_id', $categories_id);
         return $this->db->get($this->tblname)->row();
     }
@@ -3635,6 +3705,7 @@ if (!empty($_SESSION['isb2b'])) {
     {
         $this->db->select_max('price', 'price');
         $this->db->where("$this->tblname.isShown", 1);
+        $this->applyPublicProductCondition();
         $this->db->where('brand_id', $brand);
         return $this->db->get($this->tblname)->row();
     }
@@ -3643,6 +3714,7 @@ if (!empty($_SESSION['isb2b'])) {
     {
         $this->db->select_min('price', 'price');
         $this->db->where("$this->tblname.isShown", 1);
+        $this->applyPublicProductCondition();
         $this->db->where('brand_id', $brand);
         return $this->db->get($this->tblname)->row();
     }
@@ -3656,6 +3728,7 @@ if (!empty($_SESSION['isb2b'])) {
         }
         $this->db->select_max('price', 'price');
         $this->db->where("$this->tblname.isShown", 1);
+        $this->applyPublicProductCondition();
         $this->db->where_in('id', $pr_id);
         return $this->db->get($this->tblname)->row();
     }
@@ -3669,6 +3742,7 @@ if (!empty($_SESSION['isb2b'])) {
         }
         $this->db->select_min('price', 'price');
         $this->db->where("$this->tblname.isShown", 1);
+        $this->applyPublicProductCondition();
         $this->db->where_in('id', $pr_id);
         return $this->db->get($this->tblname)->row();
     }
@@ -3831,6 +3905,7 @@ if (!empty($_SESSION['isb2b'])) {
         $campaignMin,
         $campaignMax
     ) {
+        $this->applyPublicProductCondition();
         $allowedBrandIds =
             $this->normalizeNicheSaleBrandIds(
                 $allowedBrandIds

@@ -177,6 +177,17 @@ class Ajax extends CI_Controller
         );
     }
 
+    if (!empty($product->isGift)) {
+        $response['code'] = 'GIFT_PRODUCT_ONLY';
+        $response['message'] = 'Подарочный товар можно добавить только через акцию или рулетку.';
+
+        return $this->cartAddResponse(
+            $response,
+            $add_item,
+            403
+        );
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Вариант
@@ -504,6 +515,14 @@ public function gift_promotion_add()
         if (empty($variable) || (int) ($variable->qty ?? 0) <= 0) {
             return $this->output->set_status_header(409)->set_content_type('application/json', 'utf-8')
                 ->set_output(json_encode(array('status' => 'error', 'code' => 'GIFT_VARIANT_UNAVAILABLE', 'message' => 'Выбранный вариант подарка недоступен.'), JSON_UNESCAPED_UNICODE));
+        }
+    } elseif (empty($giftVariants)) {
+        $availableGiftStock = !empty($_SESSION['isb2b'])
+            ? (int) ($product->on_stockWH ?? 0)
+            : (int) ($product->on_stock ?? 0);
+        if ($availableGiftStock <= 0) {
+            return $this->output->set_status_header(409)->set_content_type('application/json', 'utf-8')
+                ->set_output(json_encode(array('status' => 'error', 'code' => 'GIFT_OUT_OF_STOCK', 'message' => 'Подарок закончился.'), JSON_UNESCAPED_UNICODE));
         }
     }
 

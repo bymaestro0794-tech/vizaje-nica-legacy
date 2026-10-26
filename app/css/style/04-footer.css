@@ -3,6 +3,10 @@
    ========================================================= */
 
 .footer {
+	/* Keep footer links in the DOM, but defer layout and paint until the
+	 * footer approaches the viewport on long catalog pages. */
+	content-visibility: auto;
+	contain-intrinsic-size: 680px;
 	background: #ffffff;
 	color: #111111;
 }

@@ -115,6 +115,11 @@ class Products extends BackEndController
                 $post[$index] = $this->input->post($index);
             }
 
+            $post['isGift'] = !empty($post['isGift']) ? 1 : 0;
+            if ($post['isGift'] === 1) {
+                $post['isShown'] = 0;
+            }
+
             if (array_key_exists('youtube_video_url', $post)) {
                 $youtubeUrl = trim((string) $post['youtube_video_url']);
                 $youtubeVideoId = $youtubeUrl === ''
@@ -271,6 +276,11 @@ class Products extends BackEndController
             try {
                 foreach ($_POST as $index => $post_data) {
                     $post[$index] = $this->input->post($index, TRUE);
+                }
+
+                $post['isGift'] = !empty($post['isGift']) ? 1 : 0;
+                if ($post['isGift'] === 1) {
+                    $post['isShown'] = 0;
                 }
 
                 if (array_key_exists('youtube_video_url', $post)) {

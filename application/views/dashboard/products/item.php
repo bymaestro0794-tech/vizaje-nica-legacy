@@ -221,6 +221,17 @@
                                         </td>
                                     </tr>
                                     <tr>
+                                        <td>Тип товара</td>
+                                        <td>
+                                            <label class="mt-checkbox mt-checkbox-outline">
+                                                <input type="checkbox" name="isGift" value="1" <?= !empty($item->isGift) ? 'checked' : '' ?>>
+                                                Подарок — скрыть на сайте и добавлять только через акцию/рулетку
+                                                <span></span>
+                                            </label>
+                                            <p class="help-block">В корзине такой товар всегда считается по цене 1 MDL. Снятие флага не включает товар обратно автоматически — при необходимости включите «Показывать на сайте».</p>
+                                        </td>
+                                    </tr>
+                                    <tr>
                                         <td width="200"><?= lang('Price') ?></td>
                                         <td>
                                             <input type="text" name="price" value="<?= $item->price ?>"

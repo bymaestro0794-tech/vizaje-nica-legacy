@@ -32,7 +32,10 @@
         isOpening = true
         window.VNQuickView.open(productId, {
             promotionId: promotionId,
-            title: item.title || ''
+            title: item.title || '',
+            progressMode: item.progress_mode || 'time',
+            dateTo: item.date_to || '',
+            remainingStock: Number(item.remaining_stock) || 0
         })
 
         window.setTimeout(function () {

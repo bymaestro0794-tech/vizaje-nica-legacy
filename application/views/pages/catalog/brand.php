@@ -23,6 +23,12 @@ $selectedCategories = !empty($_GET['category']) && is_array($_GET['category'])
 $minPrice = isset($filter_price_min) ? (float) $filter_price_min : (float) $price_min;
 $maxPrice = isset($filter_price_max) ? (float) $filter_price_max : (float) $price_max;
 $brandTitle = !empty($brand->h1_title) ? $brand->h1_title : $brand->title;
+$brandFilterCategoryIds = array_map(
+    static function ($categoryFilter) {
+        return (int) $categoryFilter->id;
+    },
+    (array) $categoryes_filter
+);
 ?>
 <main class="page catalog-category-page catalog-brand-page">
     <section class="breacrums">
@@ -42,35 +48,30 @@ $brandTitle = !empty($brand->h1_title) ? $brand->h1_title : $brand->title;
             </header>
 
             <?php
-            $visibleBrandCategories = array();
-            $activeBrandCategoryId = !empty($selectedCategories) ? (int) reset($selectedCategories) : 0;
-            foreach ((array) $categoryes_filter as $categoryFilter) {
-                if ((int) $categoryFilter->id === $activeBrandCategoryId) {
-                    array_unshift($visibleBrandCategories, $categoryFilter);
-                } else {
-                    $visibleBrandCategories[] = $categoryFilter;
-                }
-            }
+            $brandCategoryNavigation = $category_navigation ?? array('parent' => null, 'items' => array());
             $brandCategoryQuery = $_GET;
-            unset($brandCategoryQuery['page'], $brandCategoryQuery['filter_count']);
+            unset($brandCategoryQuery['page'], $brandCategoryQuery['filter_count'], $brandCategoryQuery['category']);
+            $brandCategoryResetQuery = http_build_query($brandCategoryQuery, '', '&', PHP_QUERY_RFC3986);
+            $brandCategoryResetUrl = current_url() . ($brandCategoryResetQuery !== '' ? '?' . $brandCategoryResetQuery : '');
             ?>
-            <?php if (!empty($visibleBrandCategories)) { ?>
+            <?php if (!empty($brandCategoryNavigation['items']) || !empty($brandCategoryNavigation['parent'])) { ?>
                 <nav class="category-shortcuts catalog-brand__categories" aria-label="<?= $copy['categories'] ?>">
-                    <?php foreach ($visibleBrandCategories as $categoryFilter) {
+                    <?php if (!empty($brandCategoryNavigation['parent'])) { ?>
+                        <a class="category-shortcut category-shortcut--back" href="<?= html_escape($brandCategoryResetUrl) ?>">
+                            <span class="category-shortcut__image" aria-hidden="true">←</span>
+                            <span class="category-shortcut__label"><?= $isRomanian ? 'Toate categoriile' : 'Все категории' ?></span>
+                        </a>
+                    <?php } ?>
+                    <?php foreach (($brandCategoryNavigation['items'] ?? array()) as $categoryFilter) {
                         $categoryImage = !empty($categoryFilter->img)
                             ? newthumbs($categoryFilter->img, 'categories', 92, 92, '92x92x1', 1)
                             : '';
-                        $categoryIsActive = (int) $categoryFilter->id === $activeBrandCategoryId;
                         $categoryQuery = $brandCategoryQuery;
-                        if ($categoryIsActive) {
-                            unset($categoryQuery['category']);
-                        } else {
-                            $categoryQuery['category'] = array((int) $categoryFilter->id);
-                        }
+                        $categoryQuery['category'] = array((int) $categoryFilter->id);
                         $categoryQueryString = http_build_query($categoryQuery, '', '&', PHP_QUERY_RFC3986);
                         $categoryUrl = current_url() . ($categoryQueryString !== '' ? '?' . $categoryQueryString : '');
                     ?>
-                        <a class="category-shortcut <?= $categoryIsActive ? 'is-active' : '' ?>" href="<?= html_escape($categoryUrl) ?>" <?= $categoryIsActive ? 'aria-current="true"' : '' ?>>
+                        <a class="category-shortcut" href="<?= html_escape($categoryUrl) ?>">
                             <span class="category-shortcut__image">
                                 <?php if ($categoryImage) { ?><img src="<?= $categoryImage ?>" alt="" loading="lazy"><?php }
                                 else { ?><span aria-hidden="true"><?= html_escape(mb_substr($categoryFilter->title, 0, 1, 'UTF-8')) ?></span><?php } ?>
@@ -126,6 +127,7 @@ $brandTitle = !empty($brand->h1_title) ? $brand->h1_title : $brand->title;
                 <div class="main-catalog__body">
                     <?php foreach ($products as $product) { $this->load->view('layouts/pages/product_main', array('item' => $product, 'is_home_product_card' => true, 'enable_catalog_hover_gallery' => true)); } ?>
                 </div>
+                <?php $this->load->view('pages/catalog/_lazy_sentinel'); ?>
                 <div class="main-catalog__paggination paggination-main-catalog"><?php $this->load->view('layouts/pages/paginator'); ?></div>
                 <?php if (!empty(trim(strip_tags((string) $brand->seo_text)))) : ?><section class="category-seo"><?= $brand->seo_text ?></section><?php endif; ?>
             </div>
@@ -142,8 +144,30 @@ $brandTitle = !empty($brand->h1_title) ? $brand->h1_title : $brand->title;
         </header>
 
         <form class="catalog-filter-form" method="get" action="<?= current_url() ?>" data-category-filter-form data-price-default-min="<?= (float) $price_min ?>" data-price-default-max="<?= (float) $price_max ?>" data-price-label="<?= $copy['price'] ?>">
-            <?php foreach ($selectedCategories as $selectedCategoryId) { ?><input type="hidden" name="category[]" value="<?= (int) $selectedCategoryId ?>"><?php } ?>
+            <?php foreach ($selectedCategories as $selectedCategoryId) {
+                if (in_array((int) $selectedCategoryId, $brandFilterCategoryIds, true)) continue;
+            ?><input type="hidden" name="category[]" value="<?= (int) $selectedCategoryId ?>"><?php } ?>
             <div class="catalog-filter-drawer__content">
+                <?php if (!empty($categoryes_filter)) { ?>
+                    <section class="catalog-filter-section" data-filter-section="category" data-filter-title="<?= $copy['categories'] ?>">
+                        <button type="button" class="catalog-filter-section__heading" aria-expanded="false">
+                            <span><?= $copy['categories'] ?><?php if ($selectedCategories) { ?><small><?= count($selectedCategories) ?> <?= $copy['selected'] ?></small><?php } ?></span>
+                            <svg class="catalog-filter-section__chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="m3 4.5 3 3 3-3"/></svg>
+                        </button>
+                        <div class="catalog-filter-section__body" hidden>
+                            <div class="catalog-filter-options">
+                                <?php foreach ($categoryes_filter as $categoryFilter) { ?>
+                                    <label class="catalog-filter-option">
+                                        <input type="checkbox" name="category[]" value="<?= (int) $categoryFilter->id ?>" <?= in_array((int) $categoryFilter->id, $selectedCategories, true) ? 'checked' : '' ?>>
+                                        <span class="catalog-filter-option__check"></span>
+                                        <span class="catalog-filter-option__name"><?= html_escape($categoryFilter->title) ?></span>
+                                        <span class="catalog-filter-option__count"><?= (int) $categoryFilter->count ?></span>
+                                    </label>
+                                <?php } ?>
+                            </div>
+                        </div>
+                    </section>
+                <?php } ?>
                 <section class="catalog-filter-section" data-filter-section="stock" data-filter-title="<?= $copy['stock'] ?>">
                     <label class="catalog-stock-toggle"><span><?= $copy['stock'] ?></span><input type="checkbox" name="in_stock" value="1" <?= !empty($_GET['in_stock']) ? 'checked' : '' ?>><i aria-hidden="true"></i></label>
                 </section>

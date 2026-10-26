@@ -466,6 +466,17 @@
 	color: #111;
 }
 
+.quick-view-product__gift-promotion {
+	display: inline-flex;
+	margin: 12px 0 0;
+	padding: 7px 10px;
+	border: 1px solid #111;
+	color: #9a6f54;
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: .03em;
+}
+
 .quick-view-product__price {
 	display: flex;
 	align-items: baseline;

@@ -63,6 +63,76 @@ function filter_products() {
     return false;
 }
 
+/* Desktop category chips: mouse drag and wheel behave like a mobile swipe. */
+;(function () {
+	'use strict'
+
+	document.querySelectorAll('.category-shortcuts').forEach(function (scroller) {
+		var drag = null
+		var suppressClick = false
+
+		scroller.addEventListener('wheel', function (event) {
+			if (scroller.scrollWidth <= scroller.clientWidth) return
+			if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return
+
+			scroller.scrollLeft += event.deltaY
+			event.preventDefault()
+		}, { passive: false })
+
+		scroller.addEventListener('pointerdown', function (event) {
+			if (event.pointerType !== 'mouse' || scroller.scrollWidth <= scroller.clientWidth) return
+
+			drag = {
+				pointerId: event.pointerId,
+				startX: event.clientX,
+				startScrollLeft: scroller.scrollLeft,
+				moved: false
+			}
+			scroller.setPointerCapture(event.pointerId)
+		})
+
+		scroller.addEventListener('pointermove', function (event) {
+			if (!drag || event.pointerId !== drag.pointerId) return
+
+			var distance = event.clientX - drag.startX
+			if (Math.abs(distance) > 5) {
+				drag.moved = true
+				scroller.classList.add('is-dragging')
+				event.preventDefault()
+			}
+			if (drag.moved) {
+				scroller.scrollLeft = drag.startScrollLeft - distance
+			}
+		})
+
+		function finishDrag (event) {
+			if (!drag || (event && event.pointerId !== drag.pointerId)) return
+
+			suppressClick = drag.moved
+			scroller.classList.remove('is-dragging')
+			if (event && scroller.hasPointerCapture(event.pointerId)) {
+				scroller.releasePointerCapture(event.pointerId)
+			}
+			drag = null
+
+			if (suppressClick) {
+				window.setTimeout(function () {
+					suppressClick = false
+				}, 0)
+			}
+		}
+
+		scroller.addEventListener('pointerup', finishDrag)
+		scroller.addEventListener('pointercancel', finishDrag)
+		scroller.addEventListener('click', function (event) {
+			if (!suppressClick) return
+			event.preventDefault()
+			event.stopPropagation()
+			suppressClick = false
+		}, true)
+	})
+})()
+
 $('body.catalog_page').on('click', '.head-main-catalog__select .select .select__options .select__option', function (e) {
     filter_products();
 });

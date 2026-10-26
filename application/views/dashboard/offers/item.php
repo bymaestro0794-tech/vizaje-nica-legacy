@@ -104,6 +104,18 @@
                                             </select>
                                         </td>
                                     </tr>
+                                    <tr>
+                                        <td width="200">Показывать в карточке товара</td>
+                                        <td>
+                                            <?php $progressMode = in_array(($item->progress_mode ?? 'time'), array('time', 'stock', 'none'), true) ? $item->progress_mode : 'time'; ?>
+                                            <select name="progress_mode" class="form-control" style="max-width:320px">
+                                                <option value="time" <?= $progressMode === 'time' ? 'selected' : '' ?>>Оставшееся время</option>
+                                                <option value="stock" <?= $progressMode === 'stock' ? 'selected' : '' ?>>Остаток товара</option>
+                                                <option value="none" <?= $progressMode === 'none' ? 'selected' : '' ?>>Ничего</option>
+                                            </select>
+                                            <p class="help-block">Выберите, что показывать рядом с акцией: таймер, остаток или ничего.</p>
+                                        </td>
+                                    </tr>
                                     <? foreach (language(true) as $lang) { ?>
                                         <tr>
                                             <td width="200"><?= lang('Location') ?> <?= strtoupper($lang) ?>
@@ -290,7 +302,33 @@
                                     <span data-offer-product-count>Выбрано: 0</span>
                                     <button type="button" class="btn blue" data-offer-product-add>Добавить выбранные</button>
                                 </div>
+                                <div style="margin-top:16px;padding-top:16px;border-top:1px solid #ddd;">
+                                    <label for="offer-excluded-brands" style="display:block;margin-bottom:6px;">Добавить товары всех брендов, кроме:</label>
+                                    <select id="offer-excluded-brands" class="form-control" data-offer-excluded-brands multiple size="6" style="max-width:520px;">
+                                        <?php foreach (($product_brands ?? array()) as $brand) : ?>
+                                            <option value="<?= (int) $brand->id ?>"><?= htmlspecialchars((string) $brand->title, ENT_QUOTES, 'UTF-8') ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <p class="help-block">Выберите бренды, которые нужно исключить, затем добавьте остальные товары одной кнопкой.</p>
+                                    <button type="button" class="btn purple" data-offer-add-all-except-brands>Добавить все бренды, кроме выбранных</button>
+                                </div>
                             </div>
+                            <?php if (!empty($offer_brands)) : ?>
+                                <div class="offer-brands-list" style="margin-bottom:20px;padding:15px;background:#fff8e5;border:1px solid #f0d58a;">
+                                    <h4 style="margin-top:0;">Бренды в акции</h4>
+                                    <p style="margin-bottom:12px;color:#777;">Удаление бренда уберёт из этой акции только его товары. Сам бренд и товары не удаляются.</p>
+                                    <div data-offer-brands>
+                                        <?php foreach ($offer_brands as $brand) : ?>
+                                            <div data-offer-brand-row data-brand-id="<?= (int) $brand->id ?>" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #f0e4bf;">
+                                                <span><?= htmlspecialchars((string) $brand->title, ENT_QUOTES, 'UTF-8') ?> <small style="color:#777;">(товаров: <?= (int) $brand->product_count ?>)</small></span>
+                                                <button type="button" class="btn btn-xs default btn-editable red-stripe" onclick="DeleteOfferBrand(<?= (int) $brand->id ?>)">
+                                                    <i class="glyphicon glyphicon-remove-circle"></i> Удалить бренд из акции
+                                                </button>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
                             <div class="table-scrollable">
                                 <table class="table table-bordered table-striped table-hover">
                                     <thead>
@@ -317,7 +355,7 @@
                                     $i = 0; ?>
                                     <?php foreach ($products_alt as $key) { ?>
                                         <table class="table table-bordered table-striped table-hover"
-                                               id="prodalt<?= $key->id ?>">
+                                               id="prodalt<?= $key->id ?>" data-offer-product-row data-product-id="<?= (int) $key->product_id ?>" data-brand-id="<?= (int) $key->brand_id ?>">
                                             <tbody>
                                             <tr>
                                                 <td width="80">
@@ -378,18 +416,53 @@
         return false;
     });
 
+    var offerId = <?= (int) $item->id ?>;
+
     function DeleteProdAlt(id) {
         var tbid = '#prodalt' + id;
+        if (!window.confirm('Удалить товар из акции?')) return;
         $.ajax({
             url: '/cp/offers/prodalt_delete', // путь к обработчику
             type: 'POST', // метод отправки
-            data: {id: id},
+            dataType: 'json',
+            data: {row_id: id, offer_id: offerId},
             success: function (data) {
-                console.log("УСПЕХ"); // выводим сообщение в консоль
-                $(tbid).remove();
+                if (data && data.status === 'ok') {
+                    var row = $(tbid);
+                    var brandId = row.data('brand-id');
+                    row.remove();
+                    if (brandId && !$('[data-offer-product-row][data-brand-id="' + brandId + '"]').length) {
+                        $('[data-offer-brand-row][data-brand-id="' + brandId + '"]').remove();
+                        if (!$('[data-offer-brand-row]').length) $('.offer-brands-list').remove();
+                    }
+                }
             },
             error: function (data) {
                 console.log(data); // выводим ошибку в консоль
+            }
+        });
+    }
+
+    function DeleteOfferBrand(brandId) {
+        if (!window.confirm('Удалить все товары этого бренда из акции?')) return;
+
+        $.ajax({
+            url: '/cp/offers/brand_products_delete',
+            type: 'POST',
+            dataType: 'json',
+            data: {brand_id: brandId, offer_id: offerId},
+            success: function (data) {
+                if (!data || data.status !== 'ok') return;
+
+                var productIds = (data.product_ids || []).map(String);
+                $('[data-offer-product-row]').each(function () {
+                    if (productIds.indexOf(String($(this).data('product-id'))) !== -1) $(this).remove();
+                });
+                $('[data-offer-brand-row][data-brand-id="' + brandId + '"]').remove();
+                if (!$('[data-offer-brand-row]').length) $('.offer-brands-list').remove();
+            },
+            error: function (data) {
+                console.log(data);
             }
         });
     }
@@ -492,9 +565,56 @@
                             + '<td>' + escapeHtml(item.title) + '</td>'
                             + '<td width="100"><a onclick="DeleteProdAlt(' + item.id + ')" class="btn btn-xs default btn-editable red-stripe"><i class="glyphicon glyphicon-remove-circle"></i> Удалить</a></td>'
                             + '</tr></tbody>';
+                        table.setAttribute('data-offer-product-row', '');
+                        table.setAttribute('data-product-id', item.product_id);
+                        table.setAttribute('data-brand-id', item.brand_id);
                         document.querySelector('.products_list').prepend(table);
                     });
                     loadProducts();
+                });
+        });
+
+        var excludedBrands = picker.querySelector('[data-offer-excluded-brands]');
+        var addAllExceptBrands = picker.querySelector('[data-offer-add-all-except-brands]');
+
+        addAllExceptBrands.addEventListener('click', function () {
+            var selectedBrandIds = Array.from(excludedBrands.selectedOptions).map(function (option) {
+                return option.value;
+            });
+            var message = selectedBrandIds.length
+                ? 'Добавить в акцию товары всех брендов, кроме выбранных?'
+                : 'Добавить в акцию товары всех брендов?';
+
+            if (!window.confirm(message)) return;
+
+            var body = new URLSearchParams();
+            body.append('offer_id', picker.dataset.offerId);
+            selectedBrandIds.forEach(function (brandId) {
+                body.append('excluded_brand_ids[]', brandId);
+            });
+
+            addAllExceptBrands.disabled = true;
+            fetch('/cp/offers/products_bulk_add_all_except_brands', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+                body: body.toString()
+            })
+                .then(function (response) { return response.json(); })
+                .then(function (payload) {
+                    if (payload.status !== 'ok') {
+                        window.alert(payload.message || 'Не удалось добавить товары.');
+                        return;
+                    }
+
+                    window.alert('Добавлено товаров: ' + payload.added_count + '.');
+                    window.location.reload();
+                })
+                .catch(function () {
+                    window.alert('Не удалось добавить товары.');
+                })
+                .finally(function () {
+                    addAllExceptBrands.disabled = false;
                 });
         });
 

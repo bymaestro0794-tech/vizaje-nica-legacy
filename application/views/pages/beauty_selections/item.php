@@ -12,7 +12,7 @@
     <section class="beauty-selection">
         <div class="beauty-selection__hero">
             <?php if (!empty($selection->img)) : ?>
-                <img src="<?= newthumbs($selection->img, 'beauty_selections', 1800, 760, '1800x760x1', 1) ?>" alt="<?= htmlspecialchars($selection->title, ENT_QUOTES, 'UTF-8') ?>">
+                <img src="<?= newthumbs($selection->img, 'beauty_selections', 1800, 760, '1800x760x1', 1) ?>" alt="<?= htmlspecialchars($selection->title, ENT_QUOTES, 'UTF-8') ?>" fetchpriority="high" decoding="async">
             <?php endif; ?>
             <div class="beauty-selection__hero-copy">
                 <h1><?= htmlspecialchars($selection->title, ENT_QUOTES, 'UTF-8') ?></h1>

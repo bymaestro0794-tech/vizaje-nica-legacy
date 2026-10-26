@@ -1,6 +1,6 @@
 <?php
 $productTitle = (string) ($product->title ?? '');
-$productImage = newthumbs($product->img, 'products');
+$productImage = newthumbs($product->img, 'products', 800, 800, 'selection-800', 0);
 $productUrl = '/'
     . $lclang
     . '/'

@@ -13,7 +13,7 @@ $productId = isset($item->id)
     ? (int) $item->id
     : 0;
 
-$isVariable = !empty($item->variable);
+$isVariable = !empty($item->variable) || !empty($item->has_variable);
 
 $parentPrice = isset($item->price)
     ? (float) $item->price
@@ -132,7 +132,7 @@ if (
     $wishlistDisplayTitle = $wishlistBrandTitle . ' ' . $productTitle;
 }
 
-$imageSrc = newthumbs($displayImage, 'products');
+$imageSrc = newthumbs($displayImage, 'products', 800, 800, 'catalog-800', 0);
 $catalogHoverGalleryAttribute = '';
 
 if (!empty($enable_catalog_hover_gallery) && $imageSrc) {
@@ -157,10 +157,10 @@ if (!empty($enable_catalog_hover_gallery) && $imageSrc) {
             continue;
         }
 
-        $galleryImageUrl = '/public/products/' . implode(
-            '/',
-            array_map('rawurlencode', $pathSegments)
-        );
+        // Hover images are requested only after the user points at a card.
+        // Do not generate four PHP thumbnails for every card during the
+        // initial category request; keep the original URL for deferred load.
+        $galleryImageUrl = '/public/products/' . $galleryImageName;
 
         if ($galleryImageUrl === $imageSrc) {
             continue;

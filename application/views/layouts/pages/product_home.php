@@ -11,7 +11,7 @@ $productTitle = preg_replace(
     )
 );
 
-$productImage = newthumbs($item->img, 'products');
+$productImage = newthumbs($item->img, 'products', 800, 800, 'home-800', 0);
 
 if (!empty($_SESSION['isb2b'])) {
     $productPrice = $item->priceWH . ' ' . MDL;

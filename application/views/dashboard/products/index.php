@@ -180,6 +180,17 @@
                                                 </td>
                                             </tr>
                                             <tr>
+                                                <td>Тип товара</td>
+                                                <td>
+                                                    <label class="mt-checkbox mt-checkbox-outline">
+                                                        <input type="checkbox" name="isGift" value="1">
+                                                        Подарок — скрыть на сайте и добавлять только через акцию/рулетку
+                                                        <span></span>
+                                                    </label>
+                                                    <p class="help-block">В корзине такой товар всегда считается по цене 1 MDL.</p>
+                                                </td>
+                                            </tr>
+                                            <tr>
                                                 <td width="200"><?= lang('Price') ?></td>
                                                 <td>
                                                     <input type="text" name="price"
@@ -401,7 +412,7 @@
                                                class="form-control text-center sorder" value="<?= $object->sorder ?>"
                                                name="so[<?= $object->id ?>]">
                                     </td>
-                                    <td><a href="<?= $e_path . $object->id . '/' ?>"><?= $object->titleRO ?></a></td>
+                                    <td><a href="<?= $e_path . $object->id . '/' ?>"><?= $object->titleRO ?></a><?php if (!empty($object->isGift)) : ?> <span class="label label-warning">Подарок</span><?php endif; ?></td>
                                     <td><a href="<?= $e_path . $object->id . '/' ?>"><?= $object->SKU ?></a></td>
 
                                     <td class="align-middle">

@@ -906,6 +906,11 @@ a.breacrums__name:hover {
 	overflow: visible;
 }
 
+.product-color-select__desktop-options--compact {
+	justify-content: flex-start;
+	gap: 12px;
+}
+
 .product-color-select__desktop-option {
 	display: grid;
 	flex: 0 0 38px;
