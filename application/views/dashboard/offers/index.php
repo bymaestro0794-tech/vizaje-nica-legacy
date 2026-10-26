@@ -96,6 +96,17 @@
                                                     </select>
                                                 </td>
                                             </tr>
+                                            <tr>
+                                                <td width="200">Показывать в карточке товара</td>
+                                                <td>
+                                                    <select name="progress_mode" class="form-control" style="max-width:320px">
+                                                        <option value="time" selected>Оставшееся время</option>
+                                                        <option value="stock">Остаток товара</option>
+                                                        <option value="none">Ничего</option>
+                                                    </select>
+                                                    <p class="help-block">Выберите, что показывать рядом с акцией: таймер, остаток или ничего.</p>
+                                                </td>
+                                            </tr>
                                             <? foreach (language(true) as $lang) { ?>
                                                 <tr>
                                                     <td width="200"><?= lang('Location') ?> <?= strtoupper($lang) ?>

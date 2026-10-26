@@ -7,9 +7,10 @@
     }
 
     var timer = promotion.querySelector('[data-product-promotion-timer]');
+    var mode = promotion.getAttribute('data-product-promotion-mode') || 'time';
     var deadline = Date.parse(promotion.getAttribute('data-product-promotion-deadline') || '');
 
-    if (!timer || Number.isNaN(deadline)) {
+    if (mode !== 'time' || !timer || Number.isNaN(deadline)) {
         return;
     }
 

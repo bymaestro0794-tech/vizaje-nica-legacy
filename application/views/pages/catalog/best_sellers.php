@@ -15,6 +15,12 @@ $copy = $isRomanian ? array(
 );
 $activeBrands = !empty($_GET['brand']) && is_array($_GET['brand']) ? array_map('intval', $_GET['brand']) : array();
 $activeCategories = !empty($_GET['category']) && is_array($_GET['category']) ? array_map('intval', $_GET['category']) : array();
+$discountFilterCategoryIds = array_map(
+    static function ($filterCategory) {
+        return (int) $filterCategory->id;
+    },
+    (array) ($filter_categories ?? array())
+);
 $activeSex = !empty($_GET['sex']) && is_array($_GET['sex']) ? $_GET['sex'] : array();
 $priceMin = isset($filter_price_min) ? (float) $filter_price_min : (float) $price_min;
 $priceMax = isset($filter_price_max) ? (float) $filter_price_max : (float) $price_max;
@@ -26,19 +32,13 @@ foreach (($brands ?? array()) as $brand) {
     $groupName = preg_match('/^[0-9]/u', $firstCharacter) ? '0—9' : mb_strtoupper($firstCharacter, 'UTF-8');
     $brandGroups[$groupName][] = $brand;
 }
-$orderedDiscountCategories = array();
-$activeDiscountCategories = array();
-$inactiveDiscountCategories = array();
-foreach (($filter_categories ?? array()) as $filterCategory) {
-    if (in_array((int) $filterCategory->id, $activeCategories, true)) {
-        $activeDiscountCategories[] = $filterCategory;
-    } else {
-        $inactiveDiscountCategories[] = $filterCategory;
-    }
-}
-$orderedDiscountCategories = array_merge($activeDiscountCategories, $inactiveDiscountCategories);
 $discountCategoryQuery = $_GET;
 unset($discountCategoryQuery['page'], $discountCategoryQuery['filter_count']);
+$discountCategoryNavigation = $category_navigation ?? array('parent' => null, 'items' => array());
+$discountCategoryResetQuery = $_GET;
+unset($discountCategoryResetQuery['page'], $discountCategoryResetQuery['filter_count'], $discountCategoryResetQuery['category']);
+$discountCategoryResetQueryString = http_build_query($discountCategoryResetQuery, '', '&', PHP_QUERY_RFC3986);
+$discountCategoryResetUrl = $page_url . ($discountCategoryResetQueryString !== '' ? '?' . $discountCategoryResetQueryString : '');
 ?>
 <main class="page catalog-category-page catalog-discounts-page">
     <section class="breacrums">
@@ -54,17 +54,18 @@ unset($discountCategoryQuery['page'], $discountCategoryQuery['filter_count']);
             <header class="head-catalog catalog-category__heading">
                 <h1 class="head-catalog__title"><?= $menu['all'][35]->title ?></h1>
             </header>
-            <?php if (!empty($orderedDiscountCategories)) { ?>
+            <?php if (!empty($discountCategoryNavigation['items']) || !empty($discountCategoryNavigation['parent'])) { ?>
                 <nav class="category-shortcuts catalog-discounts__categories" aria-label="<?= $copy['category'] ?>">
-                    <?php foreach ($orderedDiscountCategories as $filterCategory) {
-                        $categoryIsActive = in_array((int) $filterCategory->id, $activeCategories, true);
+                    <?php if (!empty($discountCategoryNavigation['parent'])) { ?>
+                        <a class="category-shortcut category-shortcut--back" href="<?= html_escape($discountCategoryResetUrl) ?>">
+                            <span class="category-shortcut__image" aria-hidden="true">←</span>
+                            <span class="category-shortcut__label"><?= $isRomanian ? 'Toate categoriile' : 'Все категории' ?></span>
+                        </a>
+                    <?php } ?>
+                    <?php foreach (($discountCategoryNavigation['items'] ?? array()) as $filterCategory) {
                         $categoryQuery = $discountCategoryQuery;
-                        if ($categoryIsActive) {
-                            $categoryQuery['category'] = array_values(array_diff($activeCategories, array((int) $filterCategory->id)));
-                            if (empty($categoryQuery['category'])) unset($categoryQuery['category']);
-                        } else {
-                            $categoryQuery['category'] = array((int) $filterCategory->id);
-                        }
+                        unset($categoryQuery['category']);
+                        $categoryQuery['category'] = array((int) $filterCategory->id);
                         $categoryQueryString = http_build_query($categoryQuery, '', '&', PHP_QUERY_RFC3986);
                         $categoryUrl = $page_url . ($categoryQueryString !== '' ? '?' . $categoryQueryString : '');
                         $categoryImage = !empty($filterCategory->img)
@@ -122,6 +123,7 @@ unset($discountCategoryQuery['page'], $discountCategoryQuery['filter_count']);
                 <div class="main-catalog__body">
                     <?php foreach ($products as $product) { $this->load->view('layouts/pages/product_main', array('item' => $product, 'is_home_product_card' => true, 'is_catalog_editorial_card' => true, 'is_discount_catalog_card' => true, 'enable_catalog_hover_gallery' => true)); } ?>
                 </div>
+                <?php $this->load->view('pages/catalog/_lazy_sentinel'); ?>
                 <div class="main-catalog__paggination paggination-main-catalog"><?php $this->load->view('layouts/pages/paginator'); ?></div>
             </div>
         </div>
@@ -136,6 +138,9 @@ unset($discountCategoryQuery['page'], $discountCategoryQuery['filter_count']);
             <button type="button" class="catalog-filter-drawer__close" data-category-filter-close aria-label="<?= $copy['close'] ?>">×</button>
         </header>
         <form class="catalog-filter-form" method="get" action="<?= current_url() ?>" data-category-filter-form data-price-default-min="<?= (float) $price_min ?>" data-price-default-max="<?= (float) $price_max ?>" data-price-label="<?= $copy['price'] ?>">
+            <?php foreach ($activeCategories as $activeCategoryId) {
+                if (in_array((int) $activeCategoryId, $discountFilterCategoryIds, true)) continue;
+            ?><input type="hidden" name="category[]" value="<?= (int) $activeCategoryId ?>"><?php } ?>
             <div class="catalog-filter-drawer__content">
                 <?php if (!empty($filter_categories)) { ?>
                     <section class="catalog-filter-section" data-filter-section="category" data-filter-title="<?= $copy['category'] ?>">

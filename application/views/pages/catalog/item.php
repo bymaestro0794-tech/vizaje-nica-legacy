@@ -782,6 +782,10 @@ if (
 	}
 }
 
+$productPageDesktopColorSwatchesCompact = count(
+	$productPageDesktopColorSwatches
+) < 9;
+
 /*
 |--------------------------------------------------------------------------
 | Other content
@@ -1452,20 +1456,31 @@ $hasBrandDescription = !empty(
 	<?php
 	$offerRoute = $lclang === 'ro' ? 'promotii' : 'aktsii';
 	$offerTitle = (string) ($product_offer->title ?? '');
-	$offerDeadline = !empty($product_offer->date_to)
+	$offerProgressMode = in_array(($product_offer->progress_mode ?? 'time'), array('time', 'stock', 'none'), true)
+		? (string) $product_offer->progress_mode
+		: 'time';
+	$offerDeadline = $offerProgressMode === 'time' && !empty($product_offer->date_to)
 		? $product_offer->date_to . 'T23:59:59'
 		: '';
+	$offerRemainingStock = max(0, (int) ($product_offer->remaining_stock ?? 0));
 	?>
 	<section
 		class="product-promotion"
 		data-product-promotion
+		data-product-promotion-mode="<?= htmlspecialchars($offerProgressMode, ENT_QUOTES, 'UTF-8') ?>"
 		data-product-promotion-deadline="<?= htmlspecialchars($offerDeadline, ENT_QUOTES, 'UTF-8') ?>"
 	>
 		<div class="product-promotion__heading">
 			<span class="product-promotion__label">
 				<?= $lclang === 'ro' ? 'PROMOȚIE' : 'АКЦИЯ' ?>
 			</span>
-			<span class="product-promotion__timer" data-product-promotion-timer></span>
+			<?php if ($offerProgressMode === 'stock' && $offerRemainingStock > 0) : ?>
+				<span class="product-promotion__timer">
+					<?= $lclang === 'ro' ? 'Au rămas: ' : 'Осталось: ' ?><?= $offerRemainingStock ?> <?= $lclang === 'ro' ? 'buc.' : 'шт.' ?>
+				</span>
+			<?php elseif ($offerProgressMode === 'time' && $offerDeadline !== '') : ?>
+				<span class="product-promotion__timer" data-product-promotion-timer></span>
+			<?php endif; ?>
 		</div>
 		<a
 			href="/<?= $lclang ?>/<?= $offerRoute ?>/<?= rawurlencode((string) $product_offer->uri) ?>"
@@ -1581,7 +1596,9 @@ $hasBrandDescription = !empty(
 									</button>
 
 									<div
-										class="product-color-select__desktop-options"
+										class="product-color-select__desktop-options<?= $productPageDesktopColorSwatchesCompact
+											? ' product-color-select__desktop-options--compact'
+											: '' ?>"
 										aria-label="<?= $lclang === 'ro' ? 'Nuanțe disponibile' : 'Доступные оттенки' ?>"
 									>
 										<?php foreach ($productPageDesktopColorSwatches as $colorSwatch) : ?>

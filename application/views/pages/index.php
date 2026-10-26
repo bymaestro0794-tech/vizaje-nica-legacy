@@ -492,7 +492,7 @@ switch ($currentView) {
 
     case 'pages/offers/niche_sale':
         $pageCss[] = 'app/css/style/05-home.css';
-        $pageCss[] = 'app/css/style/06-catalog.css';
+        $pageCss[] = 'app/css/style/06-catalog.css?v=20261026-category-scroll';
         $pageCss[] = 'app/css/style/15-nouislider.css';
         break;
 
@@ -508,7 +508,7 @@ switch ($currentView) {
             $pageCss[] = '/app/css/pages/catalog/discount-cards.css?v=20261022-discount-cards';
         }
         $pageCss[] = 'app/css/style/05-home.css';
-        $pageCss[] = 'app/css/style/06-catalog.css';
+        $pageCss[] = 'app/css/style/06-catalog.css?v=20261026-category-scroll';
         $pageCss[] = 'app/css/style/15-nouislider.css';
         break;
 
@@ -541,7 +541,7 @@ if (strpos($currentView, 'pages/offers/') === 0) {
 
     if ($currentView === 'pages/offers/items') {
         $pageCss[] = 'app/css/style/05-home.css';
-        $pageCss[] = 'app/css/style/06-catalog.css';
+        $pageCss[] = 'app/css/style/06-catalog.css?v=20261026-category-scroll';
         $pageCss[] = '/app/css/pages/catalog/discount-cards.css?v=20261022-discount-cards';
     }
 }
@@ -852,7 +852,12 @@ if (!empty($is_privacy_policy_page)) {
     <script src="<?= asset_url('app/js/components/header-promo-slider.js') ?>" defer></script>
     <?php if ($rouletteShouldRender) { ?><script src="<?= asset_url('app/js/components/roulette-wheel.js') ?>" defer></script><?php } ?>
     <!-- APP JS START HERE -->
-     <script type="module" src="/app/js/pages/home/home.js?v=20261013-product-hover-gallery"></script>
+     <?php if ($currentView === 'pages/main/index') { ?>
+         <script type="module" src="/app/js/pages/home/home.js?v=20261013-product-hover-gallery"></script>
+     <?php } ?>
+     <?php if ($currentView === 'pages/catalog/item') { ?>
+         <script type="module" src="/app/js/pages/home/products-slider.js?v=20261026-product-recommendations"></script>
+     <?php } ?>
      <script src="/app/js/app/01-dynamic-adapt.js" defer></script>
      <script src="/app/js/app/02-sliders.js" defer></script>
      <script src="<?= asset_url('app/js/app/03-header-menu.js') ?>" defer></script>
@@ -863,8 +868,8 @@ if (!empty($is_privacy_policy_page)) {
      <script src="/app/js/app/08-inputs.js" defer></script>
      <script src="/app/js/app/09-quantity-range.js" defer></script>
      <script src="/app/js/app/10-scroll-navigation.js" defer></script>
-     <script src="/app/js/app/11-catalog-filters.js" defer></script>
-     <?php if (in_array($currentView, array('pages/catalog/category', 'pages/catalog/brand', 'pages/catalog/best_sellers'), true)) { ?><script src="/app/js/app/12-category-filter-drawer.js?v=20261009-1" defer></script><?php } ?>
+     <script src="/app/js/app/11-catalog-filters.js?v=20261026-category-scroll" defer></script>
+    <?php if (in_array($currentView, array('pages/catalog/category', 'pages/catalog/brand', 'pages/catalog/best_sellers'), true)) { ?><script src="/app/js/app/12-category-filter-drawer.js?v=20261009-1" defer></script><script src="/app/js/app/14-catalog-lazy.js?v=20261026-catalog-lazy" defer></script><?php } ?>
     <?php if ($currentView === 'pages/catalog/mobile_categories') { ?><script src="<?= asset_url('app/js/app/13-collections-carousel.js') ?>" defer></script><?php } ?>
 
     <!-- APP JS END HERE -->
@@ -884,10 +889,12 @@ if (!empty($is_privacy_policy_page)) {
         src="<?= asset_url('app/js/components/notifications.js') ?>"
         defer
     ></script>
-    <script
-        src="<?= asset_url('app/js/components/home-brand-showcase.js') ?>"
-        defer
-    ></script>
+    <?php if ($currentView === 'pages/main/index') { ?>
+        <script
+            src="<?= asset_url('app/js/components/home-brand-showcase.js') ?>"
+            defer
+        ></script>
+    <?php } ?>
 <?php if ($currentView === 'pages/cart/checkout') : ?>
 	<script
         type="module"
@@ -899,14 +906,16 @@ if (!empty($is_privacy_policy_page)) {
 
 <?php endif; ?>
 
-    <script
-        src="<?= asset_url('app/js/components/product.js') ?>"
-        defer
-    ></script>
-    <script
-        src="<?= asset_url('app/js/components/product-promotion.js') ?>"
-        defer
-    ></script>
+    <?php if ($currentView === 'pages/catalog/item') { ?>
+        <script
+            src="<?= asset_url('app/js/components/product.js') ?>"
+            defer
+        ></script>
+        <script
+            src="<?= asset_url('app/js/components/product-promotion.js') ?>"
+            defer
+        ></script>
+    <?php } ?>
     <script
         src="<?= asset_url('app/js/components/catalog-hover-gallery.js?v=20261013') ?>"
         defer

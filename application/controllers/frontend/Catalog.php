@@ -7,6 +7,7 @@ class Catalog extends FrontEndController
 {
     private $page_id;
     private $per_page;
+    private $catalog_lazy_per_page = 16;
 
     public function __construct()
     {
@@ -58,6 +59,89 @@ class Catalog extends FrontEndController
         if ((int) $pageNumber > $lastPage) {
             throw_on_404();
         }
+    }
+
+    /** Return the selected category and all of its descendants. */
+    private function expandCategorySelection($nodes, $selectedIds)
+    {
+        $childrenByParent = array();
+        foreach ((array) $nodes as $node) {
+            $parentId = (int) $node->parent_id;
+            $childrenByParent[$parentId][] = (int) $node->id;
+        }
+
+        $expanded = array();
+        $queue = array_values(array_unique(array_map('intval', (array) $selectedIds)));
+        while (!empty($queue)) {
+            $categoryId = (int) array_shift($queue);
+            if ($categoryId < 1 || isset($expanded[$categoryId])) continue;
+
+            $expanded[$categoryId] = $categoryId;
+            foreach (($childrenByParent[$categoryId] ?? array()) as $childId) {
+                $queue[] = $childId;
+            }
+        }
+
+        return array_values($expanded);
+    }
+
+    /**
+     * Build the one-level-at-a-time category navigation used on scoped
+     * catalog pages (brand and discounts).
+     */
+    private function getScopedCategoryNavigation($lang, $leafIds, $selectedIds = array())
+    {
+        $nodes = $this->categories_model->get_category_listing_nodes($lang);
+        $byId = array();
+        $childrenByParent = array();
+        foreach ((array) $nodes as $node) {
+            $nodeId = (int) $node->id;
+            $byId[$nodeId] = $node;
+            $childrenByParent[(int) $node->parent_id][] = $node;
+        }
+
+        $relevant = array();
+        foreach (array_unique(array_map('intval', (array) $leafIds)) as $leafId) {
+            $currentId = $leafId;
+            $guard = 0;
+            while ($currentId > 0 && isset($byId[$currentId]) && $guard++ < 20) {
+                if (isset($relevant[$currentId])) break;
+                $relevant[$currentId] = true;
+                $currentId = (int) $byId[$currentId]->parent_id;
+            }
+        }
+
+        $selectedId = 0;
+        foreach (array_map('intval', (array) $selectedIds) as $candidateId) {
+            if ($candidateId > 0 && isset($relevant[$candidateId])) {
+                $selectedId = $candidateId;
+                break;
+            }
+        }
+
+        $items = array();
+        foreach (($childrenByParent[$selectedId] ?? array()) as $node) {
+            if (isset($relevant[(int) $node->id])) $items[] = $node;
+        }
+
+        return array(
+            'parent' => $selectedId > 0 && isset($byId[$selectedId]) ? $byId[$selectedId] : null,
+            'items' => $items,
+        );
+    }
+
+    /** Render only product cards for the catalog lazy-load endpoint. */
+    private function renderCatalogProductCards($products, $cardOptions = array())
+    {
+        $viewData = is_array($this->data) ? $this->data : array();
+        $viewData['products'] = $products;
+        $viewData['card_options'] = is_array($cardOptions) ? $cardOptions : array();
+
+        return $this->load->view(
+            'pages/catalog/_product_cards',
+            $viewData,
+            true
+        );
     }
 
     public function index()
@@ -238,6 +322,7 @@ class Catalog extends FrontEndController
 
     public function best_sellers()
 {
+    $this->per_page = $this->catalog_lazy_per_page;
     $page = $this->menu_model->get_page_data_by_id(
         $this->clang,
         35
@@ -265,17 +350,39 @@ class Catalog extends FrontEndController
         ->get_all_products_best_sellers();
     $_GET = $activeQuery;
 
+    $discountCategoryLeafIds = array_unique(array_filter(array_map(
+        static function ($product) {
+            return isset($product->category_id) ? (int) $product->category_id : 0;
+        },
+        $allDiscountedProducts
+    )));
+    $selectedDiscountCategoryIds = !empty($activeQuery['category']) && is_array($activeQuery['category'])
+        ? array_values(array_filter(array_map('intval', $activeQuery['category'])))
+        : array();
+    $discountCategoryNodes = $this->categories_model->get_category_listing_nodes($this->clang);
+    $expandedDiscountCategoryIds = $this->expandCategorySelection(
+        $discountCategoryNodes,
+        $selectedDiscountCategoryIds
+    );
+    $discountFilteredQuery = $activeQuery;
+    if (!empty($selectedDiscountCategoryIds)) {
+        $discountFilteredQuery['category'] = $expandedDiscountCategoryIds;
+    }
+
     if ($this->input->get('filter_count')) {
+        $_GET = $discountFilteredQuery;
         $filteredProducts = $this->products_model
             ->get_all_products_best_sellers();
+        $_GET = $activeQuery;
         $this->output
             ->set_content_type('application/json')
             ->set_output(json_encode(array('count' => count($filteredProducts))));
         return;
     }
 
-    $product_all = $this->products_model
-        ->get_all_products_best_sellers();
+    $_GET = $discountFilteredQuery;
+    $product_all = $this->products_model->get_all_products_best_sellers();
+    $_GET = $activeQuery;
 
     $products_count = count($product_all);
     $this->validatePaginationPage(
@@ -283,13 +390,25 @@ class Catalog extends FrontEndController
         $products_count
     );
 
-    $products =
-        $this->products_model
-            ->get_products_pag_best_sellers(
-                $this->clang,
-                $start,
-                $this->per_page
-            );
+    $_GET = $discountFilteredQuery;
+    $products = $this->products_model->get_products_pag_best_sellers(
+        $this->clang,
+        $start,
+        $this->per_page
+    );
+    $_GET = $activeQuery;
+
+    if ($this->input->get('catalog_partial')) {
+        $this->output
+            ->set_content_type('text/html')
+            ->set_output($this->renderCatalogProductCards($products, array(
+                'is_home_product_card' => true,
+                'is_catalog_editorial_card' => true,
+                'is_discount_catalog_card' => true,
+                'enable_catalog_hover_gallery' => true,
+            )));
+        return;
+    }
 
     $uri_parts = explode(
         '?',
@@ -328,6 +447,8 @@ class Catalog extends FrontEndController
     $this->data['show_from'] = $start;
     $this->data['show_to'] =
         $start + $this->per_page;
+    $this->data['catalog_lazy_page'] = $pagination_nr;
+    $this->data['catalog_lazy_total_pages'] = max(1, (int) ceil($products_count / $this->per_page));
 
     /*
     |--------------------------------------------------------------------------
@@ -408,6 +529,11 @@ class Catalog extends FrontEndController
      */
     $this->data['filter_categories'] =
         $filter_categories;
+    $this->data['category_navigation'] = $this->getScopedCategoryNavigation(
+        $this->clang,
+        $discountCategoryLeafIds,
+        $selectedDiscountCategoryIds
+    );
 
     /*
     |--------------------------------------------------------------------------
@@ -655,6 +781,7 @@ class Catalog extends FrontEndController
 
     public function category()
     {
+        $this->per_page = $this->catalog_lazy_per_page;
 
         $page = $this->menu_model->get_page_data_by_id($this->clang, $this->page_id);
         if (empty($page)) throw_on_404();
@@ -694,22 +821,30 @@ class Catalog extends FrontEndController
             if (empty($pagination_nr) || $pagination_nr < 1) $pagination_nr = 1;
             $start = ($pagination_nr - 1) * $this->per_page;
 
-            $product_all = $this->products_model->get_all_category_products($categories_id);
+            // The listing query already loads only the current page. Do not
+            // fetch every matching product just to calculate the paginator.
+            $count = $this->products_model->count_category_products($categories_id);
 
             if ($this->input->get('filter_count')) {
                 $this->output
                     ->set_content_type('application/json')
-                    ->set_output(json_encode(array('count' => count($product_all))));
+                    ->set_output(json_encode(array('count' => $count)));
                 return;
             }
 
-            $count = count($product_all);
             $this->validatePaginationPage($pagination_nr, $count);
 
             $products = $this->products_model->get_category_products_pag($this->clang, $categories_id, $start, $this->per_page);
 
-            foreach ($products as $product) {
-                $product->variable = $this->products_model->get_product_variable($this->clang, $product->id);
+            if ($this->input->get('catalog_partial')) {
+                $this->output
+                    ->set_content_type('text/html')
+                    ->set_output($this->renderCatalogProductCards($products, array(
+                        'is_home_product_card' => true,
+                        'is_catalog_editorial_card' => true,
+                        'enable_catalog_hover_gallery' => true,
+                    )));
+                return;
             }
 
             $uri_parts = explode('?', $_SERVER['REQUEST_URI'], 2);
@@ -754,6 +889,8 @@ class Catalog extends FrontEndController
             $this->data['products_count'] = $count;
             $this->data['show_from'] = $start;
             $this->data['show_to'] = $start + $this->per_page;
+            $this->data['catalog_lazy_page'] = $pagination_nr;
+            $this->data['catalog_lazy_total_pages'] = max(1, (int) ceil($count / $this->per_page));
 
             $this->data['category'] = $category;
 
@@ -880,6 +1017,7 @@ class Catalog extends FrontEndController
 
     public function brands()
     {
+        $this->per_page = $this->catalog_lazy_per_page;
         $page = $this->menu_model->get_page_data_by_id($this->clang, $this->page_id);
         if (empty($page)) throw_on_404();
 
@@ -902,12 +1040,18 @@ class Catalog extends FrontEndController
                 $allowedCategoryIds[(int) $product->category_id] = (int) $product->category_id;
             }
         }
-        $categoryFilters = !empty($_GET['category']) && is_array($_GET['category'])
-            ? array_values(array_intersect(
-                array_map('intval', $_GET['category']),
-                array_values($allowedCategoryIds)
-            ))
+        $selectedBrandCategoryIds = !empty($_GET['category']) && is_array($_GET['category'])
+            ? array_values(array_filter(array_map('intval', $_GET['category'])))
             : array();
+        $brandCategoryNodes = $this->categories_model->get_category_listing_nodes($this->clang);
+        $expandedBrandCategoryIds = $this->expandCategorySelection(
+            $brandCategoryNodes,
+            $selectedBrandCategoryIds
+        );
+        $categoryFilters = array_values(array_intersect(
+            $expandedBrandCategoryIds,
+            array_values($allowedCategoryIds)
+        ));
 
         $count = count($this->products_model->get_all_products_brands($brand->id, $categoryFilters));
         if ($this->input->get('filter_count')) {
@@ -927,6 +1071,16 @@ class Catalog extends FrontEndController
             $this->per_page,
             $categoryFilters
         );
+
+        if ($this->input->get('catalog_partial')) {
+            $this->output
+                ->set_content_type('text/html')
+                ->set_output($this->renderCatalogProductCards($products, array(
+                    'is_home_product_card' => true,
+                    'enable_catalog_hover_gallery' => true,
+                )));
+            return;
+        }
 
         $this->validatePaginationPage($pagination_nr, $count);
 
@@ -950,6 +1104,8 @@ class Catalog extends FrontEndController
         $this->data['products_count'] = $count;
         $this->data['show_from'] = $start;
         $this->data['show_to'] = $start + $this->per_page;
+        $this->data['catalog_lazy_page'] = $pagination_nr;
+        $this->data['catalog_lazy_total_pages'] = max(1, (int) ceil($count / $this->per_page));
 
         $this->data['brand'] = $brand;
 
@@ -964,6 +1120,11 @@ class Catalog extends FrontEndController
             $cat_ids[$value->category_id] = $value->category_id;
         }
         $this->data['categoryes_filter'] = $this->categories_model->get_category_ids($this->clang, $brand->id, $cat_ids);
+        $this->data['category_navigation'] = $this->getScopedCategoryNavigation(
+            $this->clang,
+            array_values($allowedCategoryIds),
+            $selectedBrandCategoryIds
+        );
         $this->data['filter_price_min'] = isset($_GET['price_min'])
             ? (float) $_GET['price_min']
             : (float) $this->data['price_min'];

@@ -727,7 +727,11 @@ class Import extends CI_Controller
 
     public function update_qty()
     {
-        $products = $this->db->select('id,on_stock,on_stockWH')->where('isShown', 1)->get('products')->result();
+        $this->db->select('id,on_stock,on_stockWH')->where('isShown', 1);
+        if ($this->db->field_exists('isGift', 'products')) {
+            $this->db->or_where('isGift', 1);
+        }
+        $products = $this->db->get('products')->result();
 
         foreach ($products as $product) {
             $products_variable = $this->db->select('qty,qtyWH')->where('isShown', 1)->where('product_id', $product->id)->get('products_variable')->result();

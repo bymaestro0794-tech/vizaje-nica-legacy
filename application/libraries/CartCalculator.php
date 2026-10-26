@@ -421,6 +421,9 @@ class CartCalculator
                     'product_id' => $giftProductId,
                     'fixed_variant_id' => 0,
                     'offer_uri' => !empty($promotion->offer_uri) ? (string) $promotion->offer_uri : null,
+                    'progress_mode' => !empty($promotion->progress_mode) ? (string) $promotion->progress_mode : 'time',
+                    'date_to' => !empty($promotion->date_to) ? (string) $promotion->date_to : null,
+                    'remaining_stock' => (int) ($promotion->remaining_stock ?? 0),
                 );
                 continue;
             }

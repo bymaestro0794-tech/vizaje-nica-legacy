@@ -75,6 +75,12 @@ class Offers extends BackEndController {
                 throw new Exception('Выберите формат акции: онлайн, офлайн или оба канала.');
             }
             $post['is_online'] = (int) $post['is_online'];
+            $progressMode = $this->normalizeProgressMode($post['progress_mode'] ?? 'time');
+            if ($progressMode === null) {
+                unset($post['progress_mode']);
+            } else {
+                $post['progress_mode'] = $progressMode;
+            }
 
             foreach(language(true) as $lang){
                 $post['uri'.strtoupper($lang)] = (!empty($post['title'.strtoupper($lang)])) ? transliteration($post['title'.strtoupper($lang)]) : '';
@@ -174,6 +180,12 @@ class Offers extends BackEndController {
                     throw new Exception('Выберите формат акции: онлайн, офлайн или оба канала.');
                 }
                 $post['is_online'] = (int) $post['is_online'];
+                $progressMode = $this->normalizeProgressMode($post['progress_mode'] ?? 'time');
+                if ($progressMode === null) {
+                    unset($post['progress_mode']);
+                } else {
+                    $post['progress_mode'] = $progressMode;
+                }
 
 
                 if (!empty($_FILES['imgRU']['name'])) {
@@ -221,6 +233,16 @@ class Offers extends BackEndController {
 
         $products_alt = $this->offers_model->gat_products_offers($id);
         $this->data['products_alt'] = $products_alt;
+        $this->data['offer_brands'] = $this->db
+            ->select('b.id, b.title, COUNT(op.id) AS product_count')
+            ->from('offers_products op')
+            ->join('products p', 'p.id = op.product_id', 'inner')
+            ->join('brands b', 'b.id = p.brand_id', 'inner')
+            ->where('op.offers_id', $id)
+            ->group_by(array('b.id', 'b.title'))
+            ->order_by('b.title', 'ASC')
+            ->get()
+            ->result();
         $this->data['product_brands'] = $this->db
             ->select('id, title')
             ->order_by('title', 'ASC')
@@ -240,6 +262,20 @@ class Offers extends BackEndController {
 
         $this->load->vars($this->data);
         $this->load->view($this->main_layout);
+    }
+
+    private function normalizeProgressMode($value)
+    {
+        $value = (string) $value;
+        if (!in_array($value, array('time', 'stock', 'none'), true)) {
+            $value = 'time';
+        }
+
+        if (!$this->db->field_exists('progress_mode', 'offers')) {
+            return null;
+        }
+
+        return $value;
     }
 
     public function delete($id = false) {
@@ -267,33 +303,41 @@ class Offers extends BackEndController {
     public function products_alt()
     {
         check_if_POST();
-        $product = $this->products_model->product_alt($_POST['product']);
+        $offerId = (int) $this->input->post('id', true);
+        if ($offerId < 1 || empty($this->offers_model->find_first($offerId))) {
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_status_header(404)
+                ->set_output(json_encode(array('message' => 'Акция не найдена.'), JSON_UNESCAPED_UNICODE));
+        }
+        $product = $this->products_model->product_alt($this->input->post('product', true));
         if (empty($product)) throw_on_404();
-        $product_seasonal = $this->db->where('offers_id', $_POST['id'])->where('product_id', $product->id)->get('offers_products')->row();
+        $product_seasonal = $this->db->where('offers_id', $offerId)->where('product_id', $product->id)->get('offers_products')->row();
         if (empty($product_seasonal)) {
             $data = array(
                 'product_id' => $product->id,
-                'offers_id' => $_POST['id'],
+                'offers_id' => $offerId,
                 'title' => $product->title,
                 'SKU' => $product->SKU,
                 'sorder' => 1,
             );
             $this->db->insert('offers_products', $data);
+            $offerProductId = (int) $this->db->insert_id();
             echo '
-<table class="table table-bordered table-striped table-hover" id="prodalt' . $product->id . '">
+<table class="table table-bordered table-striped table-hover" id="prodalt' . $offerProductId . '" data-offer-product-row data-product-id="' . (int) $product->id . '" data-brand-id="' . (int) $product->brand_id . '">
     <tbody>
     <tr>
         <td width="50">
-            <input type="text" name="sorder[' . $product->id . ']" value="0" class="form-control">
+            <input type="text" name="sorder[' . $offerProductId . ']" value="0" class="form-control">
         </td>
         <td width="150">
-            SKU: ' . $product->SKU . '
+            SKU: ' . htmlspecialchars((string) $product->SKU, ENT_QUOTES, 'UTF-8') . '
         </td>
         <td width="">
-            ' . $product->title . '
+            ' . htmlspecialchars((string) $product->title, ENT_QUOTES, 'UTF-8') . '
         </td>
         <td width="100">
-            <a onclick="DeleteProdAlt( ' . $product->id . ' )"   class="btn btn-xs default btn-editable red-stripe">
+            <a onclick="DeleteProdAlt( ' . $offerProductId . ' )"   class="btn btn-xs default btn-editable red-stripe">
                 <i class="glyphicon glyphicon-remove-circle"></i> Удалить
             </a>
         </td>
@@ -305,9 +349,64 @@ class Offers extends BackEndController {
 
     public function prodalt_delete()
     {
-        $id = $_POST['id'];
-        $this->db->where('id', $id);
-        $this->db->delete('offers_products');
+        check_if_POST();
+
+        $offerId = (int) $this->input->post('offer_id', true);
+        $offerProductId = (int) $this->input->post('row_id', true);
+        if ($offerId < 1 || $offerProductId < 1) {
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_status_header(422)
+                ->set_output(json_encode(array('message' => 'Не указан товар акции.'), JSON_UNESCAPED_UNICODE));
+        }
+
+        $this->db
+            ->where('id', $offerProductId)
+            ->where('offers_id', $offerId)
+            ->delete('offers_products');
+
+        return $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode(array('status' => 'ok', 'deleted' => (int) $this->db->affected_rows()), JSON_UNESCAPED_UNICODE));
+    }
+
+    public function brand_products_delete()
+    {
+        check_if_POST();
+
+        $offerId = (int) $this->input->post('offer_id', true);
+        $brandId = (int) $this->input->post('brand_id', true);
+        if ($offerId < 1 || $brandId < 1) {
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_status_header(422)
+                ->set_output(json_encode(array('message' => 'Не указан бренд акции.'), JSON_UNESCAPED_UNICODE));
+        }
+
+        $productRows = $this->db
+            ->select('p.id')
+            ->from('offers_products op')
+            ->join('products p', 'p.id = op.product_id', 'inner')
+            ->where('op.offers_id', $offerId)
+            ->where('p.brand_id', $brandId)
+            ->get()
+            ->result_array();
+        $productIds = array_map('intval', array_column($productRows, 'id'));
+
+        if (!empty($productIds)) {
+            $this->db
+                ->where('offers_id', $offerId)
+                ->where_in('product_id', $productIds)
+                ->delete('offers_products');
+        }
+
+        return $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode(array(
+                'status' => 'ok',
+                'deleted' => (int) $this->db->affected_rows(),
+                'product_ids' => $productIds,
+            ), JSON_UNESCAPED_UNICODE));
     }
 
     public function product_lookup()
@@ -334,7 +433,7 @@ class Offers extends BackEndController {
         }
 
         $this->db
-            ->select('p.id, p.SKU, p.titleRU, p.titleRO, b.title AS brand_title')
+            ->select('p.id, p.SKU, p.brand_id, p.titleRU, p.titleRO, b.title AS brand_title')
             ->from('products p')
             ->join('brands b', 'b.id = p.brand_id', 'left')
             ->where('p.isShown', 1);
@@ -367,6 +466,7 @@ class Offers extends BackEndController {
                 'sku' => (string) $item->SKU,
                 'title' => (string) ($item->titleRU ?: $item->titleRO),
                 'brand' => (string) ($item->brand_title ?? ''),
+                'brand_id' => (int) ($item->brand_id ?? 0),
                 'attached' => !empty($attached[(int) $item->id]),
             );
         }
@@ -392,7 +492,7 @@ class Offers extends BackEndController {
         }
 
         $products = $this->db
-            ->select('id, SKU, titleRU, titleRO')
+            ->select('id, SKU, brand_id, titleRU, titleRO')
             ->where_in('id', $productIds)
             ->where('isShown', 1)
             ->get('products')
@@ -426,6 +526,7 @@ class Offers extends BackEndController {
             $added[] = array(
                 'id' => (int) $this->db->insert_id(),
                 'product_id' => (int) $product->id,
+                'brand_id' => (int) $product->brand_id,
                 'sku' => (string) $product->SKU,
                 'title' => (string) ($product->titleRU ?: $product->titleRO),
                 'sorder' => $nextOrder - 1,
@@ -435,5 +536,82 @@ class Offers extends BackEndController {
         return $this->output
             ->set_content_type('application/json')
             ->set_output(json_encode(array('items' => $added), JSON_UNESCAPED_UNICODE));
+    }
+
+    public function products_bulk_add_all_except_brands()
+    {
+        check_if_POST();
+
+        $offerId = (int) $this->input->post('offer_id', true);
+        $excludedBrandIds = $this->input->post('excluded_brand_ids');
+        $excludedBrandIds = is_array($excludedBrandIds)
+            ? array_values(array_filter(array_unique(array_map('intval', $excludedBrandIds))))
+            : array();
+
+        if ($offerId < 1 || empty($this->offers_model->find_first($offerId))) {
+            return $this->output
+                ->set_content_type('application/json')
+                ->set_status_header(404)
+                ->set_output(json_encode(array('message' => 'Акция не найдена.'), JSON_UNESCAPED_UNICODE));
+        }
+
+        $this->db
+            ->select('id, SKU, titleRU, titleRO, brand_id')
+            ->where('isShown', 1);
+        if ($this->db->field_exists('isGift', 'products')) {
+            $this->db->where('isGift', 0);
+        }
+        if (!empty($excludedBrandIds)) {
+            $this->db->where_not_in('brand_id', $excludedBrandIds);
+        }
+        $products = $this->db
+            ->order_by('id', 'ASC')
+            ->get('products')
+            ->result();
+
+        $attachedRows = $this->db
+            ->select('product_id')
+            ->where('offers_id', $offerId)
+            ->get('offers_products')
+            ->result_array();
+        $attached = array();
+        foreach ($attachedRows as $row) {
+            $attached[(int) $row['product_id']] = true;
+        }
+
+        $maxOrderRow = $this->db
+            ->select_max('sorder')
+            ->where('offers_id', $offerId)
+            ->get('offers_products')
+            ->row();
+        $nextOrder = !empty($maxOrderRow->sorder) ? (int) $maxOrderRow->sorder + 1 : 1;
+        $rowsToInsert = array();
+
+        foreach ($products as $product) {
+            $productId = (int) $product->id;
+            if (isset($attached[$productId])) {
+                continue;
+            }
+
+            $rowsToInsert[] = array(
+                'offers_id' => $offerId,
+                'product_id' => $productId,
+                'title' => (string) ($product->titleRU ?: $product->titleRO),
+                'SKU' => (string) $product->SKU,
+                'sorder' => $nextOrder++,
+            );
+        }
+
+        foreach (array_chunk($rowsToInsert, 500) as $chunk) {
+            $this->db->insert_batch('offers_products', $chunk);
+        }
+
+        return $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode(array(
+                'status' => 'ok',
+                'added_count' => count($rowsToInsert),
+                'excluded_brand_ids' => $excludedBrandIds,
+            ), JSON_UNESCAPED_UNICODE));
     }
 }

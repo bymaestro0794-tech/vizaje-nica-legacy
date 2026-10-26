@@ -105,14 +105,20 @@ class Gifts extends BackEndController
         $query = trim((string) $this->input->get('q', true));
         $products = array();
         if (mb_strlen($query, 'UTF-8') >= 2) {
-            $products = $this->db->select('id, SKU, titleRU, titleRO')
+            $this->db->select('id, SKU, titleRU, titleRO')
                 ->group_start()
                 ->like('titleRU', $query)
                 ->or_like('titleRO', $query)
                 ->or_like('SKU', $query)
                 ->or_like('id', $query)
                 ->group_end()
-                ->where('isShown', 1)
+                ->group_start()
+                    ->where('isShown', 1);
+            if ($this->db->field_exists('isGift', 'products')) {
+                $this->db->or_where('isGift', 1);
+            }
+            $products = $this->db
+                ->group_end()
                 ->order_by('stock DESC, id DESC')
                 ->limit(20)
                 ->get('products')
@@ -147,8 +153,13 @@ class Gifts extends BackEndController
         }
 
         $productId = (int) $this->input->post('product_id');
-        if ($productId < 1 || !$this->db->where('id', $productId)->where('isShown', 1)->count_all_results('products')) {
-            throw new Exception('Выберите опубликованный товар для подарка.');
+        $this->db->where('id', $productId)->group_start()->where('isShown', 1);
+        if ($this->db->field_exists('isGift', 'products')) {
+            $this->db->or_where('isGift', 1);
+        }
+        $productExists = $this->db->group_end()->count_all_results('products');
+        if ($productId < 1 || !$productExists) {
+            throw new Exception('Выберите опубликованный или отмеченный как подарок товар.');
         }
 
         $variantId = (int) $this->input->post('variant_id');

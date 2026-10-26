@@ -5,6 +5,15 @@ class Gift_promotions_model extends BaseModel
 {
     protected $tblname = 'gift_promotions';
 
+    private function progressModeSelect()
+    {
+        if ($this->db->field_exists('progress_mode', 'gift_promotions')) {
+            return "COALESCE(NULLIF(gp.progress_mode, ''), 'time') AS progress_mode";
+        }
+
+        return "'time' AS progress_mode";
+    }
+
     public function get_admin()
     {
         return $this->db
@@ -61,15 +70,40 @@ class Gift_promotions_model extends BaseModel
         $today = date('Y-m-d');
 
         $rows = $this->db
-            ->select('gp.*, gp.title' . strtoupper($language) . ' AS title, gp.description' . strtoupper($language) . ' AS description, g.product_id, g.variant_id, g.title' . strtoupper($language) . ' AS gift_title, g.show_on_site AS gift_show_on_site, g.is_enabled AS gift_is_enabled, o.uri' . strtoupper($language) . ' AS offer_uri')
+            ->select('gp.*, ' . $this->progressModeSelect() . ', gp.title' . strtoupper($language) . ' AS title, gp.description' . strtoupper($language) . ' AS description, g.product_id, g.variant_id, g.title' . strtoupper($language) . ' AS gift_title, g.show_on_site AS gift_show_on_site, g.is_enabled AS gift_is_enabled, o.uri' . strtoupper($language) . ' AS offer_uri, CASE WHEN g.variant_id > 0 THEN COALESCE((SELECT pv_gift_fixed.qty FROM products_variable pv_gift_fixed WHERE pv_gift_fixed.id = g.variant_id AND pv_gift_fixed.product_id = g.product_id AND pv_gift_fixed.isShown = 1), 0) ELSE GREATEST(COALESCE(gift_product.on_stock, 0), COALESCE((SELECT SUM(pv_gift_stock.qty) FROM products_variable pv_gift_stock WHERE pv_gift_stock.product_id = g.product_id AND pv_gift_stock.isShown = 1), 0)) END AS remaining_stock')
             ->from('gift_promotions gp')
             ->join('gifts g', 'g.id = gp.gift_id', 'inner')
+            ->join('products gift_product', 'gift_product.id = g.product_id', 'inner')
             ->join('offers o', 'o.id = gp.offer_id', 'left')
             ->where('gp.is_enabled', 1)
             ->where('gp.show_on_site', 1)
             ->where_in('gp.is_online', array(1, 2))
             ->where('g.is_enabled', 1)
             ->where('g.show_on_site', 1)
+            ->group_start()
+                ->where('g.variant_id >', 0)
+                ->where("EXISTS (
+                    SELECT 1
+                    FROM products_variable gift_variant
+                    WHERE gift_variant.id = g.variant_id
+                      AND gift_variant.product_id = g.product_id
+                      AND gift_variant.isShown = 1
+                      AND gift_variant.qty > 0
+                )", null, false)
+                ->or_group_start()
+                    ->where('g.variant_id IS NULL', null, false)
+                    ->group_start()
+                        ->where('gift_product.on_stock >', 0)
+                        ->or_where("EXISTS (
+                            SELECT 1
+                            FROM products_variable gift_variant_available
+                            WHERE gift_variant_available.product_id = g.product_id
+                              AND gift_variant_available.isShown = 1
+                              AND gift_variant_available.qty > 0
+                        )", null, false)
+                    ->group_end()
+                ->group_end()
+            ->group_end()
             ->group_start()
                 ->where('gp.date_from <=', $today)
                 ->or_where('gp.date_from IS NULL', null, false)

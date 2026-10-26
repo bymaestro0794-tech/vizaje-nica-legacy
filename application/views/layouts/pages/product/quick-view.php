@@ -736,6 +736,14 @@ if (!empty($initialVariation)) {
 				) ?>
 			</h2>
 
+			<div
+				class="quick-view-product__gift-promotion"
+				data-quick-view-gift-promotion
+				hidden
+			>
+				<span data-quick-view-gift-promotion-value></span>
+			</div>
+
 			<a
 				href="<?= $escape(
 					$productUrl

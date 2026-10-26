@@ -61,6 +61,7 @@ class Gift_promotions extends BackEndController
             'descriptionRO' => '',
             'condition_qty' => 2,
             'is_online' => 1,
+            'progress_mode' => 'time',
             'is_enabled' => 1,
             'show_on_site' => 1,
             'sorder' => 0,
@@ -156,7 +157,7 @@ class Gift_promotions extends BackEndController
             throw new Exception('Выберите формат акции: онлайн, офлайн или оба канала.');
         }
 
-        return array(
+        $result = array(
             'titleRU' => $titleRU,
             'titleRO' => $titleRO,
             'descriptionRU' => $this->input->post('descriptionRU', true),
@@ -172,5 +173,26 @@ class Gift_promotions extends BackEndController
             'sorder' => (int) $this->input->post('sorder'),
             'brand_ids' => $brandIds,
         );
+
+        $progressMode = $this->normalizeProgressMode($this->input->post('progress_mode', true));
+        if ($progressMode !== null) {
+            $result['progress_mode'] = $progressMode;
+        }
+
+        return $result;
+    }
+
+    private function normalizeProgressMode($value)
+    {
+        $value = (string) $value;
+        if (!in_array($value, array('time', 'stock', 'none'), true)) {
+            $value = 'time';
+        }
+
+        if (!$this->db->field_exists('progress_mode', 'gift_promotions')) {
+            return null;
+        }
+
+        return $value;
     }
 }
