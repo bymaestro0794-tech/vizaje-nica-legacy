@@ -367,7 +367,15 @@ if (!function_exists('asset_url')) {
     function asset_url(string $path): string
     {
         $path = ltrim($path, '/');
-        $absolutePath = FCPATH . $path;
+        $assetPath = parse_url($path, PHP_URL_PATH);
+        $assetPath = ltrim(
+            is_string($assetPath) && $assetPath !== ''
+                ? $assetPath
+                : $path,
+            '/'
+        );
+        $path = $assetPath;
+        $absolutePath = FCPATH . $assetPath;
 
         /*
          * Версия меняется только после физического изменения файла.
@@ -388,7 +396,7 @@ $criticalCss = [
     'app/css/style/01-base.css',
     'app/css/style/31-product-card-options.css',
     'app/css/style/02-cookie.css',
-    'app/css/style/03-header.css',
+    'app/css/style/03-header.css?v=20261030-mobile-header-refresh',
     'static/assets/global/plugins/simple-line-icons/simple-line-icons.min.css',
     'app/css/style/04-footer.css',
     'app/css/style/05-breadcrumbs.css',
@@ -421,6 +429,13 @@ $deferredCss = [
  */
 $pageCss = [];
 
+/* Shared public B2C component layer. Admin and B2B use other layouts. */
+$b2cCss = [
+    'app/css/b2c/tokens.css',
+    'app/css/b2c/components.css',
+    'app/css/b2c/product-card.css',
+];
+
 $currentView = trim((string) ($inner_view ?? ''), '/');
 $rouletteExcludedViews = array(
     'pages/cart/checkout',
@@ -435,7 +450,7 @@ $rouletteShouldRender = !empty($client_info->id)
 
 switch ($currentView) {
     case 'pages/main/index':
-	$pageCss[] = '/app/css/pages/home/home.css?v=20261022-catalog-cards';
+	$pageCss[] = '/app/css/pages/home/home.css?v=20261027-b2c-foundation';
 	$pageCss[] = '/app/css/pages/home/catalog-slider-card.css?v=20261022-catalog-cards';
         break;
     case 'pages/beauty_selections/index':
@@ -479,6 +494,10 @@ switch ($currentView) {
     
     case 'pages/certificat/index':
         $pageCss[] = 'app/css/pages/certificate-builder.css';
+        break;
+
+    case 'pages/gift_card/index':
+        $pageCss[] = 'app/css/pages/gift-card.css';
         break;
     
     case 'pages/errors/404':
@@ -585,6 +604,14 @@ if (!empty($is_privacy_policy_page)) {
     rel="stylesheet"
     href="<?= asset_url('app/css/media.css') ?>"
 >
+
+<!-- Shared B2C component foundation. Not used by admin or B2B layouts. -->
+<?php foreach ($b2cCss as $cssFile) { ?>
+    <link
+        rel="stylesheet"
+        href="<?= asset_url($cssFile) ?>"
+    >
+<?php } ?>
 
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 
@@ -760,7 +787,11 @@ if (!empty($is_privacy_policy_page)) {
                 if (d.head) d.head.appendChild(s);
             })(document);
         </script> -->
-        <?php if (!empty($checkout_on)) {
+        <?php if ($currentView === 'pages/certificat/index') {
+            $this->load->view('/layouts/pages/certificate_builder_header');
+        } elseif (!empty($minimal_page)) {
+            $this->load->view('/layouts/pages/gift_card_header');
+        } elseif (!empty($checkout_on)) {
             $this->load->view('/layouts/pages/header_checkout');
         } else {
             $this->load->view('/layouts/pages/header');
@@ -769,7 +800,11 @@ if (!empty($is_privacy_policy_page)) {
             <?php $this->load->view('layouts/pages/welcome-offer-countdown'); ?>
         <?php } ?>
         <?php $this->load->view($inner_view); ?>
-        <?php $this->load->view('/layouts/pages/footer'); ?>
+        <?php if (!empty($minimal_page)) {
+            $this->load->view('/layouts/pages/gift_card_footer');
+        } else {
+            $this->load->view('/layouts/pages/footer');
+        } ?>
     </div>
 
     <?php
@@ -829,6 +864,75 @@ if (!empty($is_privacy_policy_page)) {
 
     <?php $this->load->view('layouts/pages/cookie/panel'); ?>
 
+    <?php if (empty($_SESSION['isb2b'])) : ?>
+        <?php
+        /*
+         * Public B2C cart snapshot. It lets product cards render their
+         * quantity control immediately, before the first cart AJAX request.
+         * Gifts are intentionally excluded because their quantity is not
+         * customer-editable.
+         */
+        $b2cCartState = array();
+
+        foreach ((array) ($cart_items ?? array()) as $cartItem) {
+            $cartOptions = $cartItem['options'] ?? null;
+            $isCartGift = is_array($cartOptions)
+                && (
+                    !empty($cartOptions['gift_promotion_id'])
+                    || !empty($cartOptions['roulette_gift_id'])
+                );
+
+            if ($isCartGift) {
+                continue;
+            }
+
+            $cartProductId = (int) ($cartItem['id'] ?? 0);
+            $cartRowId = trim((string) ($cartItem['rowid'] ?? ''));
+
+            if ($cartProductId <= 0 || $cartRowId === '') {
+                continue;
+            }
+
+            if (is_array($cartOptions)) {
+                $cartVariantId = !empty($cartOptions['sku_id'])
+                    ? (int) $cartOptions['sku_id']
+                    : (!empty($cartOptions['variant_id'])
+                        ? (int) $cartOptions['variant_id']
+                        : 0);
+            } else {
+                $cartVariantId = (int) $cartOptions;
+            }
+
+            $cartKey = $cartProductId . ':' . $cartVariantId;
+
+            $b2cCartState[$cartKey] = array(
+                'productId' => $cartProductId,
+                'variantId' => $cartVariantId,
+                'rowId' => $cartRowId,
+                'quantity' => max(1, (int) ($cartItem['qty'] ?? 1)),
+            );
+        }
+        ?>
+        <script>
+            window.VNProductCartState = <?= json_encode(
+                array(
+                    'totalItems' => (int) ($total_items_cart ?? 0),
+                    'items' => $b2cCartState,
+                ),
+                JSON_UNESCAPED_UNICODE
+                    | JSON_UNESCAPED_SLASHES
+                    | JSON_HEX_TAG
+                    | JSON_HEX_AMP
+                    | JSON_HEX_APOS
+                    | JSON_HEX_QUOT
+            ) ?>;
+        </script>
+        <script
+            src="<?= asset_url('app/js/components/b2c-product-cart.js?v=20261028-cart-stepper') ?>"
+            defer
+        ></script>
+    <?php endif; ?>
+
      <script
         src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"
     ></script>
@@ -869,7 +973,8 @@ if (!empty($is_privacy_policy_page)) {
      <script src="/app/js/app/09-quantity-range.js" defer></script>
      <script src="/app/js/app/10-scroll-navigation.js" defer></script>
      <script src="/app/js/app/11-catalog-filters.js?v=20261026-category-scroll" defer></script>
-    <?php if (in_array($currentView, array('pages/catalog/category', 'pages/catalog/brand', 'pages/catalog/best_sellers'), true)) { ?><script src="/app/js/app/12-category-filter-drawer.js?v=20261009-1" defer></script><script src="/app/js/app/14-catalog-lazy.js?v=20261026-catalog-lazy" defer></script><?php } ?>
+    <?php if (in_array($currentView, array('pages/catalog/category', 'pages/catalog/brand', 'pages/catalog/best_sellers', 'pages/catalog/search'), true)) { ?><script src="/app/js/app/12-category-filter-drawer.js?v=20261030-search-filters" defer></script><?php } ?>
+    <?php if (in_array($currentView, array('pages/catalog/category', 'pages/catalog/brand', 'pages/catalog/best_sellers'), true)) { ?><script src="/app/js/app/14-catalog-lazy.js?v=20261026-catalog-lazy" defer></script><?php } ?>
     <?php if ($currentView === 'pages/catalog/mobile_categories') { ?><script src="<?= asset_url('app/js/app/13-collections-carousel.js') ?>" defer></script><?php } ?>
 
     <!-- APP JS END HERE -->
@@ -961,6 +1066,17 @@ if (!empty($is_privacy_policy_page)) {
     ></script>
 
 <?php endif; ?>
+
+<?php if ($currentView === 'pages/gift_card/index') : ?>
+
+    <script
+        src="<?= asset_url(
+            'app/js/pages/gift-card.js'
+        ) ?>"
+        defer
+    ></script>
+
+<?php endif; ?>
    
     <script
         src="<?= asset_url('app/js/components/header.js') ?>"
@@ -975,7 +1091,7 @@ if (!empty($is_privacy_policy_page)) {
 
 <!-- SEARCH PLUGIN -->
 
-
+<?php if (!config_item('meilisearch_frontend_enabled')) : ?>
 <script>
 (function (document) {
 	'use strict';
@@ -1045,6 +1161,7 @@ if (!empty($is_privacy_policy_page)) {
 	}
 })(document);
 </script>
+<?php endif; ?>
 
 </body>
 

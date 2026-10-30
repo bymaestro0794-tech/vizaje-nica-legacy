@@ -189,7 +189,7 @@
                             <tr>
                                 <th width="100"> <?= lang('Sorting') ?></th>
                                 <th> <?= lang('Title') ?></th>
-                                <th width="190"></th>
+                                <th width="240">Статус / период</th>
                                 <th width="305"> <?= lang('Action') ?></th>
                             </tr>
                             </thead>
@@ -221,6 +221,39 @@
                                                    class="mine_change_check"><?= lang('Show on site') ?>
                                             <span></span>
                                         </label>
+                                        <?php
+                                        $today = date('Y-m-d');
+                                        $dateFrom = !empty($item->date_from) && $item->date_from !== '0000-00-00' ? (string) $item->date_from : '';
+                                        $dateTo = !empty($item->date_to) && $item->date_to !== '0000-00-00' ? (string) $item->date_to : '';
+                                        $endedByTime = $dateTo !== '' && $dateTo < $today;
+                                        $hasVisibleProducts = (int) ($item->stock_product_count ?? 0) > 0;
+                                        $endedByStock = $hasVisibleProducts && (int) ($item->remaining_stock ?? 0) <= 0;
+                                        $startsLater = $dateFrom !== '' && $dateFrom > $today;
+                                        if ($endedByTime) {
+                                            $statusLabel = 'Завершена: срок истёк';
+                                            $statusClass = 'label-danger';
+                                        } elseif ($endedByStock) {
+                                            $statusLabel = 'Завершена: товары закончились';
+                                            $statusClass = 'label-danger';
+                                        } elseif (!$hasVisibleProducts) {
+                                            $statusLabel = 'Нет доступных товаров';
+                                            $statusClass = 'label-warning';
+                                        } elseif ($startsLater) {
+                                            $statusLabel = 'Запланирована';
+                                            $statusClass = 'label-warning';
+                                        } elseif (empty($item->isShown)) {
+                                            $statusLabel = 'Скрыта';
+                                            $statusClass = 'label-default';
+                                        } else {
+                                            $statusLabel = 'Активна';
+                                            $statusClass = 'label-success';
+                                        }
+                                        ?>
+                                        <br><span class="label <?= $statusClass ?>"><?= $statusLabel ?></span>
+                                        <small style="display:block;color:#777;margin-top:4px;">
+                                            <?= $dateFrom !== '' ? htmlspecialchars($dateFrom, ENT_QUOTES, 'UTF-8') : 'Без начала' ?> — <?= $dateTo !== '' ? htmlspecialchars($dateTo, ENT_QUOTES, 'UTF-8') : 'Без окончания' ?>
+                                            <?php if ($hasVisibleProducts) : ?><br>Остаток: <?= (int) ($item->remaining_stock ?? 0) ?> шт.<?php endif; ?>
+                                        </small>
                                     </td>
 
                                     <td class="align-middle">

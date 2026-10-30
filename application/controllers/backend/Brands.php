@@ -28,6 +28,29 @@ class Brands extends BackEndController
         $this->load->model('brand_certificates_model');
     }
 
+    private function getMeilisearchBrandProductIds($brandId)
+    {
+        try {
+            $this->load->library('meilisearch_catalog_sync');
+            return $this->meilisearch_catalog_sync->getProductIdsForBrand($brandId);
+        } catch (Exception $e) {
+            log_message('error', 'Unable to collect products for Meilisearch brand refresh: ' . $e->getMessage());
+            return array();
+        }
+    }
+
+    private function syncMeilisearchProducts(array $productIds)
+    {
+        if (empty($productIds)) return;
+
+        try {
+            $this->load->library('meilisearch_catalog_sync');
+            $this->meilisearch_catalog_sync->syncProducts($productIds);
+        } catch (Exception $e) {
+            log_message('error', 'Meilisearch brand refresh failed: ' . $e->getMessage());
+        }
+    }
+
     public function index()
     {
         init_load_img($this->main_page);
@@ -112,6 +135,8 @@ class Brands extends BackEndController
         if (empty($item)) throw_on_404();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $meilisearchProductIds = $this->getMeilisearchBrandProductIds($id);
+
             try {
                 $post = [];
 
@@ -167,6 +192,8 @@ class Brands extends BackEndController
                     );
                 }
 
+                $this->syncMeilisearchProducts($meilisearchProductIds);
+
                 $_SESSION['success'] = $this->success_edit;
             } catch (Exception $e) {
                 log_message('error', $e->getMessage());
@@ -200,12 +227,16 @@ class Brands extends BackEndController
         $item = $this->brands_model->find_first($id);
         if (empty($item)) throw_on_404();
 
+        $meilisearchProductIds = $this->getMeilisearchBrandProductIds($id);
+
         unlink_files($this->main_page, $item->img);
 
         try {
             if (!$this->brands_model->delete($id)) {
                 throw new Exception(lang('Error deleting data from table') . $this->main_page);
             }
+
+            $this->syncMeilisearchProducts($meilisearchProductIds);
 
             $_SESSION['success'] = $this->success_delete;
         } catch (Exception $e) {

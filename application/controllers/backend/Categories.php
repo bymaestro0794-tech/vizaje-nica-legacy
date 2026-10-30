@@ -28,6 +28,29 @@ class Categories extends BackEndController
         $this->load->model('shop_type_model');
     }
 
+    private function getMeilisearchCategoryProductIds($categoryId)
+    {
+        try {
+            $this->load->library('meilisearch_catalog_sync');
+            return $this->meilisearch_catalog_sync->getProductIdsForCategoryTree($categoryId);
+        } catch (Exception $e) {
+            log_message('error', 'Unable to collect products for Meilisearch category refresh: ' . $e->getMessage());
+            return array();
+        }
+    }
+
+    private function syncMeilisearchProducts(array $productIds)
+    {
+        if (empty($productIds)) return;
+
+        try {
+            $this->load->library('meilisearch_catalog_sync');
+            $this->meilisearch_catalog_sync->syncProducts($productIds);
+        } catch (Exception $e) {
+            log_message('error', 'Meilisearch category refresh failed: ' . $e->getMessage());
+        }
+    }
+
     public function index()
     {
         init_load_img($this->main_page);
@@ -150,6 +173,8 @@ class Categories extends BackEndController
         $banner->uriimg = '';
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $meilisearchProductIdsBefore = $this->getMeilisearchCategoryProductIds($id);
+
             try {
                 foreach ($_POST as $index => $post_data) {
                     $post[$index] = $this->input->post($index);
@@ -259,6 +284,12 @@ class Categories extends BackEndController
                     throw new Exception(lang('Error writing data to table') . $this->main_page);
                 }
 
+                $meilisearchProductIdsAfter = $this->getMeilisearchCategoryProductIds($id);
+                $this->syncMeilisearchProducts(array_merge(
+                    $meilisearchProductIdsBefore,
+                    $meilisearchProductIdsAfter
+                ));
+
                 $_SESSION['success'] = $this->success_edit;
             } catch (Exception $e) {
                 log_message('error', $e->getMessage());
@@ -299,12 +330,16 @@ class Categories extends BackEndController
         $item = $this->categories_model->find_first($id);
         if (empty($item)) throw_on_404();
 
+        $meilisearchProductIds = $this->getMeilisearchCategoryProductIds($id);
+
         unlink_files($this->main_page, $item->img);
 
         try {
             if (!$this->categories_model->delete($id)) {
                 throw new Exception(lang('Error deleting data from table') . $this->main_page);
             }
+
+            $this->syncMeilisearchProducts($meilisearchProductIds);
 
             $_SESSION['success'] = $this->success_delete;
         } catch (Exception $e) {

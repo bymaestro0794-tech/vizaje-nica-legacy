@@ -58,6 +58,56 @@ class Analytics extends CI_Controller
         return $this->respond(array('accepted' => true), 201);
     }
 
+    /** Record an opted-in search activity as a daily phrase aggregate without visitor identifiers. */
+    public function search_query()
+    {
+        if (strtoupper($this->input->method()) !== 'POST') {
+            return $this->respond(array('error' => 'POST required'), 405);
+        }
+
+        if (!$this->hasAnalyticsConsent()) {
+            return $this->respond(array('accepted' => false), 204);
+        }
+
+        if ($this->requestSizeIsTooLarge()) {
+            return $this->respond(array('error' => 'Payload too large'), 413);
+        }
+
+        $query = trim((string) $this->input->post('query', false));
+        $query = strip_tags($query);
+        $query = html_entity_decode($query, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $query = trim(preg_replace('/\s+/u', ' ', $query));
+        $length = function_exists('mb_strlen') ? mb_strlen($query, 'UTF-8') : strlen($query);
+        $activity = trim((string) $this->input->post('activity', true));
+        $resultCount = null;
+        if ($activity === '') {
+            $activity = 'search';
+        }
+
+        if ($activity === 'result_count') {
+            $resultCountInput = $this->input->post('result_count', true);
+            if (!is_scalar($resultCountInput) || !is_numeric($resultCountInput)) {
+                return $this->respond(array('accepted' => false), 204);
+            }
+            $resultCount = max(0, min(10000000, (int) $resultCountInput));
+        }
+
+        if (!in_array($activity, array('search', 'zero_result', 'result_click', 'add_to_cart', 'result_count'), true)
+            || $length < 2 || $length > 80
+            || preg_match('/\p{L}/u', $query) !== 1
+            || preg_match('/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i', $query)
+            || preg_match('/(?<!\d)\+?\d(?:[\s().-]*\d){8,}(?!\d)/u', $query)
+        ) {
+            return $this->respond(array('accepted' => false), 204);
+        }
+
+        if (!$this->site_analytics_model->record_search_activity($query, $activity, $resultCount)) {
+            return $this->respond(array('accepted' => false), 204);
+        }
+
+        return $this->respond(array('accepted' => true), 202);
+    }
+
     private function hasAnalyticsConsent()
     {
         $raw = (string) $this->input->cookie('cookie_consent', true);

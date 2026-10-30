@@ -598,7 +598,7 @@ if (!empty($initialVariation)) {
 ?>
 
 <div
-	class="quick-view-product"
+	class="quick-view-product b2c-quick-view-product"
 	data-quick-view-product
 	data-product-id="<?= $productId ?>"
 	data-selected-variation="<?= $initialVariationId ?>"

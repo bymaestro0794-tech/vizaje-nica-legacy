@@ -17,6 +17,7 @@ dist/
 application/config/database.php
 application/libraries/secret/
 .htpasswd
+site-meilisearch.env
 
 # CI logs
 application/logs/log-*.php
@@ -36,3 +37,6 @@ session-test.php
 # phpMyAdmin
 pmadm/
 robots.txt
+
+# Separate Next.js rewrite project; keep it out of the legacy production repository.
+vz-next/

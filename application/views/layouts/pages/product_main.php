@@ -86,6 +86,7 @@ $useHomeProductCardStyle = !empty($is_home_product_card);
 $useCatalogEditorialCardStyle = !empty($is_catalog_editorial_card);
 $useWishlistProductCardStyle = !empty($is_wishlist_product_card);
 $useDiscountCatalogCardStyle = !empty($is_discount_catalog_card);
+$isHeaderSearchProductCard = !empty($is_header_search_card);
 
 $productUrl =
     '/' .
@@ -200,9 +201,10 @@ $notificationPriceText =
 ?>
 
 <div
-    class="main-catalog__product product
+    class="main-catalog__product product b2c-product-card
         <?= $useCatalogEditorialCardStyle ? 'product--editorial-card' : '' ?>
         <?= $useWishlistProductCardStyle ? 'product--wishlist-editorial' : '' ?>
+        <?= $isHeaderSearchProductCard ? 'product--header-search-card' : '' ?>
         <?= $isLiked ? '_liked' : '' ?>
         <?= !$isInStock ? 'stock_off' : '' ?>"
     data-prod_id="<?= $productId ?>"
@@ -269,6 +271,7 @@ $notificationPriceText =
         </span>
     <?php endif; ?>
 
+    <?php if (!$isHeaderSearchProductCard) : ?>
     <div class="head-product__modificator">
         <?php if (!empty($item->is_new)) { ?>
             <p class="head-product__modificator_new">
@@ -294,6 +297,7 @@ $notificationPriceText =
             </p>
         <?php } ?>
     </div>
+    <?php endif; ?>
 
     <?php if ($isInStock) { ?>
     <a

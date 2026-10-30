@@ -1361,7 +1361,7 @@ $hasBrandDescription = !empty(
 						<?php if ($productInStock) : ?>
 							<button
 								type="button"
-								class="product-actions__button product-actions__button--primary product-actions__button--top add_cart"
+								class="b2c-button b2c-button--primary product-actions__button product-actions__button--top add_cart"
 								data-product-add-top
 							>
 								<?= $escape(ADD_TO_CART) ?>
@@ -1843,6 +1843,8 @@ $hasBrandDescription = !empty(
 								<button
 									type="button"
 									class="
+										b2c-button
+										b2c-button--primary
 										product-actions__button
 										product-actions__button--primary
 										add_cart
@@ -1859,6 +1861,8 @@ $hasBrandDescription = !empty(
 								<button
 									type="button"
 									class="
+										b2c-button
+										b2c-button--secondary
 										product-actions__button
 										product-actions__button--disabled
 									"
@@ -2486,7 +2490,7 @@ $hasBrandDescription = !empty(
 
 		<button
 			type="button"
-			class="product-sticky-bar__button add_cart"
+			class="b2c-button b2c-button--primary product-sticky-bar__button add_cart"
 			data-product-sticky-add
 			<?= !$productInStock
 				? 'disabled'

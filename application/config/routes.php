@@ -119,6 +119,7 @@ $route['dev/design-lab'] = 'design_lab/index';
 $route['dev/design-lab/catalog'] = 'design_lab/catalog';
 // $route['b2b'] = 'frontend/b2b/index';
 $route['(ro|ru)/b2b'] = 'frontend/b2b/index/$1';
+$route[$langs.'/(podarochnaya-karta|card-cadou)'] = 'frontend/gift_card/index';
 $route[$langs.'/(certificat-cadou|podarochnyie-sertifikatyi)'] = "frontend/certificat/index";
 $route[$langs.'/(certificat-cadou|podarochnyie-sertifikatyi)/success'] = "frontend/certificat/success";
 $route[$langs.'/(certificat-cadou|podarochnyie-sertifikatyi)/error'] = "frontend/certificat/success";
@@ -214,6 +215,7 @@ $route[$langs.'/(brands)/(:any)'] = "frontend/brands/items";
 
 $route[$langs . '/(poisk|cautare)'] = 'frontend/search/index';
 $route[$langs . '/search'] = 'frontend/search/search';
+$route[$langs . '/search/meilisearch'] = 'frontend/search/meilisearch';
 
 $route[$langs.'/products/category-parent'] = "frontend/catalog/products_category_parent";
 $route[$langs.'/products/brands'] = "frontend/catalog/products_brand";
@@ -224,6 +226,7 @@ $route['cp_features/(:any)'] = "features/$1";
 $route['feedback/submit'] = 'frontend/feedback/submit';
 /* Default Routing */
 $route['analytics/event'] = 'frontend/analytics/event';
+$route['analytics/search-query'] = 'frontend/analytics/search_query';
 $route[$langs . '/:any/:any/:any/:any/:any'] = 'pages/text_pages';
 $route[$langs . '/:any/:any/:any/:any'] = 'pages/text_pages';
 $route[$langs . '/:any/:any/:any'] = 'pages/text_pages';

@@ -279,6 +279,62 @@ class Categories_model extends BaseModel
         return $this->db->get($this->tblname)->result();
     }
 
+    public function get_exact_search_categories($lang, $search)
+    {
+        $lang = strtoupper((string) $lang);
+        if (!in_array($lang, array('RU', 'RO'), true)) {
+            return array();
+        }
+
+        $this->db->select("id, title{$lang} AS title, uri{$lang} AS uri");
+        $this->db->where("title{$lang}", trim((string) $search));
+        $this->db->where('isShown', 1);
+        $this->db->limit(2);
+        return $this->db->get($this->tblname)->result();
+    }
+
+    public function get_categories_by_ids($lang, $ids)
+    {
+        $lang = strtoupper((string) $lang);
+        if (!in_array($lang, array('RU', 'RO'), true) || !is_array($ids) || empty($ids)) {
+            return array();
+        }
+
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        if (empty($ids)) {
+            return array();
+        }
+
+        $orderIds = implode(',', $ids);
+        return $this->db
+            ->select("id, title{$lang} AS title, uri{$lang} AS uri, img")
+            ->where('isShown', 1)
+            ->where_in('id', $ids)
+            ->order_by("FIELD(id, {$orderIds})", '', false)
+            ->get($this->tblname)
+            ->result();
+    }
+
+    public function get_categories_by_ru_titles($lang, $titles)
+    {
+        $lang = strtoupper((string) $lang);
+        if (!in_array($lang, array('RU', 'RO'), true) || !is_array($titles) || empty($titles)) {
+            return array();
+        }
+
+        $titles = array_values(array_unique(array_filter(array_map('trim', $titles))));
+        if (empty($titles)) {
+            return array();
+        }
+
+        return $this->db
+            ->select("id, titleRU AS title_ru, title{$lang} AS title, uri{$lang} AS uri, img")
+            ->where('isShown', 1)
+            ->where_in('titleRU', $titles)
+            ->get($this->tblname)
+            ->result();
+    }
+
     public function get_category_ids($lang, $brand_id, $ids)
     {
         if (empty($ids)) return false;

@@ -2685,7 +2685,7 @@
 
 	.form-header-search__input {
 		font-size: 18px;
-		padding-bottom: 15px;
+		padding-bottom: 0;
 	}
 
 	.form-header-search__lists {

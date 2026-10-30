@@ -29,6 +29,18 @@ class Products extends BackEndController
         $this->load->model('products_model');
     }
 
+    /** Keep the Meilisearch product projection aligned with successful admin edits. */
+    private function syncMeilisearchProduct($productId)
+    {
+        $productId = (int) $productId;
+        if ($productId <= 0) {
+            return;
+        }
+
+        $this->load->library('meilisearch_catalog_sync');
+        $this->meilisearch_catalog_sync->syncProducts(array($productId));
+    }
+
     public function index()
     {
         init_load_img($this->main_page, true, 'jpg|jpeg|gif|png|svg|webp|avif');
@@ -43,8 +55,40 @@ class Products extends BackEndController
             $this->data['objects'] = $objects['data'];
         }
 
+        $brandIds = array();
+        $categoryIds = array();
+        foreach ($this->data['objects'] as $object) {
+            if (!empty($object->brand_id)) $brandIds[] = (int) $object->brand_id;
+            if (!empty($object->category_id)) $categoryIds[] = (int) $object->category_id;
+        }
+
+        $brandTitlesById = array();
+        $brandIds = array_values(array_unique($brandIds));
+        if (!empty($brandIds)) {
+            foreach ($this->db->select('id, title')->where_in('id', $brandIds)->get('brands')->result() as $brand) {
+                $brandTitlesById[(int) $brand->id] = trim((string) $brand->title);
+            }
+        }
+
+        $categoryTitlesById = array();
+        $categoryIds = array_values(array_unique($categoryIds));
+        if (!empty($categoryIds)) {
+            foreach ($this->db->select('id, titleRU, titleRO')->where_in('id', $categoryIds)->get('categories')->result() as $category) {
+                $categoryTitleRU = trim((string) $category->titleRU);
+                $categoryTitlesById[(int) $category->id] = $categoryTitleRU !== ''
+                    ? $categoryTitleRU
+                    : trim((string) $category->titleRO);
+            }
+        }
+
         foreach ($this->data['objects'] as $datum)
         {
+            $datum->admin_brand_title = $brandTitlesById[(int) $datum->brand_id] ?? '';
+            $datum->admin_category_title = $categoryTitlesById[(int) $datum->category_id] ?? '';
+            $datum->admin_missing_brand = empty($datum->brand_id)
+                || $datum->admin_brand_title === '';
+            $datum->admin_missing_category = empty($datum->category_id)
+                || $datum->admin_category_title === '';
             $datum->img_variable = 1;
 
             $this->db->select('
@@ -554,6 +598,8 @@ class Products extends BackEndController
                     throw new Exception(lang('Error writing data to table') . $this->main_page);
                 }
 
+                $this->syncMeilisearchProduct($id);
+
                 $_SESSION['success'] = $this->success_edit;
 				if ($importChangeId > 0 && $this->db->table_exists('product_import_changes') && $this->db->field_exists('status', 'product_import_changes')) {
 					$this->db
@@ -677,6 +723,8 @@ class Products extends BackEndController
             if (!$this->products_model->delete($id)) {
                 throw new Exception(lang('Error deleting data from table') . $this->main_page);
             }
+
+            $this->syncMeilisearchProduct($id);
 
             $_SESSION['success'] = $this->success_delete;
         } catch (Exception $e) {
@@ -991,7 +1039,23 @@ class Products extends BackEndController
     public function add_variable_delete()
     {
         check_if_POST();
-        $this->db->where('id', $_POST['id']);
+
+        $variableId = isset($_POST['id']) ? (int) $_POST['id'] : 0;
+        if ($variableId <= 0) {
+            return;
+        }
+
+        $variant = $this->db->select('product_id')
+            ->where('id', $variableId)
+            ->limit(1)
+            ->get('products_variable')
+            ->row();
+
+        $this->db->where('id', $variableId);
         $this->db->delete('products_variable');
+
+        if (!empty($variant)) {
+            $this->syncMeilisearchProduct((int) $variant->product_id);
+        }
     }
 }

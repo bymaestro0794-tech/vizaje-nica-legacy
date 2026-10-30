@@ -446,6 +446,7 @@ public function get_product_by_id_for_quick_view(
         if (!empty($_GET['brands'])) {
             $this->db->where('brand_id', $_GET['brands']);
         }
+        $this->applyAdminMissingTaxonomyFilter();
         if (!empty($_GET['sorder'])) {
             $this->db->order_by($_GET['sorder'] . ', id DESC');
         } else {
@@ -466,6 +467,7 @@ public function get_product_by_id_for_quick_view(
         if (!empty($_GET['brands'])) {
             $this->db->where('brand_id', $_GET['brands']);
         }
+        $this->applyAdminMissingTaxonomyFilter();
         if (!empty($_GET['sorder'])) {
             $this->db->order_by($_GET['sorder'] . ', id DESC');
         } else {
@@ -496,6 +498,7 @@ public function get_product_by_id_for_quick_view(
         if (!empty($_GET['brands'])) {
             $this->db->where('brand_id', $_GET['brands']);
         }
+        $this->applyAdminMissingTaxonomyFilter();
         if (!empty($_GET['sorder'])) {
             $this->db->order_by($_GET['sorder'] . ', id DESC');
         } else {
@@ -504,6 +507,35 @@ public function get_product_by_id_for_quick_view(
 
         $products = $this->db->get($this->tblname)->result();
         return $products;
+    }
+
+    private function applyAdminMissingTaxonomyFilter()
+    {
+        $missing = isset($_GET['missing']) ? (string) $_GET['missing'] : '';
+        $brandMissingSql = "NOT EXISTS (
+            SELECT 1 FROM brands admin_brand
+            WHERE admin_brand.id = products.brand_id
+              AND TRIM(COALESCE(admin_brand.title, '')) <> ''
+        )";
+        $categoryMissingSql = "NOT EXISTS (
+            SELECT 1 FROM categories admin_category
+            WHERE admin_category.id = products.category_id
+              AND (
+                  TRIM(COALESCE(admin_category.titleRU, '')) <> ''
+                  OR TRIM(COALESCE(admin_category.titleRO, '')) <> ''
+              )
+        )";
+
+        if ($missing === 'brand') {
+            $this->db->where($brandMissingSql, null, false);
+        } elseif ($missing === 'category') {
+            $this->db->where($categoryMissingSql, null, false);
+        } elseif ($missing === 'any') {
+            $this->db->group_start()
+                ->where($brandMissingSql, null, false)
+                ->or_where($categoryMissingSql, null, false)
+                ->group_end();
+        }
     }
 
     public function get_prod_characteristics($feature_type)
@@ -2092,14 +2124,14 @@ if (!empty($_SESSION['isb2b'])) {
      * Берём только позиции из каталога скидок с реальной скидкой,
      * изображением и доступным остатком (у товара или скидочного варианта).
      */
-    public function get_header_discount_products($lang, $limit = 18)
+    public function get_header_discount_products($lang, $limit = 18, $rotate = true)
     {
         $lang = strtoupper((string) $lang);
         if (!in_array($lang, array('RU', 'RO'), true)) {
             return array();
         }
 
-        $limit = max(1, min(24, (int) $limit));
+        $limit = max(1, min(120, (int) $limit));
         $poolLimit = max($limit * 3, 36);
         $popularBrandPriority = "CASE
             WHEN LOWER(COALESCE(brands.title, '')) LIKE '%clarins%' THEN 700
@@ -2243,7 +2275,7 @@ if (!empty($_SESSION['isb2b'])) {
 
         /* Меняем стартовую позицию один раз в 48 часов, а не на каждый запрос. */
         $rotationCount = count($rotatedPool);
-        if ($rotationCount > 1) {
+        if ($rotate && $rotationCount > 1) {
             $rotationOffset = $this->getTwoDayRotationSeed($lang, 'header-sale') % $rotationCount;
             if ($rotationOffset > 0) {
                 $rotatedPool = array_merge(
@@ -2340,12 +2372,16 @@ if (!empty($_SESSION['isb2b'])) {
         $this->db->offset(0);
         $this->db->limit(15);
 
-        $this->db->order_by("products.stock DESC, products.sorder ASC, products.id DESC");
+        $this->db->order_by(
+            'has_available_stock DESC, products.sorder ASC, products.id DESC',
+            '',
+            false
+        );
         $this->db->group_by("products.id");
         return $this->db->get($this->tblname)->result();
     }
 
-    public function get_search_productsID($lang, $productsID)
+    public function get_search_productsID($lang, $productsID, $preserveOrder = false, $offset = 0, $limit = 15)
     {
         $effectiveFields = $this->getEffectiveProductFields();
 
@@ -2376,10 +2412,22 @@ if (!empty($_SESSION['isb2b'])) {
        $this->applySellableCondition();
 
         $this->db->where("$this->tblname.isShown", 1);
-        $this->db->offset(0);
-        $this->db->limit(15);
+        $this->db->offset(max(0, (int) $offset));
+        $this->db->limit(max(1, (int) $limit));
 
-        $this->db->order_by("products.stock DESC, products.sorder ASC, products.id DESC");
+        if ($preserveOrder && !empty($productsID)) {
+            $orderedIds = implode(',', array_unique(array_filter(array_map('intval', $productsID))));
+            if ($orderedIds !== '') {
+                $orderSql = 'has_available_stock DESC, FIELD(products.id, ' . $orderedIds . ')';
+                $this->db->order_by($orderSql, '', false);
+            }
+        } else {
+            $this->db->order_by(
+                'has_available_stock DESC, products.sorder ASC, products.id DESC',
+                '',
+                false
+            );
+        }
         $this->db->group_by("products.id");
         return $this->db->get($this->tblname)->result();
     }
@@ -2517,7 +2565,26 @@ if (!empty($_SESSION['isb2b'])) {
         $this->db->offset($offset);
         $this->db->limit($limit);
 
-        $this->db->order_by("products.stock DESC, products.sorder ASC, products.id DESC");
+        switch ((string) $sort) {
+            case '1':
+                $this->db->order_by('has_available_stock DESC, products.best_selling DESC, products.id ASC', '', false);
+                break;
+            case '2':
+                $this->db->order_by('has_available_stock DESC, effective_price ASC, products.id ASC', '', false);
+                break;
+            case '3':
+                $this->db->order_by('has_available_stock DESC, effective_price DESC, products.id ASC', '', false);
+                break;
+            case '4':
+                $this->db->order_by('has_available_stock DESC, products.sale_percent DESC, products.sale_mdl DESC, products.id ASC', '', false);
+                break;
+            case '5':
+                $this->db->order_by('has_available_stock DESC, products.is_new DESC, products.id DESC', '', false);
+                break;
+            default:
+                $this->db->order_by('has_available_stock DESC, products.sorder ASC, products.id DESC', '', false);
+                break;
+        }
         $this->db->group_by("products.id");
         $products = $this->db->get($this->tblname)->result();
 

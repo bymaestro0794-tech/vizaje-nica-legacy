@@ -15,7 +15,7 @@ $productPrice = (float) ($product->effective_price ?? $product->price ?? 0);
 $productSale = !empty($_SESSION['isb2b']) ? 0 : (float) ($product->effective_discount_price ?? $product->discount_price ?? 0);
 if ($productSale > 0 && $productSale < $productPrice) $productPrice = $productSale;
 ?>
-<a class="blog-recommended-product" href="<?= htmlspecialchars($productUrl, ENT_QUOTES, 'UTF-8') ?>">
+<a class="blog-recommended-product b2c-product-card b2c-product-card--editorial" href="<?= htmlspecialchars($productUrl, ENT_QUOTES, 'UTF-8') ?>">
     <span class="blog-recommended-product__image">
         <?php if ($productImage !== '') { ?>
             <img src="<?= htmlspecialchars($productImage, ENT_QUOTES, 'UTF-8') ?>"

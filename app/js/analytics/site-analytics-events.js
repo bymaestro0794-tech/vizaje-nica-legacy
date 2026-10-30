@@ -47,6 +47,44 @@
 		}
 	}
 
+	function recordSearchAttributedCartAdd(productId) {
+		var storageKey = 'vn_search_cart_attribution'
+		var attribution
+
+		try {
+			attribution = JSON.parse(window.sessionStorage.getItem(storageKey) || 'null')
+			window.sessionStorage.removeItem(storageKey)
+		} catch (error) {
+			return
+		}
+
+		if (
+			!attribution ||
+			!analytics.hasConsent ||
+			!analytics.hasConsent() ||
+			positiveInt(attribution.productId) !== positiveInt(productId) ||
+			!attribution.expiresAt ||
+			Number(attribution.expiresAt) < Date.now() ||
+			typeof attribution.query !== 'string' ||
+			attribution.query.trim().length < 2
+		) {
+			return
+		}
+
+		fetch('/analytics/search-query', {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+			body: new URLSearchParams({
+				query: attribution.query,
+				activity: 'add_to_cart'
+			}),
+			keepalive: true
+		}).catch(function () {
+			// Search attribution is optional; adding to cart must remain unaffected.
+		})
+	}
+
 	function sendOnce(name, details) {
 		if (pageEventsSent[name]) {
 			return
@@ -179,6 +217,7 @@
 				var payload = requestData(settings)
 
 				if (/\/cart_add$/.test(url)) {
+					recordSearchAttributedCartAdd(payload.product_id)
 					analytics.track('add_to_cart', {
 						product_id: positiveInt(payload.product_id),
 						quantity: positiveInt(payload.quantity) || 1,

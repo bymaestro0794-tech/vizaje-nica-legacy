@@ -217,6 +217,36 @@ class Brands_model extends BaseModel
         $this->db->order_by("sorder ASC, id DESC");
         return $this->db->get($this->tblname)->result();
     }
+
+    public function get_exact_search_brands($search)
+    {
+        $this->db->select('id, title, uri');
+        $this->db->where('title', trim((string) $search));
+        $this->db->where('isShown', 1);
+        $this->db->limit(2);
+        return $this->db->get($this->tblname)->result();
+    }
+
+    public function get_brands_by_ids($ids)
+    {
+        if (!is_array($ids) || empty($ids)) {
+            return array();
+        }
+
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        if (empty($ids)) {
+            return array();
+        }
+
+        $orderIds = implode(',', $ids);
+        return $this->db
+            ->select('id, title, uri')
+            ->where('isShown', 1)
+            ->where_in('id', $ids)
+            ->order_by("FIELD(id, {$orderIds})", '', false)
+            ->get($this->tblname)
+            ->result();
+    }
     
     public function get_niche_sale_brands(
         array $brandTitles

@@ -62,6 +62,31 @@ $phoneValue = !empty(CONT_PHONE1) ? CONT_PHONE1 : '';
 $phoneUrl = $phoneValue !== ''
     ? 'tel:' . preg_replace('/[^\d+]/', '', $phoneValue)
     : '';
+
+$offersFooterUri = !empty($menu['all'][9]->uri)
+    ? trim((string) $menu['all'][9]->uri, '/')
+    : ($isRomanian ? 'promotii' : 'aktsii');
+$newsFooterUri = !empty($menu['all'][37]->uri)
+    ? trim((string) $menu['all'][37]->uri, '/')
+    : ($isRomanian ? 'noutati' : 'novosti');
+$footerDiscoveryLinks = [
+    [
+        'title' => $isRomanian ? 'Promoții' : 'Акции',
+        'url' => '/' . $lclang . '/' . $offersFooterUri,
+    ],
+    [
+        'title' => $isRomanian ? 'Selecții de frumusețe' : 'Бьюти-подборки',
+        'url' => '/' . $lclang . '/beauty-selections',
+    ],
+    [
+        'title' => $isRomanian ? 'Noutăți' : 'Новости',
+        'url' => '/' . $lclang . '/' . $newsFooterUri,
+    ],
+    [
+        'title' => $isRomanian ? 'Blog' : 'Блог',
+        'url' => '/' . $lclang . '/blog',
+    ],
+];
 ?>
 
 <footer class="footer footer--storefront">
@@ -221,6 +246,25 @@ $phoneUrl = $phoneValue !== ''
                                 data-cookie-action="settings"
                             ><?= COOKIE_SETTINGS_LINK ?></button>
                         </li>
+                    </ul>
+                </div>
+
+                <div class="main-footer__column main-footer__column_discovery">
+                    <p class="main-footer__name">
+                        <?= $isRomanian ? 'Descoperă' : 'Откройте для себя' ?>
+                    </p>
+
+                    <ul class="main-footer__list">
+                        <?php foreach ($footerDiscoveryLinks as $footerLink) : ?>
+                            <li class="main-footer__item">
+                                <a
+                                    href="<?= htmlspecialchars($footerLink['url'], ENT_QUOTES, 'UTF-8') ?>"
+                                    class="main-footer__link"
+                                >
+                                    <?= htmlspecialchars($footerLink['title'], ENT_QUOTES, 'UTF-8') ?>
+                                </a>
+                            </li>
+                        <?php endforeach; ?>
                     </ul>
                 </div>
 

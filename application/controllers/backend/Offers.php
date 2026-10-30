@@ -52,6 +52,28 @@ class Offers extends BackEndController {
             $object->gift_promotion_count = $giftOfferCounts[(int) $object->id] ?? 0;
         }
 
+        $stockByOffer = array();
+        if ($this->db->table_exists('offers_products') && $this->db->table_exists('products')) {
+            $this->db->select('op.offers_id, SUM(GREATEST(COALESCE(p.on_stock, 0), COALESCE(pv_offer_stock.stock, 0))) AS remaining_stock, COUNT(DISTINCT p.id) AS product_count', false);
+            $this->db->from('offers_products op');
+            $this->db->join('products p', 'p.id = op.product_id', 'inner');
+            $this->db->join('(SELECT product_id, SUM(qty) AS stock FROM products_variable WHERE isShown = 1 GROUP BY product_id) pv_offer_stock', 'pv_offer_stock.product_id = p.id', 'left', false);
+            $this->db->where('p.isShown', 1);
+            if ($this->db->field_exists('isGift', 'products')) {
+                $this->db->where('p.isGift', 0);
+            }
+            $stockRows = $this->db->group_by('op.offers_id')->get()->result();
+            foreach ($stockRows as $stockRow) {
+                $stockByOffer[(int) $stockRow->offers_id] = $stockRow;
+            }
+        }
+
+        foreach ((array) $objects as $object) {
+            $stock = $stockByOffer[(int) $object->id] ?? null;
+            $object->remaining_stock = !empty($stock) ? max(0, (int) $stock->remaining_stock) : 0;
+            $object->stock_product_count = !empty($stock) ? (int) $stock->product_count : 0;
+        }
+
         $this->data['inner_view'] = $this->index_view;
         $this->data['objects'] = $objects;
 

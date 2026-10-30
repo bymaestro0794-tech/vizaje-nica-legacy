@@ -3,6 +3,9 @@ AddDefaultCharset UTF-8
 RewriteEngine On
 RewriteBase /
 
+# Never expose the local/hosting Meilisearch credentials file.
+RewriteRule ^site-meilisearch\.env$ - [F,L,NC]
+
 RewriteRule ^certificates$ /ro/certificate [R=301,L]
 
 # Force HTTPS only on production

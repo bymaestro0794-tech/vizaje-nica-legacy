@@ -3,6 +3,232 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Site_analytics_model extends CI_Model
 {
+    /** Store only a daily phrase aggregate; no visitor, session, IP, or account key is retained. */
+    public function record_search_activity($query, $activity = 'search', $resultCount = null)
+    {
+        $activityColumns = array(
+            'search' => 'search_count',
+            'zero_result' => 'zero_result_count',
+            'result_click' => 'result_click_count',
+            'add_to_cart' => 'add_to_cart_count',
+            'result_count' => 'result_count_total',
+        );
+        if (!isset($activityColumns[$activity])) {
+            return false;
+        }
+
+        if (!$this->db->table_exists('search_query_stats')) {
+            return false;
+        }
+
+        $query = strip_tags((string) $query);
+        $query = html_entity_decode($query, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $query = trim(preg_replace('/\s+/u', ' ', $query));
+        $queryLength = function_exists('mb_strlen') ? mb_strlen($query, 'UTF-8') : strlen($query);
+        if ($queryLength < 2 || $queryLength > 80
+            || preg_match('/\p{L}/u', $query) !== 1
+            || preg_match('/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i', $query)
+            || preg_match('/(?<!\d)\+?\d(?:[\s().-]*\d){8,}(?!\d)/u', $query)
+        ) {
+            return false;
+        }
+
+        $query = function_exists('mb_strtolower')
+            ? mb_strtolower($query, 'UTF-8')
+            : strtolower($query);
+
+        $hasZeroResultCount = $this->db->field_exists('zero_result_count', 'search_query_stats');
+        $hasResultClickCount = $this->db->field_exists('result_click_count', 'search_query_stats');
+        $hasResultCountTotal = $this->db->field_exists('result_count_total', 'search_query_stats');
+        $hasResultCountSamples = $this->db->field_exists('result_count_samples', 'search_query_stats');
+        $hasAddToCartCount = $this->db->field_exists('add_to_cart_count', 'search_query_stats');
+        $hasBaseActivityColumns = $hasZeroResultCount && $hasResultClickCount;
+        $hasConversionColumns = $hasResultCountTotal && $hasResultCountSamples && $hasAddToCartCount;
+
+        if (!$hasBaseActivityColumns) {
+            // Keep basic opted-in query counting working until the activity patch is applied.
+            if ($activity !== 'search') {
+                return false;
+            }
+
+            $this->db->query(
+                'INSERT INTO search_query_stats (query_date, query_text, search_count, updated_at)
+                 VALUES (CURDATE(), ?, 1, NOW())
+                 ON DUPLICATE KEY UPDATE
+                    search_count = CASE WHEN search_count < 4294967295 THEN search_count + 1 ELSE search_count END,
+                    updated_at = NOW()',
+                array($query)
+            );
+        } elseif (!$hasConversionColumns) {
+            // Result and click metrics work with the first stats extension; conversion
+            // metrics wait for the follow-up columns instead of disabling earlier metrics.
+            if (in_array($activity, array('result_count', 'add_to_cart'), true)) {
+                return false;
+            }
+
+            $increments = array(
+                $activity === 'search' ? 1 : 0,
+                $activity === 'zero_result' ? 1 : 0,
+                $activity === 'result_click' ? 1 : 0,
+            );
+            $this->db->query(
+                'INSERT INTO search_query_stats
+                    (query_date, query_text, search_count, zero_result_count, result_click_count, updated_at)
+                 VALUES (CURDATE(), ?, ?, ?, ?, NOW())
+                 ON DUPLICATE KEY UPDATE
+                    search_count = CASE WHEN search_count < 4294967295 THEN search_count + VALUES(search_count) ELSE search_count END,
+                    zero_result_count = CASE WHEN zero_result_count < 4294967295 THEN zero_result_count + VALUES(zero_result_count) ELSE zero_result_count END,
+                    result_click_count = CASE WHEN result_click_count < 4294967295 THEN result_click_count + VALUES(result_click_count) ELSE result_click_count END,
+                    updated_at = NOW()',
+                array_merge(array($query), $increments)
+            );
+        } else {
+            $resultCount = is_numeric($resultCount)
+                ? max(0, min(10000000, (int) $resultCount))
+                : 0;
+            $hasResultCountSample = $activity === 'result_count';
+            $increments = array(
+                'search_count' => $activity === 'search' ? 1 : 0,
+                'zero_result_count' => $activity === 'zero_result' ? 1 : 0,
+                'result_click_count' => $activity === 'result_click' ? 1 : 0,
+                'result_count_total' => $activity === 'result_count' ? $resultCount : 0,
+                'result_count_samples' => $hasResultCountSample ? 1 : 0,
+                'add_to_cart_count' => $activity === 'add_to_cart' ? 1 : 0,
+            );
+            $this->db->query(
+                'INSERT INTO search_query_stats
+                    (query_date, query_text, search_count, zero_result_count, result_click_count, result_count_total, result_count_samples, add_to_cart_count, updated_at)
+                 VALUES (CURDATE(), ?, ?, ?, ?, ?, ?, ?, NOW())
+                 ON DUPLICATE KEY UPDATE
+                    search_count = CASE WHEN search_count < 4294967295 THEN search_count + VALUES(search_count) ELSE search_count END,
+                    zero_result_count = CASE WHEN zero_result_count < 4294967295 THEN zero_result_count + VALUES(zero_result_count) ELSE zero_result_count END,
+                    result_click_count = CASE WHEN result_click_count < 4294967295 THEN result_click_count + VALUES(result_click_count) ELSE result_click_count END,
+                    result_count_total = result_count_total + VALUES(result_count_total),
+                    result_count_samples = CASE WHEN result_count_samples < 4294967295 THEN result_count_samples + VALUES(result_count_samples) ELSE result_count_samples END,
+                    add_to_cart_count = CASE WHEN add_to_cart_count < 4294967295 THEN add_to_cart_count + VALUES(add_to_cart_count) ELSE add_to_cart_count END,
+                    updated_at = NOW()',
+                array(
+                    $query,
+                    $increments['search_count'],
+                    $increments['zero_result_count'],
+                    $increments['result_click_count'],
+                    $increments['result_count_total'],
+                    $increments['result_count_samples'],
+                    $increments['add_to_cart_count'],
+                )
+            );
+        }
+
+        // Keep the aggregate table bounded without running a cleanup on every request.
+        if (mt_rand(1, 100) === 1) {
+            $this->db->query(
+                'DELETE FROM search_query_stats WHERE query_date < DATE_SUB(CURDATE(), INTERVAL 180 DAY)'
+            );
+        }
+
+        return true;
+    }
+
+    public function record_search_query($query)
+    {
+        return $this->record_search_activity($query, 'search');
+    }
+
+    public function get_search_query_stats($days = 30, $limit = 50)
+    {
+        $days = max(1, min(180, (int) $days));
+        $limit = max(1, min(200, (int) $limit));
+        if (!$this->db->table_exists('search_query_stats')) {
+            return array();
+        }
+
+        $hasZeroResultCount = $this->db->field_exists('zero_result_count', 'search_query_stats');
+        $hasResultClickCount = $this->db->field_exists('result_click_count', 'search_query_stats');
+        if (!$hasZeroResultCount || !$hasResultClickCount) return array();
+
+        $resultCountSelect = $this->db->field_exists('result_count_total', 'search_query_stats')
+            && $this->db->field_exists('result_count_samples', 'search_query_stats')
+            ? 'SUM(result_count_total) / NULLIF(SUM(result_count_samples), 0) AS average_result_count'
+            : '0 AS average_result_count';
+        $addToCartSelect = $this->db->field_exists('add_to_cart_count', 'search_query_stats')
+            ? 'SUM(add_to_cart_count) AS search_add_to_carts'
+            : '0 AS search_add_to_carts';
+
+        return $this->db->query(
+            "SELECT query_text,
+                    SUM(search_count) AS searches,
+                    SUM(zero_result_count) AS zero_results,
+                    SUM(result_click_count) AS result_clicks,
+                    {$resultCountSelect},
+                    {$addToCartSelect}
+             FROM search_query_stats
+             WHERE query_date >= DATE_SUB(CURDATE(), INTERVAL " . ($days - 1) . " DAY)
+             GROUP BY query_text
+             ORDER BY zero_results DESC, searches DESC, result_clicks DESC, query_text ASC
+             LIMIT {$limit}"
+        )->result_array();
+    }
+
+    public function get_popular_search_queries($limit = 5, $days = 30)
+    {
+        $limit = max(1, min(10, (int) $limit));
+        $days = max(1, min(180, (int) $days));
+        if (!$this->db->table_exists('search_query_stats')) {
+            return array();
+        }
+
+        $fromDate = date('Y-m-d', strtotime('-' . ($days - 1) . ' days'));
+        $rows = $this->db->query(
+            "SELECT query_text, SUM(search_count) AS total_searches, MAX(updated_at) AS last_used
+             FROM search_query_stats
+             WHERE query_date >= ?
+             GROUP BY query_text
+             HAVING SUM(search_count) >= 2
+             ORDER BY total_searches DESC, last_used DESC
+             LIMIT {$limit}",
+            array($fromDate)
+        )->result();
+
+        return array_values(array_map(static function ($row) {
+            return (string) $row->query_text;
+        }, $rows));
+    }
+
+    public function get_matching_popular_search_queries($query, $limit = 5, $days = 30)
+    {
+        $limit = max(1, min(10, (int) $limit));
+        $days = max(1, min(180, (int) $days));
+        if (!$this->db->table_exists('search_query_stats')) {
+            return array();
+        }
+
+        $query = strip_tags((string) $query);
+        $query = html_entity_decode($query, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $query = trim(preg_replace('/\\s+/u', ' ', $query));
+        $query = function_exists('mb_strtolower')
+            ? mb_strtolower($query, 'UTF-8')
+            : strtolower($query);
+        $queryLength = function_exists('mb_strlen') ? mb_strlen($query, 'UTF-8') : strlen($query);
+        if ($queryLength < 2 || $queryLength > 80) {
+            return array();
+        }
+
+        $fromDate = date('Y-m-d', strtotime('-' . ($days - 1) . ' days'));
+        $escapedPrefix = $this->db->escape_like_str($query) . '%';
+        $sql = "SELECT query_text, SUM(search_count) AS total_searches, MAX(updated_at) AS last_used
+                FROM search_query_stats
+                WHERE query_date >= ? AND query_text LIKE ? ESCAPE '!'
+                GROUP BY query_text
+                HAVING SUM(search_count) >= 2
+                ORDER BY total_searches DESC, last_used DESC
+                LIMIT {$limit}";
+        $rows = $this->db->query($sql, array($fromDate, $escapedPrefix))->result();
+
+        return array_values(array_map(static function ($row) {
+            return (string) $row->query_text;
+        }, $rows));
+    }
+
     public function insert_event(array $event)
     {
         if (isset($event['event_name'], $event['order_id']) && $event['event_name'] === 'purchase' && $event['order_id']) {

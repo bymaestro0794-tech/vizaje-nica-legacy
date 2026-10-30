@@ -208,6 +208,37 @@
 		font-size: 20px;
 	}
 
+	body.mobile_catalog_list_page .mobile-catalog-page__item--language {
+		margin: 0 0 8px;
+	}
+
+	body.mobile_catalog_list_page .mobile-catalog-page__link--language {
+		justify-content: flex-start;
+		min-height: 50px;
+		gap: 10px;
+		font-size: 18px;
+		font-weight: 400;
+	}
+
+	body.mobile_catalog_list_page .mobile-catalog-page__link--language .mobile-catalog-page__utility-icon {
+		width: 22px;
+		height: 22px;
+		flex-basis: 22px;
+	}
+
+	body.mobile_catalog_list_page .mobile-catalog-page__link--language .mobile-catalog-page__utility-icon svg {
+		display: block;
+		width: 22px;
+		height: 22px;
+	}
+
+	body.mobile_catalog_list_page .mobile-catalog-page__link--language .mobile-catalog-page__language-chevron {
+		width: 16px;
+		height: 16px;
+		margin-left: auto;
+		flex: 0 0 16px;
+	}
+
 	body.mobile_catalog_list_page .mobile-catalog-page__link--language-option.is-current {
 		font-weight: 600;
 	}
@@ -900,7 +931,6 @@
 	height: 100%;
 	overflow: hidden;
 
-	background: #f3f3f3;
 	border-radius: 0;
 }
 
@@ -984,21 +1014,6 @@
 	white-space: nowrap;
 }
 
-.products_catalog .head-product__modificator_new {
-	background: #63bdff;
-	color: #fff;
-}
-
-.products_catalog .head-product__modificator_sale {
-	background: #171717;
-	color: #ffffff;
-}
-
-.products_catalog .products-colection__modification_hit {
-	background: #e9ff00;
-	color: #111111;
-}
-
 /* ==========================================================================
    Content
    ========================================================================== */
@@ -1041,7 +1056,6 @@
 	white-space: nowrap;
 	text-overflow: ellipsis;
 
-	color: #555555;
 }
 
 /* Product name */
@@ -1058,7 +1072,6 @@
 	font-weight: 500;
 	line-height: 1.35;
 
-	color: #111111;
 	text-decoration: none;
 
 	white-space: normal;
@@ -1115,7 +1128,6 @@
 
 	white-space: nowrap;
 
-	color: #111111;
 }
 
 .products_catalog .price-product__old {
@@ -1124,8 +1136,6 @@
 	line-height: 1.2;
 
 	white-space: nowrap;
-
-	color: #9b9b9b;
 
 	text-decoration: line-through;
 }
@@ -1137,7 +1147,6 @@
 	font-weight: 400;
 	line-height: 1.25;
 
-	color: #888888;
 }
 
 /* ==========================================================================
@@ -1187,9 +1196,6 @@
 	border: 0;
 	border-radius: 50%;
 
-	background: #2c2c2c;
-	color: #ffffff;
-
 	box-shadow: 0 6px 18px rgba(17, 17, 17, 0.12);
 }
 
@@ -1208,8 +1214,6 @@
 
 @media (hover: hover) and (pointer: fine) {
 	.products_catalog .head-product__cart:hover {
-		background: #111111;
-
 		transform: scale(1.05);
 
 		box-shadow: 0 10px 26px rgba(0, 0, 0, 0.16);
@@ -1221,7 +1225,6 @@
 }
 
 .products_catalog .head-product__cart:focus-visible {
-	outline: 2px solid #111111;
 	outline-offset: 3px;
 }
 
@@ -1506,6 +1509,11 @@
 	margin: 0 0 14px; scrollbar-width: none;
 }
 .category-shortcuts::-webkit-scrollbar { display: none; }
+.search-results__categories { margin-top: 3px; }
+.search-results__toolbar { margin-bottom: 18px; }
+.search-results__fallback { margin-top: 28px; }
+.search-results__fallback-title { margin: 0 0 18px; font-size: 24px; line-height: 1.25; font-weight: 600; }
+.search-results__fallback-link { display: inline-flex; align-items: center; gap: 10px; margin-top: 22px; color: inherit; font-weight: 600; }
 @media (min-width: 768px) {
 	.category-shortcuts { cursor: grab; overscroll-behavior-inline: contain; }
 	.category-shortcuts.is-dragging { cursor: grabbing; user-select: none; }
@@ -1663,6 +1671,7 @@
 	.catalog-filter-trigger { min-height: 38px; padding: 0 11px; border-radius: 12px; }
 	.catalog-category__quick { grid-column: 1 / -1; grid-row: 2; }
 	.catalog-toolbar-count { grid-column: 1 / -1; grid-row: 3; padding: 2px 0 1px; }
+	.search-results__toolbar .catalog-toolbar-count { grid-row: 2; }
 	.catalog-quick-control { min-height: 32px; }
 	.catalog-quick-chip { min-height: 30px; padding: 0 11px; font-size: 11px; }
 	.catalog-quick-clear { width: 27px; min-height: 30px; }
@@ -2551,44 +2560,18 @@
 .catalog-category-page .catalog-category__quick { gap: 6px; }
 .catalog-category-page .catalog-quick-control,
 .catalog-category-page .catalog-quick-pill {
-	border-color: #dedede;
 	transition: color .18s ease, background-color .18s ease, border-color .18s ease;
 }
-.catalog-category-page .catalog-quick-chip { color: #1a1a1a; }
-.catalog-category-page .catalog-quick-control:hover,
-.catalog-category-page .catalog-quick-pill:not(.is-active):hover {
-	border-color: #ac8e7a;
-	background-color: #faf7f5;
-}
-.catalog-category-page .catalog-quick-pill--promo.is-active,
-.catalog-category-page .catalog-quick-pill--stock.is-active {
-	border-color: #1a1a1a;
-	background: #1a1a1a;
-	color: #fff;
-}
-.catalog-category-page .catalog-quick-pill--promo.is-active > span { color: #fff; }
 
 .catalog-filter-drawer {
-	background: #fff;
-	border-color: #ededed;
 	box-shadow: 0 16px 48px rgba(0,0,0,.14);
 }
-.catalog-filter-drawer__header { border-bottom-color: #ededed; }
-.catalog-filter-drawer__header h2 { color: #111; font-family: 'Geist'; }
-.catalog-filter-section { border-bottom-color: #ededed; }
-.catalog-filter-section__heading,
-.catalog-stock-toggle { color: #111; }
-.catalog-filter-section__heading:hover { color: #ac8e7a; }
-.catalog-stock-toggle input:checked + i { background: #1a1a1a; }
-.catalog-price-fields label { background: #f5f5f5; }
-.catalog-price-range__track { background: #d8d8d8; }
-.catalog-price-range__selected { background: #1a1a1a; }
+	.catalog-filter-drawer__header { border-bottom-color: #ededed; }
+	.catalog-filter-drawer__header h2 { font-family: 'Geist'; }
+	.catalog-filter-section { border-bottom-color: #ededed; }
 .catalog-price-range__thumb { width: 24px; height: 24px; top: 5px; }
-.catalog-filter-option { min-height: 44px; color: #1a1a1a; }
-.catalog-filter-option__check { border-color: #888; }
-.catalog-filter-option input:checked + .catalog-filter-option__check { border-color: #1a1a1a; background: #1a1a1a; }
+	.catalog-filter-option { min-height: 44px; }
 .catalog-filter-drawer__footer { border-top-color: #ededed; box-shadow: 0 -5px 18px rgba(0,0,0,.025); }
-.catalog-filter-apply { border-radius: 8px; }
 
 @media (max-width: 767px) {
 	.catalog-filter-drawer {
@@ -2614,7 +2597,6 @@
 		right: 48px;
 		margin: 0;
 		padding: 8px 4px;
-		color: #777;
 		font-size: 11px;
 	}
 	.catalog-filter-drawer__close {
@@ -2622,8 +2604,6 @@
 		left: 16px;
 		width: 34px;
 		height: 34px;
-		background: transparent;
-		color: #111;
 	}
 	.catalog-filter-drawer__content { padding: 2px 20px 12px; }
 	.catalog-filter-drawer:has([data-filter-section][hidden]) .catalog-filter-section:not([hidden]) > .catalog-filter-section__heading { display: none; }
@@ -2631,12 +2611,11 @@
 	.catalog-filter-section__heading,
 	.catalog-stock-toggle { min-height: 54px; font-size: 14px; font-weight: 600; }
 	.catalog-filter-section__body { padding-bottom: 16px; }
-	.catalog-filter-search { height: 44px; margin-bottom: 8px; border-bottom-color: #e5e5e5; }
+	.catalog-filter-search { height: 44px; margin-bottom: 8px; }
 	.catalog-filter-search input { font-size: 14px; }
 	.catalog-filter-option { min-height: 46px; font-size: 14px; }
 	.catalog-filter-drawer__footer {
 		padding: 12px 20px max(18px, env(safe-area-inset-bottom));
-		background: #fff;
 	}
 	.catalog-filter-apply { min-height: 50px; font-size: 11px; letter-spacing: .08em; }
 
@@ -2941,4 +2920,32 @@
 	.products_catalog .head-product__image [data-catalog-hover-layer] {
 		transition-duration: 0.01ms;
 	}
+}
+
+/* Burgundy identifies the catalog's discount shortcut on every screen size. */
+.catalog-category-page .catalog-quick-pill--promo {
+	border-color: rgba(122, 30, 45, .34);
+	color: #7a1e2d;
+}
+
+.catalog-category-page .catalog-quick-pill--promo > span {
+	color: #7a1e2d;
+}
+
+.catalog-category-page .catalog-quick-pill--promo:hover {
+	border-color: #7a1e2d;
+	background-color: #fbf4f5;
+	color: #651625;
+}
+
+.catalog-category-page .catalog-quick-pill--promo.is-active,
+.catalog-category-page .catalog-quick-pill--promo.is-active:hover {
+	border-color: #7a1e2d;
+	background-color: #7a1e2d;
+	color: #fff;
+}
+
+.catalog-category-page .catalog-quick-pill--promo.is-active > span,
+.catalog-category-page .catalog-quick-pill--promo.is-active:hover > span {
+	color: #fff;
 }

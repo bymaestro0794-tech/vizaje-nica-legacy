@@ -299,7 +299,7 @@ $config['allow_get_array'] = TRUE;
 | your log files will fill up very fast.
 |
 */
-$config['log_threshold'] = 4;
+$config['log_threshold'] = 1;
 
 /*
 |--------------------------------------------------------------------------
@@ -460,6 +460,63 @@ $config['sess_save_path'] = NULL;
 $config['sess_match_ip'] = FALSE;
 $config['sess_time_to_update'] = 300;
 $config['sess_regenerate_destroy'] = FALSE;
+
+/*
+ * The legacy application starts native PHP sessions directly in its
+ * controllers instead of loading CodeIgniter's Session library. Apply the
+ * configured lifetime here so PHP does not fall back to the server default
+ * (often 1440 seconds on production hosting).
+ */
+$nativeSessionLifetime = max(0, (int) $config['sess_expiration']);
+ini_set('session.gc_maxlifetime', (string) $nativeSessionLifetime);
+ini_set('session.cookie_lifetime', (string) $nativeSessionLifetime);
+
+/* Meilisearch is accessed only from the backend. Keep the keys out of JS. */
+$meilisearchFileEnv = array();
+$meilisearchEnvPath = defined('FCPATH') ? FCPATH . 'site-meilisearch.env' : '';
+$meilisearchEnvLines = $meilisearchEnvPath !== ''
+    ? @file($meilisearchEnvPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES)
+    : false;
+if (is_array($meilisearchEnvLines)) {
+    foreach ($meilisearchEnvLines as $line) {
+        $line = trim($line);
+        if ($line === '' || strpos($line, '#') === 0 || strpos($line, '=') === false) {
+            continue;
+        }
+
+        list($key, $value) = explode('=', $line, 2);
+        $key = trim($key);
+        $value = trim($value);
+        if ($value !== '' && (($value[0] === '"' && substr($value, -1) === '"') || ($value[0] === "'" && substr($value, -1) === "'"))) {
+            $value = substr($value, 1, -1);
+        }
+
+        if (preg_match('/^MEILISEARCH_[A-Z0-9_]+$/', $key)) {
+            $meilisearchFileEnv[$key] = $value;
+        }
+    }
+}
+
+$meilisearchEnv = static function ($key, $default = null) use ($env, $meilisearchFileEnv) {
+    $value = $env($key, null);
+    if ($value !== null && $value !== '') {
+        return $value;
+    }
+
+    return array_key_exists($key, $meilisearchFileEnv)
+        ? $meilisearchFileEnv[$key]
+        : $default;
+};
+
+$config['meilisearch_url'] = rtrim((string) $meilisearchEnv('MEILISEARCH_URL', ''), '/');
+$config['meilisearch_index'] = (string) $meilisearchEnv('MEILISEARCH_INDEX', 'vizaje_nica_products');
+$config['meilisearch_search_key'] = (string) $meilisearchEnv('MEILISEARCH_SEARCH_KEY', '');
+$config['meilisearch_admin_key'] = (string) $meilisearchEnv('MEILISEARCH_ADMIN_KEY', '');
+$config['meilisearch_timeout'] = max(1, (int) $meilisearchEnv('MEILISEARCH_TIMEOUT', 2));
+$config['meilisearch_frontend_enabled'] = filter_var(
+    $meilisearchEnv('MEILISEARCH_FRONTEND_ENABLED', '0'),
+    FILTER_VALIDATE_BOOLEAN
+);
 
 /*
 |--------------------------------------------------------------------------

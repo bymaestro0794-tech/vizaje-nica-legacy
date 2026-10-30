@@ -121,6 +121,14 @@
                 >
                     <?= $certificateBuilderCopy['steps'][0] ?>
                 </span>
+
+                <a
+                    class="certificate-builder-mobile-close"
+                    href="/<?= htmlspecialchars($lclang, ENT_QUOTES, 'UTF-8') ?>"
+                    aria-label="<?= $lclang === 'ro' ? 'Înapoi la pagina principală' : 'Вернуться на главную' ?>"
+                >
+                    <img src="/app/img/icons/close.svg" alt="" aria-hidden="true" width="16" height="16">
+                </a>
             </div>
 
             <nav
