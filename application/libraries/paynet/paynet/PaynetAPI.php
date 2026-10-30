@@ -291,8 +291,6 @@ class PaynetEcomAPI
 
         $url = $this->api_base_url . $path;
         
-        log_message('error', 'Paynet callApi URL: ' . $url); // ВРЕМЕННО
-
         if (count($query_params) > 0) {
             $url .= '?' . http_build_query($query_params);
         }
@@ -309,8 +307,8 @@ class PaynetEcomAPI
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
         curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
         if ($method != 'GET') {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
@@ -318,11 +316,6 @@ class PaynetEcomAPI
 
         $json_response = curl_exec($ch);
         
-        log_message('error', 'DIAG: Paynet callApi URL: ' . $url);
-        log_message('error', 'DIAG: Paynet callApi raw response: ' . var_export($json_response, true));
-        log_message('error', 'DIAG: Paynet callApi curl error: ' . curl_error($ch));
-        log_message('error', 'DIAG: Paynet callApi http code: ' . curl_getinfo($ch, CURLINFO_HTTP_CODE));
-
         if ($json_response === false) {
             /*
              * If an error occurred, remember the error

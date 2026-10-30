@@ -329,6 +329,17 @@
                                                 </td>
                                             </tr>
                                             <tr>
+                                                <td width="200">Заполненность</td>
+                                                <td>
+                                                    <select name="missing" class="form-control" style="width: 250px;">
+                                                        <option value="" <?= empty($_GET['missing']) ? 'selected' : '' ?>>Все товары</option>
+                                                        <option value="brand" <?= (!empty($_GET['missing']) && $_GET['missing'] === 'brand') ? 'selected' : '' ?>>Без бренда</option>
+                                                        <option value="category" <?= (!empty($_GET['missing']) && $_GET['missing'] === 'category') ? 'selected' : '' ?>>Без категории</option>
+                                                        <option value="any" <?= (!empty($_GET['missing']) && $_GET['missing'] === 'any') ? 'selected' : '' ?>>Без бренда или категории</option>
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                            <tr>
                                                 <td width="200"><?=lang('Sorder')?></td>
                                                 <td>
                                                     <select name="sorder" class="form-control" style="width: 250px;">
@@ -380,6 +391,11 @@
             <div class="portlet-body" id="load">
                 <div class="col-md-12">
                     <form action="/cp/products/" method="get" enctype="text/plain">
+                        <?php foreach (array('cat', 'brands', 'sorder', 'missing') as $preservedFilter) { ?>
+                            <?php if (!empty($_GET[$preservedFilter])) { ?>
+                                <input type="hidden" name="<?= $preservedFilter ?>" value="<?= html_escape($_GET[$preservedFilter]) ?>">
+                            <?php } ?>
+                        <?php } ?>
                         <div class="margin-bottom-5" style="text-align: right;">
                             <?= lang('Search') ?>
                             <input type="text" style="width: 240px; padding-top: 1px; display: inline-block;"
@@ -405,14 +421,26 @@
                                 <th width="125"> <?= lang('Action') ?></th>
                             </tr>
                             <? foreach ($objects as $object) { ?>
-                                <tr <?php if (empty($object->img) || empty($object->img_variable)){?>style="background: red"<?php } ?>>
+                                <tr <?php if (empty($object->img) || empty($object->img_variable)){?>style="background: red"<?php } elseif (!empty($object->admin_missing_brand) || !empty($object->admin_missing_category)) { ?>style="background: #fff0f0"<?php } ?>>
                                     <td>
                                         <input style="width:50px;margin-left: 0;margin-right: 15px;" type="text"
                                                onkeyup="this.value=this.value.replace(/[^\d]/,\'\')" min="1"
                                                class="form-control text-center sorder" value="<?= $object->sorder ?>"
                                                name="so[<?= $object->id ?>]">
                                     </td>
-                                    <td><a href="<?= $e_path . $object->id . '/' ?>"><?= $object->titleRO ?></a><?php if (!empty($object->isGift)) : ?> <span class="label label-warning">Подарок</span><?php endif; ?></td>
+                                    <td>
+                                        <a href="<?= $e_path . $object->id . '/' ?>"><?= $object->titleRO ?></a>
+                                        <?php if (!empty($object->isGift)) : ?> <span class="label label-warning">Подарок</span><?php endif; ?>
+                                        <?php if (!empty($object->admin_missing_brand)) : ?> <span class="label label-danger">Нет бренда</span><?php endif; ?>
+                                        <?php if (!empty($object->admin_missing_category)) : ?> <span class="label label-danger">Нет категории</span><?php endif; ?>
+                                        <?php if (!empty($object->admin_brand_title) || !empty($object->admin_category_title)) : ?>
+                                            <div class="text-muted" style="font-size: 11px; margin-top: 4px;">
+                                                <?php if (!empty($object->admin_brand_title)) : ?>Бренд: <?= html_escape($object->admin_brand_title) ?><?php endif; ?>
+                                                <?php if (!empty($object->admin_brand_title) && !empty($object->admin_category_title)) : ?> · <?php endif; ?>
+                                                <?php if (!empty($object->admin_category_title)) : ?>Категория: <?= html_escape($object->admin_category_title) ?><?php endif; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </td>
                                     <td><a href="<?= $e_path . $object->id . '/' ?>"><?= $object->SKU ?></a></td>
 
                                     <td class="align-middle">
@@ -481,7 +509,7 @@
         $('#paginator').pagination({
             items: <?=$count?>,
             itemsOnPage: 40,
-            hrefTextPrefix: '?cat=<?=isset($_GET['cat']) ? $_GET['cat'] : ''?><?=isset($_GET['brands']) ? '&brands='.$_GET['brands'] : ''?><?=isset($_GET['sorder']) ? '&sorder='.$_GET['sorder'] : ''?>&page=',
+            hrefTextPrefix: '?cat=<?=isset($_GET['cat']) ? $_GET['cat'] : ''?><?=isset($_GET['brands']) ? '&brands='.$_GET['brands'] : ''?><?=isset($_GET['sorder']) ? '&sorder='.$_GET['sorder'] : ''?><?=isset($_GET['missing']) ? '&missing='.urlencode($_GET['missing']) : ''?>&page=',
             cssStyle: 'light-theme',
             currentPage: <?=isset($_GET['page']) ? $_GET['page'] : 1?>
         });

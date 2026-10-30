@@ -89,6 +89,135 @@ class Analytics_model extends BaseModel
         );
     }
 
+    /**
+     * Sales-based suggestions for the frontend search landing state.
+     * Uses the same completed-order statistics and default 30-day window as
+     * the admin dashboard.
+     */
+    public function get_header_search_popular($limit = 5)
+    {
+        $limit = max(1, min(10, (int) $limit));
+        $range = $this->normalize_date_range();
+
+        return array(
+            'categories' => array_slice(
+                $this->get_top_categories(
+                    $range['from_datetime'],
+                    $range['to_datetime'],
+                    'quantity',
+                    'desc'
+                ),
+                0,
+                $limit
+            ),
+            'brands' => array_slice(
+                $this->get_top_brands(
+                    $range['from_datetime'],
+                    $range['to_datetime'],
+                    'quantity',
+                    'desc'
+                ),
+                0,
+                $limit
+            ),
+        );
+    }
+
+    /**
+     * Product IDs ranked by sold quantity for a brand in the last 30 days.
+     */
+    public function get_header_search_brand_product_ids($brandId, $limit = 8)
+    {
+        $brandId = (int) $brandId;
+        if ($brandId <= 0) {
+            return array();
+        }
+
+        $limit = max(1, min(50, (int) $limit));
+        $range = $this->normalize_date_range();
+        $products = $this->get_top_products(
+            $range['from_datetime'],
+            $range['to_datetime'],
+            'quantity',
+            'desc',
+            $brandId,
+            null,
+            $limit,
+            true
+        );
+
+        return array_values(array_filter(array_map(
+            static function ($product) {
+                return (int) ($product['product_id'] ?? 0);
+            },
+            array_slice($products, 0, $limit)
+        )));
+    }
+
+    /**
+     * Finds other best-selling brands in the strongest-selling categories of
+     * the searched brand. This keeps the search suggestions genuinely related.
+     */
+    public function get_header_search_related_brand_ids($brandId, $limit = 5)
+    {
+        $brandId = (int) $brandId;
+        if ($brandId <= 0) {
+            return array();
+        }
+
+        $limit = max(1, min(10, (int) $limit));
+        $range = $this->normalize_date_range();
+        $lineTotal = $this->money_expression('op.total');
+        $sql = "
+            SELECT
+                p.brand_id,
+                SUM(COALESCE(op.qty, 0)) AS sold_quantity,
+                SUM({$lineTotal}) AS product_revenue
+            FROM orders AS o
+            INNER JOIN orders_products AS op ON op.order_id = o.id
+            INNER JOIN products AS p ON p.id = op.product_id
+            INNER JOIN brands AS b ON b.id = p.brand_id AND b.isShown = 1
+            INNER JOIN (
+                SELECT
+                    p1.category_id,
+                    SUM(COALESCE(op1.qty, 0)) AS category_quantity
+                FROM orders AS o1
+                INNER JOIN orders_products AS op1 ON op1.order_id = o1.id
+                INNER JOIN products AS p1 ON p1.id = op1.product_id
+                WHERE o1.status = 'finished'
+                  AND o1.added >= ?
+                  AND o1.added < ?
+                  AND p1.brand_id = ?
+                  AND p1.isShown = 1
+                  AND p1.category_id IS NOT NULL
+                GROUP BY p1.category_id
+                ORDER BY category_quantity DESC
+                LIMIT 5
+            ) AS related_categories ON related_categories.category_id = p.category_id
+            WHERE o.status = 'finished'
+              AND o.added >= ?
+              AND o.added < ?
+              AND p.isShown = 1
+              AND p.brand_id <> ?
+            GROUP BY p.brand_id
+            ORDER BY sold_quantity DESC, product_revenue DESC, p.brand_id ASC
+            LIMIT {$limit}
+        ";
+
+        $rows = $this->db->query($sql, array(
+            $range['from_datetime'],
+            $range['to_datetime'],
+            $brandId,
+            $range['from_datetime'],
+            $range['to_datetime'],
+            $brandId,
+        ))->result_array();
+
+        return array_values(array_filter(array_map(static function ($row) {
+            return (int) ($row['brand_id'] ?? 0);
+        }, $rows)));
+    }
+
     public function get_summary_for_range($fromDateTime, $toDateTime, $options = array())
     {
         $options = is_array($options) ? $options : array();
@@ -308,13 +437,35 @@ class Analytics_model extends BaseModel
         );
     }
 
-    private function get_top_products($fromDateTime, $toDateTime, $sort, $direction, $brandId = null, $orderSource = null)
+    private function get_top_products($fromDateTime, $toDateTime, $sort, $direction, $brandId = null, $orderSource = null, $limit = 10, $stockFirst = false)
     {
         $lineTotal = $this->money_expression('op.total');
         $sortSql = $this->product_sort_sql($sort);
         $directionSql = $this->normalize_direction($direction);
         $brandCondition = $this->order_source_condition($orderSource, 'o');
         $params = array($fromDateTime, $toDateTime);
+        $limit = max(1, min(100, (int) $limit));
+
+        $availableStockCondition = !empty($_SESSION['isb2b'])
+            ? "p.on_stockWH > 0 OR EXISTS (
+                SELECT 1
+                FROM products_variable pv_available
+                WHERE pv_available.product_id = p.id
+                  AND pv_available.isShown = 1
+                  AND pv_available.priceWH > 0
+                  AND pv_available.qtyWH > 0
+            )"
+            : "p.on_stock > 0 OR EXISTS (
+                SELECT 1
+                FROM products_variable pv_available
+                WHERE pv_available.product_id = p.id
+                  AND pv_available.isShown = 1
+                  AND pv_available.price > 0
+                  AND pv_available.qty > 0
+            )";
+        $stockOrderSql = $stockFirst
+            ? "CASE WHEN ({$availableStockCondition}) THEN 1 ELSE 0 END DESC, "
+            : '';
 
         if ($brandId !== null) {
             $brandCondition = ' AND p.brand_id = ?';
@@ -339,8 +490,8 @@ class Analytics_model extends BaseModel
               AND o.added < ?
               {$brandCondition}
             GROUP BY p.id, p.titleRU, p.titleRO, p.brand_id, b.title
-            ORDER BY {$sortSql} {$directionSql}, product_revenue DESC, product_title ASC
-            LIMIT 10
+            ORDER BY {$stockOrderSql}{$sortSql} {$directionSql}, product_revenue DESC, product_title ASC
+            LIMIT {$limit}
         ";
 
         return $this->db->query($sql, $params)->result_array();

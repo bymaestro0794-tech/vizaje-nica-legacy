@@ -1,0 +1,36 @@
+:root {
+	--b2c-color-black: #111111;
+	--b2c-color-white: #ffffff;
+	--b2c-color-card: #f2f2f2;
+	--b2c-color-cream: #cdbbb0;
+	--b2c-color-danger: #8e1f2d;
+	--b2c-gradient-special: linear-gradient(
+		135deg,
+		#e9e3f4 0%,
+		#c8b8dd 52%,
+		#f1ecf8 100%
+	);
+
+	--b2c-black-rgb: 17, 17, 17;
+	--b2c-cream-rgb: 205, 187, 176;
+
+	--b2c-font-family: 'Geist', sans-serif;
+	--b2c-radius-sm: 4px;
+	--b2c-radius-md: 8px;
+	--b2c-radius-lg: 16px;
+	--b2c-radius-pill: 999px;
+
+	--b2c-space-1: 4px;
+	--b2c-space-2: 8px;
+	--b2c-space-3: 12px;
+	--b2c-space-4: 16px;
+	--b2c-space-5: 24px;
+	--b2c-space-6: 32px;
+
+	--b2c-control-height: 48px;
+	--b2c-control-height-sm: 40px;
+	--b2c-focus-ring: 0 0 0 3px var(--b2c-color-cream);
+	--b2c-shadow-overlay: 0 18px 60px rgba(var(--b2c-black-rgb), 0.16);
+	--b2c-transition-fast: 160ms ease;
+	--b2c-transition-normal: 240ms ease;
+}

@@ -126,6 +126,14 @@ class Import extends CI_Controller
         return $data;
     }
 
+    private function syncMeilisearchProducts(array $productIds)
+    {
+        if (empty($productIds)) return;
+
+        $this->load->library('meilisearch_catalog_sync');
+        $this->meilisearch_catalog_sync->syncProducts($productIds);
+    }
+
     public function import()
     {
         $this->productImportTrackingEnabled = $this->db->table_exists('product_import_changes');
@@ -190,6 +198,7 @@ class Import extends CI_Controller
         }
 
         $products = [];
+        $meilisearchProductIds = array();
 
         $query = $this->db
             ->select('id, GUID, SKU, volume, barcode, category_id, brand_id, titleRU, titleRO')
@@ -219,29 +228,39 @@ class Import extends CI_Controller
 
 
             // категория 1
-            $category = $categories[$value->NomenclatureCategory1] ?? 0;
+            $category1Title = trim((string) ($value->NomenclatureCategory1 ?? ''));
+            $category = $category1Title !== '' ? ($categories[$category1Title] ?? 0) : 0;
 
             // категория 2
             $category2 = 0;
-            if (!empty($value->NomenclatureCategory2)) {
-                $category2 = $categories[$value->NomenclatureCategory2] ?? 0;
+            $category2Title = trim((string) ($value->NomenclatureCategory2 ?? ''));
+            if ($category2Title !== '') {
+                $category2 = $categories[$category2Title] ?? 0;
             }
 
             // бренд
-            $brandTitle = trim($value->Brand);
-            if (!isset($brands[$brandTitle])) {
-                $this->db->insert('brands', [
-                    'title' => $brandTitle,
-                    'uri' => transliteration($brandTitle),
-                ]);
-                $brands[$brandTitle] = $this->db->insert_id(); // кешируем
-                $brandNames[(int) $brands[$brandTitle]] = $brandTitle;
+            $brandTitle = trim((string) ($value->Brand ?? ''));
+            $brandId = 0;
+            if ($brandTitle !== '') {
+                if (!isset($brands[$brandTitle])) {
+                    $this->db->insert('brands', [
+                        'title' => $brandTitle,
+                        'uri' => transliteration($brandTitle),
+                    ]);
+                    $brands[$brandTitle] = $this->db->insert_id(); // кешируем
+                    $brandNames[(int) $brands[$brandTitle]] = $brandTitle;
+                }
+                $brandId = (int) $brands[$brandTitle];
             }
-            $brandId = $brands[$brandTitle];
             $incomingCategoryIds = array_values(array_unique(array_filter(array(
                 (int) $category,
                 (int) $category2,
             ))));
+            $category1Provided = $category1Title !== '';
+            $category2Provided = $category2Title !== '';
+            $categoryMappingComplete = (!$category1Provided || $category > 0)
+                && (!$category2Provided || $category2 > 0);
+            $primaryCategoryId = $category > 0 ? (int) $category : (int) $category2;
             $incomingSku = !empty($value->VariativeNomenclature)
                 ? $value->VariativeNomenclature
                 : $value->ID_nom;
@@ -277,7 +296,7 @@ class Import extends CI_Controller
                     'price' => $value->Price,
                     'priceWH' => $value->PriceWH,
                     'barcode' => $value->Barcode,
-                    'category_id' => $category,
+                    'category_id' => $primaryCategoryId,
                     'brand_id' => $brandId,
                     'variations' => $VariativeNomenclature,
                     'on_stock' => intval($value->QuantityBalance) + intval($value->BalMall),
@@ -342,6 +361,7 @@ class Import extends CI_Controller
                     'added',
                     $this->productImportDiff(array(), $sourceSnapshot)
                 );
+                $meilisearchProductIds[] = (int) $id_prod;
                 $products[$value->ID_nom] = (object) array_merge($data, array('id' => $id_prod));
                 $productCategories[(int) $id_prod] = $incomingCategoryIds;
 
@@ -385,6 +405,15 @@ class Import extends CI_Controller
                     'componentsRU' => $value->componentsRu,
                     'componentsRO' => $value->componentsMD,
                 );
+                if ($brandId > 0) {
+                    $data['brand_id'] = $brandId;
+                } else {
+                    // Missing feed data must not erase a value already assigned on the site.
+                    $sourceSnapshot['brand'] = $beforeSnapshot['brand'];
+                }
+                if ($categoryMappingComplete && !empty($incomingCategoryIds)) {
+                    $data['category_id'] = $primaryCategoryId;
+                }
                 $data = $this->addSeoFieldsFromFeed($data, $value);
                 $this->db->where('id', $productId);
                 $this->db->update('products', $data);
@@ -405,7 +434,7 @@ class Import extends CI_Controller
                     ];
                 }
 
-                if (!empty($data_cat)) {
+                if ($categoryMappingComplete && !empty($data_cat)) {
 
                     $this->db
                         ->where('product_id', $productId)
@@ -413,6 +442,7 @@ class Import extends CI_Controller
 
                     $this->db->insert_batch('product_categories', $data_cat);
                     $productCategories[$productId] = $incomingCategoryIds;
+                    $existingProduct->category_id = $primaryCategoryId;
                 } else {
                     $sourceSnapshot['categories'] = $beforeSnapshot['categories'];
                 }
@@ -423,6 +453,10 @@ class Import extends CI_Controller
                     'updated',
                     $this->productImportDiff($beforeSnapshot, $sourceSnapshot)
                 );
+                $meilisearchProductIds[] = $productId;
+                if ($brandId > 0) {
+                    $existingProduct->brand_id = $brandId;
+                }
                 $existingProduct->titleRU = $titleRU;
                 $existingProduct->titleRO = $titleRO;
                 $existingProduct->volume = $value->VolumeVar;
@@ -431,6 +465,7 @@ class Import extends CI_Controller
 
         }
 
+        $this->syncMeilisearchProducts($meilisearchProductIds);
         echo 'success';
     }
 
@@ -469,6 +504,8 @@ class Import extends CI_Controller
             $array = json_decode(file_get_contents($file));
         }
 
+        $meilisearchProductIds = array();
+
         foreach ($array as $value) {
             if (!empty($value->VariativeNomenclature)) {
                 $this->db->select('id')->where('SKU', $value->ID_nom);
@@ -502,6 +539,7 @@ class Import extends CI_Controller
                         'barcode' => $value->Barcode
                     );
                     $this->db->insert('products_variable', $data);
+                    if ((int) $product > 0) $meilisearchProductIds[] = (int) $product;
                 } else {
                     $this->db->select('id')->where('SKU', $value->VariativeNomenclature);
                     $product = $this->db->get('products')->row();
@@ -532,10 +570,12 @@ class Import extends CI_Controller
                     );
                     $this->db->where('id', $products_variable->id);
                     $this->db->update('products_variable', $data);
+                    if ((int) $product > 0) $meilisearchProductIds[] = (int) $product;
                 }
             }
         }
 
+        $this->syncMeilisearchProducts($meilisearchProductIds);
         echo 'success';
     }
 
@@ -647,7 +687,9 @@ class Import extends CI_Controller
     {
         $products = $this->db->select('id,on_stock')->get('products')->result();
         $upd_array = array();
+        $meilisearchProductIds = array();
         foreach ($products as $product) {
+            $meilisearchProductIds[] = (int) $product->id;
 
             if (!empty($product->on_stock)) {
                 $upd_array[] = array(
@@ -690,11 +732,13 @@ class Import extends CI_Controller
         }
 
         $this->db->update_batch('products', $upd_array, 'id');
+        $this->syncMeilisearchProducts($meilisearchProductIds);
     }
 
     public function update_url()
     {
         $products = $this->db->select('id,uriRO,uriRU,uriEN')->get('products')->result();
+        $meilisearchProductIds = array();
         $array_url = array();
         foreach ($products as $product) {
             $array_url[$product->uriRO][] = $product;
@@ -704,6 +748,7 @@ class Import extends CI_Controller
                 foreach ($value as $key => $item) {
                     if ($key != 0) {
                         $this->db->where('id', $item->id)->update('products', array('uriRO' => $item->uriRO . '-' . $item->id, 'uriRU' => $item->uriRU . '-' . $item->id, 'uriEN' => $item->uriEN . '-' . $item->id));
+                        $meilisearchProductIds[] = (int) $item->id;
                     }
                 }
             }
@@ -711,6 +756,7 @@ class Import extends CI_Controller
 
         $products = $this->db->select('id,uriRO,uriRU,uriEN')->get('categories')->result();
         $array_url = array();
+        $updatedCategoryIds = array();
         foreach ($products as $product) {
             $array_url[$product->uriRO][] = $product;
         }
@@ -719,10 +765,24 @@ class Import extends CI_Controller
                 foreach ($value as $key => $item) {
                     if ($key != 0) {
                         $this->db->where('id', $item->id)->update('categories', array('uriRO' => $item->uriRO . '-' . $item->id, 'uriRU' => $item->uriRU . '-' . $item->id, 'uriEN' => $item->uriEN . '-' . $item->id));
+                        $updatedCategoryIds[] = (int) $item->id;
                     }
                 }
             }
         }
+
+        if (!empty($updatedCategoryIds)) {
+            $categoryProducts = $this->db
+                ->select('id')
+                ->where_in('category_id', array_values(array_unique($updatedCategoryIds)))
+                ->get('products')
+                ->result();
+            foreach ($categoryProducts as $product) {
+                $meilisearchProductIds[] = (int) $product->id;
+            }
+        }
+
+        $this->syncMeilisearchProducts($meilisearchProductIds);
     }
 
     public function update_qty()
@@ -732,8 +792,10 @@ class Import extends CI_Controller
             $this->db->or_where('isGift', 1);
         }
         $products = $this->db->get('products')->result();
+        $meilisearchProductIds = array();
 
         foreach ($products as $product) {
+            $meilisearchProductIds[] = (int) $product->id;
             $products_variable = $this->db->select('qty,qtyWH')->where('isShown', 1)->where('product_id', $product->id)->get('products_variable')->result();
             if (!empty($products_variable)) {
                 foreach ($products_variable as $value) {
@@ -743,6 +805,8 @@ class Import extends CI_Controller
             }
             $this->db->where('id', $product->id)->update('products', array('on_stock' => $product->on_stock, 'on_stockWH' => $product->on_stockWH));
         }
+
+        $this->syncMeilisearchProducts($meilisearchProductIds);
     }
 
     public function update_price()
@@ -753,6 +817,7 @@ class Import extends CI_Controller
         }
 
 
+        $meilisearchProductIds = array();
         if (!empty($array)) {
             foreach ($array as $value) {
                 if (!empty($value->ID_nom)) {
@@ -765,9 +830,10 @@ class Import extends CI_Controller
                         );
                         $this->db->where('id', $product->id);
                         $this->db->update('products', $data);
+                        $meilisearchProductIds[] = (int) $product->id;
                     }
 
-                    $this->db->select('id')->where('SKU', $value->ID_nom);
+                    $this->db->select('id, product_id')->where('SKU', $value->ID_nom);
                     $products_variable = $this->db->get('products_variable')->row();
                     if (!empty($products_variable)) {
                         $data = array(
@@ -776,9 +842,11 @@ class Import extends CI_Controller
                         );
                         $this->db->where('id', $products_variable->id);
                         $this->db->update('products_variable', $data);
+                        $meilisearchProductIds[] = (int) $products_variable->product_id;
                     }
                 }
             }
+            $this->syncMeilisearchProducts($meilisearchProductIds);
             echo 'success';
         }
     }
@@ -786,8 +854,10 @@ class Import extends CI_Controller
     public function update_sale_mdl()
     {
         $products = $this->db->select('id, 	price, discount_price, sale_mdl')->get('products')->result();
+        $meilisearchProductIds = array();
         if (!empty($products)) {
             foreach ($products as $product) {
+                $meilisearchProductIds[] = (int) $product->id;
                 $sale_mdl = 0;
                 $sale_percent = 0;
                 if (!empty($product->discount_price)) {
@@ -805,6 +875,7 @@ class Import extends CI_Controller
                 $this->db->where('id', $product->id);
                 $this->db->update('products', $data);
             }
+            $this->syncMeilisearchProducts($meilisearchProductIds);
             echo 'success';
         }
     }
@@ -812,8 +883,10 @@ class Import extends CI_Controller
     public function update_search_tag()
     {
         $products = $this->db->select('id, search_teg')->where('isShown', 1)->get('products')->result();
+        $meilisearchProductIds = array();
         if (!empty($products)) {
             foreach ($products as $product) {
+                $meilisearchProductIds[] = (int) $product->id;
                 $search_teg = '';
 
                 $products_variable = $this->db->select('id, SKU, color')->where('product_id', $product->id)->get('products_variable')->result();
@@ -830,6 +903,7 @@ class Import extends CI_Controller
                 $this->db->where('id', $product->id);
                 $this->db->update('products', $data);
             }
+            $this->syncMeilisearchProducts($meilisearchProductIds);
             echo 'success';
         }
     }

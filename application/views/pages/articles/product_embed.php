@@ -14,7 +14,7 @@ $similarProducts = array_slice($similar_products ?? array(), 0, 3);
 <?php if (!empty($similarProducts)) { ?>
 <div class="blog-product-group blog-product-group--with-recommendations">
 <?php } ?>
-<div class="blog-product-embed <?= !empty($is_unavailable) ? 'blog-product-embed--unavailable' : '' ?>">
+<div class="blog-product-embed b2c-product-card b2c-product-card--editorial <?= !empty($is_unavailable) ? 'blog-product-embed--unavailable' : '' ?>">
     <a class="blog-product-embed__image" href="<?= htmlspecialchars($productUrl, ENT_QUOTES, 'UTF-8') ?>">
         <img src="<?= htmlspecialchars($productImage, ENT_QUOTES, 'UTF-8') ?>"
              alt="<?= htmlspecialchars($productTitle, ENT_QUOTES, 'UTF-8') ?>"

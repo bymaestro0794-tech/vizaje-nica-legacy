@@ -1441,6 +1441,23 @@
     cursor: pointer;
   }
 
+  .account-dashboard__language {
+    width: 100%;
+    border: 0;
+    border-bottom: 1px solid #ededed;
+    background: transparent;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .account-dashboard__icon--globe svg {
+    width: 21px;
+    height: 21px;
+    fill: currentColor;
+    stroke: none;
+  }
+
   .account__content:not(.account__content--dashboard) .account-dashboard {
     display: none;
   }

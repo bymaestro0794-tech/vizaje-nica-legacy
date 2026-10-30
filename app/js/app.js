@@ -604,6 +604,7 @@ window.onload = function () {
 
     function documentActions(e) {
         const targetElement = e.target;
+        const hasModernHeaderSearch = Boolean(document.querySelector('[data-header-search]'));
         let body = document.querySelector('body');
 
         if (targetElement.closest('.navigation-header__item._catalog .navigation-header__name')) {
@@ -686,7 +687,7 @@ window.onload = function () {
             userActionsHeader.classList.remove("_user-actions");
         }
 
-        if (targetElement.closest('.search-actions-main-header__icon')) {
+        if (targetElement.closest('.search-actions-main-header__icon') && !hasModernHeaderSearch) {
             let searchMainContent = document.querySelector('.search-actions-main-header .form-header-search');
             let searchMainIcon = targetElement.closest('.search-actions-main-header__icon');
             let body = document.querySelector('body');
@@ -700,7 +701,7 @@ window.onload = function () {
                     spollersGo = true;
                 }, 500);
             }
-        } else if (!targetElement.closest('.search-actions-main-header') && document.querySelector('.search-actions-main-header__icon._active')) {
+        } else if (!hasModernHeaderSearch && !targetElement.closest('.search-actions-main-header') && document.querySelector('.search-actions-main-header__icon._active')) {
             let searchMainContent = document.querySelector('.search-actions-main-header .form-header-search');
             let searchMainIcon = document.querySelector('.search-actions-main-header__icon');
             let body = document.querySelector('body');
@@ -821,8 +822,18 @@ window.onload = function () {
     }
 
     let searchInput = document.querySelector('.form-header-search__input')
-    if (searchInput) {
+    if (searchInput && !searchInput.closest('[data-header-search]')) {
+        let searchField = searchInput.closest('.form-header-search__search');
+        let syncSearchSubmitColor = function () {
+            if (searchField) {
+                searchField.classList.toggle('has-query', searchInput.value.trim().length > 0);
+            }
+        };
+
+        syncSearchSubmitColor();
+
         searchInput.addEventListener('input', function () {
+            syncSearchSubmitColor();
             let searchInputValue = searchInput.value.replaceAll(' ', '');
             let searchHeaderForm = document.querySelector('.form-header-search');
             if (searchInputValue.length > 2) {

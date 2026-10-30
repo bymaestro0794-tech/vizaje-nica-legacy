@@ -1365,10 +1365,7 @@ public function checkout()
                     ) {
                         log_message(
                             'error',
-                            'Order product insert failed. Order ID: '
-                            . $order_id
-                            . ', product ID: '
-                            . $productId
+                            'Order product insert failed.'
                         );
 
                         continue;
@@ -1542,13 +1539,7 @@ public function checkout()
                     if (!$usageSaved) {
                         log_message(
                             'error',
-                            'Promo usage registration failed. '
-                            . 'Promo ID: '
-                            . $promoId
-                            . ', client ID: '
-                            . $client_id
-                            . ', order ID: '
-                            . $order_id
+                            'Promo usage registration failed.'
                         );
                     }
                 }
@@ -1677,49 +1668,6 @@ public function checkout()
                     | Diagnostic total
                     |--------------------------------------------------------------------------
                     */
-
-                    $paynetExpectedTotal =
-                        0;
-
-                    foreach (
-                        $paynetItems as $paynetItem
-                    ) {
-                        if (isset($paynetItem['total'])) {
-                            $paynetExpectedTotal +=
-                                (float) $paynetItem['total'];
-                        } else {
-                            $paynetExpectedTotal +=
-                                (float) $paynetItem['price']
-                                * (int) $paynetItem['amount'];
-                        }
-                    }
-
-                    log_message(
-                        'error',
-                        'CHECKOUT PAYNET EXPECTED: '
-                        . number_format(
-                            $paynetExpectedTotal,
-                            2,
-                            '.',
-                            ''
-                        )
-                        . '; ORDER FINAL: '
-                        . number_format(
-                            $total
-                            + $delivery_price
-                            - $bonus_minus,
-                            2,
-                            '.',
-                            ''
-                        )
-                        . '; BONUS_MINUS: '
-                        . number_format(
-                            $bonus_minus,
-                            2,
-                            '.',
-                            ''
-                        )
-                    );
 
                     $this->client_server(
                         $this->clang,
@@ -2291,21 +2239,7 @@ public function checkout()
         if ($remainingBonusCents > 0) {
             log_message(
                 'error',
-                'PAYNET BONUS ALLOCATION INCOMPLETE: '
-                . 'requested='
-                . number_format(
-                    $bonusCents / 100,
-                    2,
-                    '.',
-                    ''
-                )
-                . '; remaining='
-                . number_format(
-                    $remainingBonusCents / 100,
-                    2,
-                    '.',
-                    ''
-                )
+                'Paynet bonus allocation incomplete.'
             );
         }
 
@@ -2482,13 +2416,6 @@ public function checkout()
         //         $prequest->Products[0]['UnitPrice'] = 1;
         //         $prequest->Amount = 1;
         // }
-        log_message(
-            'error',
-            'PAYNET AMOUNT: '
-            . $prequest->Amount
-            . '; PRODUCTS: '
-            . json_encode($products)
-        );
         $formObj = $api->FormCreate($prequest);
         if ($formObj->Code == PaynetCode::SUCCESS) {
             $data = array(
@@ -3034,10 +2961,7 @@ public function checkout()
     if (!$this->email->send()) {
         log_message(
             'error',
-            'Order email FAILED. Order #'
-            . $data['order_id']
-            . '; email='
-            . $data['email']
+            'Order email delivery failed.'
         );
 
         return false;
@@ -3045,10 +2969,7 @@ public function checkout()
 
     log_message(
         'info',
-        'Order email sent. Order #'
-        . $data['order_id']
-        . '; email='
-        . $data['email']
+        'Order email sent.'
     );
 
     return true;

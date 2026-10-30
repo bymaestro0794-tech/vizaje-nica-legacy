@@ -67,14 +67,6 @@
 	color: #fff;
 }
 
-.vn-toast--error .vn-toast__icon {
-	background: #b42318;
-}
-
-.vn-toast--warning .vn-toast__icon {
-	background: #b26a00;
-}
-
 .vn-toast__content {
 	min-width: 0;
 }
@@ -301,24 +293,6 @@
 		color 0.2s ease;
 }
 
-.vn-cart-added__button--primary {
-	background: #111;
-	color: #fff;
-}
-
-.vn-cart-added__button--secondary {
-	background: #fff;
-	color: #111;
-}
-
-.vn-cart-added__button--primary:hover {
-	background: #292929;
-}
-
-.vn-cart-added__button--secondary:hover {
-	background: #f5f5f5;
-}
-
 body.vn-notification-lock {
 	overflow: hidden;
 }
@@ -526,24 +500,6 @@ body.vn-notification-lock {
 	font-size: 14px;
 	font-weight: 500;
 	cursor: pointer;
-}
-
-.vn-remove-modal__button--primary {
-	background: #111;
-	color: #fff;
-}
-
-.vn-remove-modal__button--secondary {
-	background: #fff;
-	color: #111;
-}
-
-.vn-remove-modal__button--primary:hover {
-	background: #292929;
-}
-
-.vn-remove-modal__button--secondary:hover {
-	background: #f5f5f5;
 }
 
 @media (max-width: 767px) {

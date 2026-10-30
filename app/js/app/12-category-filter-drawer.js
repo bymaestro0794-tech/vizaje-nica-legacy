@@ -56,8 +56,13 @@
 			if (String(value).trim() !== '') params.append(key, value)
 		})
 		if (minChanged || maxChanged) {
-			params.set('price_min', String(Number(priceMin.value)))
-			params.set('price_max', String(Number(priceMax.value)))
+			if (form.querySelector('[data-price-slider]')) {
+				params.set('price_min', String(Number(priceMin.value)))
+				params.set('price_max', String(Number(priceMax.value)))
+			} else {
+				if (priceMin && priceMin.value.trim() !== '') params.set('price_min', String(Number(priceMin.value)))
+				if (priceMax && priceMax.value.trim() !== '') params.set('price_max', String(Number(priceMax.value)))
+			}
 		}
 		return params
 	}
@@ -312,7 +317,13 @@
 		refreshCount()
 	}
 	;[minField, maxField].forEach(function (control) {
-		if (control) control.addEventListener('input', function () { syncPrice(control) })
+		if (control) control.addEventListener('input', function () {
+			if (slider) syncPrice(control)
+			else {
+				updateQuickControls()
+				refreshCount()
+			}
+		})
 	})
 
 	function setPriceFromPointer(event, handle) {
@@ -377,8 +388,8 @@
 	var resetButton = drawer.querySelector('[data-filter-reset]')
 	if (resetButton) resetButton.addEventListener('click', function () {
 		form.querySelectorAll('input[type="checkbox"]').forEach(function (input) { input.checked = false })
-		if (minField) minField.value = String(defaultMin)
-		if (maxField) maxField.value = String(defaultMax)
+		if (minField) minField.value = slider ? String(defaultMin) : ''
+		if (maxField) maxField.value = slider ? String(defaultMax) : ''
 		if (minRange && maxRange) {
 			minField.value = String(sliderMin)
 			maxField.value = String(sliderMax)

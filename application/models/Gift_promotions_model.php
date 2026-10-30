@@ -17,9 +17,10 @@ class Gift_promotions_model extends BaseModel
     public function get_admin()
     {
         return $this->db
-            ->select('gp.*, g.titleRU AS gift_title_ru, g.titleRO AS gift_title_ro, g.product_id AS gift_product_id, o.titleRU AS offer_title_ru')
+            ->select("gp.*, g.titleRU AS gift_title_ru, g.titleRO AS gift_title_ro, g.product_id AS gift_product_id, g.is_enabled AS gift_is_enabled, g.show_on_site AS gift_show_on_site, o.titleRU AS offer_title_ru, CASE WHEN g.variant_id > 0 THEN COALESCE((SELECT pv_gift_fixed.qty FROM products_variable pv_gift_fixed WHERE pv_gift_fixed.id = g.variant_id AND pv_gift_fixed.product_id = g.product_id AND pv_gift_fixed.isShown = 1), 0) ELSE GREATEST(COALESCE(gift_product.on_stock, 0), COALESCE((SELECT SUM(pv_gift_stock.qty) FROM products_variable pv_gift_stock WHERE pv_gift_stock.product_id = g.product_id AND pv_gift_stock.isShown = 1), 0)) END AS remaining_stock", false)
             ->from('gift_promotions gp')
             ->join('gifts g', 'g.id = gp.gift_id', 'left')
+            ->join('products gift_product', 'gift_product.id = g.product_id', 'left')
             ->join('offers o', 'o.id = gp.offer_id', 'left')
             ->order_by('gp.sorder ASC, gp.id DESC')
             ->get()

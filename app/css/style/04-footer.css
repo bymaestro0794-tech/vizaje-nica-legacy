@@ -19,8 +19,8 @@
 
 .main-footer__content {
 	display: grid;
-	grid-template-columns: minmax(210px, 1.1fr) repeat(3, minmax(160px, 1fr));
-	gap: 42px 72px;
+	grid-template-columns: minmax(180px, 1.1fr) repeat(4, minmax(125px, 1fr));
+	gap: 42px clamp(18px, 3vw, 46px);
 	align-items: start;
 }
 

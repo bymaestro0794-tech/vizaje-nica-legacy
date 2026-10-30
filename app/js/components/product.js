@@ -2108,6 +2108,19 @@
 						.html(response.total_items)
 						.toggleClass('d_none', Number(response.total_items) <= 0)
 
+					if (
+						window.VNB2CProductCart &&
+						typeof window.VNB2CProductCart.onCartAdd === 'function'
+					) {
+						window.VNB2CProductCart.onCartAdd({
+							productId: data.product.id,
+							variantId: state.selectedVariationId,
+							rowId: response.row_id,
+							quantity: response.quantity || 1,
+							maxQuantity: response.max_quantity
+						})
+					}
+
 					/*
 					|--------------------------------------------------------------------------
 					| Buy now

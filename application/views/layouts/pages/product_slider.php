@@ -214,6 +214,7 @@ $useHomeProductCardStyle = !$isCatalogProductCard && (!empty($is_home_product_ta
 	class="
 		products-slider__products
 		product
+		b2c-product-card
 		<?= $isCatalogProductCard ? 'main-catalog__product' : '' ?>
 		<?= !$isInStock ? 'stock_off' : '' ?>
 	"

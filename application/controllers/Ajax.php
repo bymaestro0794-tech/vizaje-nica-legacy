@@ -373,6 +373,32 @@ class Ajax extends CI_Controller
 
         $rowId = $this->cart->insert($item);
         $saved = !empty($rowId);
+
+        /*
+         * CodeIgniter Cart can return boolean TRUE from insert() instead
+         * of the generated row id. The frontend quantity stepper needs the
+         * real row id for its first +/- update, so resolve it from the saved
+         * cart contents before returning the AJAX response.
+         */
+        if ($saved) {
+            foreach ($this->cart->contents() as $cartItem) {
+                if (CartCalculator::isGift($cartItem['options'] ?? null)) {
+                    continue;
+                }
+
+                $cartVariableId = !empty($cartItem['options'])
+                    ? CartCalculator::getCartVariableId($cartItem['options'])
+                    : 0;
+
+                if (
+                    (int) $cartItem['id'] === $productId
+                    && $cartVariableId === $variableId
+                ) {
+                    $rowId = $cartItem['rowid'];
+                    break;
+                }
+            }
+        }
     }
 
     if (!$saved) {
@@ -686,6 +712,12 @@ private function _cart_ui_state(
             $targetRow = array(
                 'row_id' =>
                     $row['row_id'],
+
+                'product_id' =>
+                    (int) $row['product_id'],
+
+                'variable_id' =>
+                    (int) $row['variable_id'],
 
                 'quantity' =>
                     (int) $row['quantity'],

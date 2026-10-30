@@ -1,0 +1,344 @@
+/* Shared product-card skin. Layout variants remain page-specific for now. */
+
+.b2c-product-card {
+	min-width: 0;
+	color: var(--b2c-color-black);
+	font-family: var(--b2c-font-family);
+}
+
+/* Home collection cards use a different legacy markup contract. Keep their
+ * layout in 05-home.css, but give the B2C skin the same visual language. */
+.b2c-product-card .products-colection__image {
+	background: var(--b2c-color-card);
+}
+
+.b2c-product-card .products-colection__brand {
+	color: rgba(var(--b2c-black-rgb), 0.58);
+	font-family: var(--b2c-font-family);
+	font-size: 11px;
+	font-weight: 500;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.b2c-product-card .products-colection__name,
+.b2c-product-card .price-products-colection__value {
+	color: var(--b2c-color-black);
+	font-family: var(--b2c-font-family);
+}
+
+.b2c-product-card .products-colection__name {
+	font-size: 16px;
+	font-weight: 500;
+	line-height: 1.35;
+}
+
+.b2c-product-card .price-products-colection__value {
+	font-size: 18px;
+	line-height: 1.2;
+}
+
+.b2c-product-card .products-colection__name:hover {
+	color: var(--b2c-color-black);
+	text-decoration-color: var(--b2c-color-cream);
+}
+
+.b2c-product-card:hover .products-colection__brand,
+.b2c-product-card:hover .products-colection__name,
+.b2c-product-card:hover .price-products-colection__value,
+.b2c-product-card:hover .price-products-colection__old,
+.b2c-product-card:hover .products-colection__bonus {
+	color: var(--b2c-color-cream) !important;
+}
+
+.b2c-product-card .products-colection__modification_sale {
+	border: 1px solid var(--b2c-color-danger);
+	background: var(--b2c-color-danger);
+	color: var(--b2c-color-white);
+}
+
+.b2c-product-card .price-products-colection__old,
+.b2c-product-card .products-colection__bonus {
+	color: rgba(var(--b2c-black-rgb), 0.56);
+}
+
+/* Common card contract. Layout files keep only their geometry variants. */
+.b2c-product-card .head-product__image {
+	background: var(--b2c-color-card) !important;
+}
+
+/* Standard product cards share one image ratio across catalog and sliders. */
+.b2c-product-card:not(.b2c-product-card--editorial) .head-product__image {
+	height: auto !important;
+	min-height: 0;
+	padding-bottom: 0 !important;
+	aspect-ratio: 1 / 1;
+}
+
+/* Do not reserve a tall footer for short product names. */
+.b2c-product-card:not(.b2c-product-card--editorial) .product__body {
+	height: auto !important;
+	min-height: 0 !important;
+	padding-top: 10px !important;
+}
+
+.b2c-product-card:not(.b2c-product-card--editorial) .product__info {
+	gap: 4px;
+}
+
+.b2c-product-card:not(.b2c-product-card--editorial) .product__other {
+	margin-top: 8px !important;
+	padding-top: 0 !important;
+}
+
+.b2c-product-card .product__brand {
+	margin: 0;
+	line-height: 1.2;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
+.b2c-product-card .product__name {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 500;
+	line-height: 1.35;
+	min-height: 2.7em;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	overflow: hidden;
+}
+
+.b2c-product-card .product__brand {
+	color: rgba(var(--b2c-black-rgb), 0.58) !important;
+	font-family: var(--b2c-font-family);
+	font-size: 11px;
+	font-weight: 500;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.b2c-product-card .product__name {
+	color: var(--b2c-color-black) !important;
+	font-family: var(--b2c-font-family);
+	text-decoration: none;
+}
+
+.b2c-product-card .product__name:hover {
+	color: var(--b2c-color-black) !important;
+	text-decoration: underline;
+	text-decoration-color: var(--b2c-color-cream);
+	text-decoration-thickness: 2px;
+	text-underline-offset: 3px;
+}
+
+/* Card hover is a single text state, not only a title underline. */
+.b2c-product-card:not(.b2c-product-card--editorial):hover .product__brand,
+.b2c-product-card:not(.b2c-product-card--editorial):hover .product__name,
+.b2c-product-card:not(.b2c-product-card--editorial):hover .price-product__value,
+.b2c-product-card:not(.b2c-product-card--editorial):hover .price-product__discount,
+.b2c-product-card:not(.b2c-product-card--editorial):hover .price-product__old,
+.b2c-product-card:not(.b2c-product-card--editorial):hover .price-product__bonuses,
+.b2c-product-card:not(.b2c-product-card--editorial):hover .price-product__discount-label,
+.b2c-product-card:not(.b2c-product-card--editorial):hover .product-card-options,
+.b2c-product-card:not(.b2c-product-card--editorial):hover .product-card-options__text,
+.b2c-product-card:not(.b2c-product-card--editorial):hover .product-card-options__more,
+.b2c-product-card:not(.b2c-product-card--editorial):hover .product-card-options__volume {
+	color: var(--b2c-color-cream) !important;
+}
+
+.b2c-product-card:not(.b2c-product-card--editorial):hover .product__name {
+	text-decoration-color: var(--b2c-color-cream);
+}
+
+.b2c-product-card .price-product__value,
+.b2c-product-card .price-product__discount {
+	font-size: 18px;
+	line-height: 1.2;
+	color: var(--b2c-color-black) !important;
+}
+
+.b2c-product-card .price-product__old {
+	font-size: 13px;
+	color: rgba(var(--b2c-black-rgb), 0.48) !important;
+}
+
+.b2c-product-card .price-product__bonuses {
+	font-size: 12px;
+	color: rgba(var(--b2c-black-rgb), 0.58) !important;
+}
+
+.b2c-product-card .price-product__discount-label {
+	color: var(--b2c-color-danger) !important;
+}
+
+.b2c-product-card .head-product__modificator_sale {
+	border-color: var(--b2c-color-danger) !important;
+	background: var(--b2c-color-danger) !important;
+	color: var(--b2c-color-white) !important;
+}
+
+.b2c-product-card .head-product__modificator_sale,
+.b2c-product-card .product-summary__badge--sale {
+	color: var(--b2c-color-danger) !important;
+}
+
+.b2c-product-card .head-product__cart {
+	width: 40px !important;
+	height: 40px !important;
+	min-width: 40px !important;
+	min-height: 40px !important;
+	padding: 0 !important;
+	border-radius: 100% !important;
+	border-color: rgba(var(--b2c-black-rgb), 0.18) !important;
+	background: var(--b2c-color-white) !important;
+	color: var(--b2c-color-black) !important;
+	transition:
+		background-color var(--b2c-transition-fast),
+		border-color var(--b2c-transition-fast),
+		color var(--b2c-transition-fast),
+		transform var(--b2c-transition-fast);
+}
+
+.b2c-product-card .head-product__cart:hover {
+	border-color: var(--b2c-color-cream) !important;
+	background: var(--b2c-color-cream) !important;
+	color: var(--b2c-color-black) !important;
+	transform: translateY(-1px);
+}
+
+.b2c-product-card .head-product__cart:active {
+	transform: scale(0.95);
+}
+
+.b2c-product-card .head-product__cart:focus-visible {
+	outline: 0;
+	box-shadow: var(--b2c-focus-ring);
+}
+
+/* In-cart state: the bag icon becomes a compact quantity stepper. */
+.b2c-product-card .b2c-cart-stepper {
+	display: inline-flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 2px;
+	width: 106px !important;
+	min-width: 106px !important;
+	height: 40px !important;
+	min-height: 40px !important;
+	padding: 0 8px !important;
+	border: 1px solid var(--b2c-color-black) !important;
+	border-radius: 999px !important;
+	background: var(--b2c-color-black) !important;
+	color: var(--b2c-color-white) !important;
+	text-decoration: none;
+	transform: none;
+	cursor: default;
+}
+
+.b2c-product-card .b2c-cart-stepper:hover,
+.b2c-product-card .b2c-cart-stepper:active {
+	border-color: var(--b2c-color-black) !important;
+	background: var(--b2c-color-black) !important;
+	color: var(--b2c-color-white) !important;
+	transform: none;
+}
+
+.b2c-product-card .b2c-cart-stepper__action,
+.b2c-product-card .b2c-cart-stepper__value {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 28px;
+	line-height: 1;
+}
+
+.b2c-product-card .b2c-cart-stepper__action {
+	width: 28px;
+	border-radius: 50%;
+	font-size: 22px;
+	font-weight: 300;
+	cursor: pointer;
+}
+
+.b2c-product-card .b2c-cart-stepper__action:hover,
+.b2c-product-card .b2c-cart-stepper__action:focus-visible {
+	background: var(--b2c-color-cream);
+	color: var(--b2c-color-black);
+	outline: 0;
+}
+
+.b2c-product-card .b2c-cart-stepper__action.is-disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.b2c-product-card .b2c-cart-stepper__value {
+	min-width: 24px;
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.b2c-product-card .b2c-cart-stepper.is-updating {
+	opacity: 0.65;
+	pointer-events: none;
+}
+
+/* NEW and HIT are intentionally removed from the classic card language. */
+.b2c-product-card .head-product__modificator_new,
+.b2c-product-card .head-product__modificator_hit,
+.b2c-product-card .products-colection__modification_new,
+.b2c-product-card .products-colection__modification_hit,
+.b2c-product-card .product-summary__badge:not(.product-summary__badge--sale) {
+	display: none !important;
+}
+
+.b2c-product-card--editorial .blog-product-embed__image,
+.b2c-product-card--editorial .blog-recommended-product__image {
+	background: var(--b2c-color-card);
+}
+
+.b2c-product-card .product-card-options__volume {
+	border-color: rgba(var(--b2c-black-rgb), 0.22);
+	background: var(--b2c-color-white);
+	color: var(--b2c-color-black);
+}
+
+.b2c-product-card .product-card-options__swatch {
+	border-color: rgba(var(--b2c-black-rgb), 0.22);
+}
+
+.b2c-product-card--editorial {
+	color: var(--b2c-color-black);
+}
+
+.b2c-product-card--editorial .blog-product-embed__eyebrow,
+.b2c-product-card--editorial .blog-recommended-product__copy small {
+	color: rgba(var(--b2c-black-rgb), 0.58);
+	font-family: var(--b2c-font-family);
+	font-size: 11px;
+	font-weight: 500;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.b2c-product-card--editorial .blog-product-embed__title,
+.b2c-product-card--editorial .blog-recommended-product__copy strong {
+	color: var(--b2c-color-black);
+	font-family: var(--b2c-font-family);
+}
+
+.b2c-product-card--editorial .blog-product-embed__title:hover,
+.b2c-product-card--editorial:hover .blog-recommended-product__copy strong {
+	color: var(--b2c-color-black);
+	text-decoration: underline;
+	text-decoration-color: var(--b2c-color-cream);
+	text-decoration-thickness: 2px;
+	text-underline-offset: 3px;
+}
+
+.b2c-product-card--editorial .blog-product-embed__price,
+.b2c-product-card--editorial .blog-recommended-product__copy b {
+	color: var(--b2c-color-black);
+}

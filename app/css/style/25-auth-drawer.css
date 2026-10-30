@@ -565,35 +565,12 @@ html.auth-drawer-lock body {
 	appearance: none;
 }
 
-.auth-drawer__primary-button {
-	border: 1px solid #111111;
-
-	background: #111111;
-	color: #ffffff;
-}
-
-.auth-drawer__primary-button:hover {
-	border-color: #292929;
-
-	background: #292929;
-}
-
 .auth-drawer__secondary-button {
 	margin-top: 12px;
-
-	border: 1px solid #111111;
-
-	background: #ffffff;
-	color: #111111;
-}
-
-.auth-drawer__secondary-button:hover {
-	background: #f3f3f3;
 }
 
 .auth-drawer__primary-button:disabled,
 .auth-drawer__secondary-button:disabled {
-	opacity: 0.55;
 	cursor: not-allowed;
 }
 
@@ -696,20 +673,6 @@ html.auth-drawer-lock body {
 	display: block;
 }
 
-.auth-drawer__message--error {
-	border-color: #dfb6b6;
-
-	background: #fff7f7;
-	color: #9c2424;
-}
-
-.auth-drawer__message--success {
-	border-color: #b8d4bc;
-
-	background: #f6fbf7;
-	color: #2f6738;
-}
-
 /* ==========================================================
    Checkboxes
    ========================================================== */
@@ -761,32 +724,6 @@ html.auth-drawer-lock body {
 	transition:
 		border-color 180ms ease,
 		background-color 180ms ease;
-}
-
-.auth-drawer__check input:checked + .auth-drawer__check-box {
-	border-color: #111111;
-	background: #111111;
-}
-
-.auth-drawer__check input:checked + .auth-drawer__check-box::after {
-	content: '';
-
-	position: absolute;
-	top: 2px;
-	left: 4px;
-
-	width: 4px;
-	height: 7px;
-
-	border-right: 1.5px solid #ffffff;
-	border-bottom: 1.5px solid #ffffff;
-
-	transform: rotate(45deg);
-}
-
-.auth-drawer__check input:focus-visible + .auth-drawer__check-box {
-	outline: 1px solid #111111;
-	outline-offset: 2px;
 }
 
 .auth-drawer__check-text {
@@ -1370,9 +1307,6 @@ html.auth-drawer-lock body {
 	order: 20;
 	flex: 0 0 auto;
 	margin-top: auto;
-	border-color: var(--auth-ink);
-	background: var(--auth-ink);
-	box-shadow: 0 -12px 20px rgb(255 255 255 / 88%);
 }
 
 .auth-drawer__secondary-button {
@@ -1382,16 +1316,8 @@ html.auth-drawer-lock body {
 	order: 19;
 	margin-top: 12px;
 	padding: 5px 0;
-	border: 0;
-	background: transparent;
-	color: var(--auth-muted);
 	font-size: 12px;
 	font-weight: 400;
-}
-
-.auth-drawer__secondary-button:hover {
-	background: transparent;
-	color: var(--auth-ink);
 }
 
 .auth-drawer__switch {
@@ -1549,8 +1475,6 @@ html.auth-drawer-lock body {
 	flex: 0 0 100px;
 	margin-bottom: 44px;
 	border: 0;
-	background: #f0f7f2;
-	color: #188144;
 }
 
 .auth-drawer__status-icon svg {
@@ -1602,12 +1526,6 @@ html.auth-drawer-lock body {
 	color: var(--auth-muted);
 	font-size: 12px;
 	text-decoration: none;
-}
-
-.auth-drawer__screen[data-auth-screen='forgot-sent'] .auth-drawer__status-icon,
-.auth-drawer__screen[data-auth-screen='register-success'] .auth-drawer__status-icon {
-	background: #f0f7f2;
-	color: #188144;
 }
 
 .auth-drawer button:focus-visible,

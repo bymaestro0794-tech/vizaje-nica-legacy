@@ -157,6 +157,12 @@ class Gift_promotions extends BackEndController
             throw new Exception('Выберите формат акции: онлайн, офлайн или оба канала.');
         }
 
+        $dateFrom = $this->normalizeOptionalDate($this->input->post('date_from', true), 'начала');
+        $dateTo = $this->normalizeOptionalDate($this->input->post('date_to', true), 'окончания');
+        if ($dateFrom !== null && $dateTo !== null && $dateFrom > $dateTo) {
+            throw new Exception('Дата начала не может быть позже даты окончания.');
+        }
+
         $result = array(
             'titleRU' => $titleRU,
             'titleRO' => $titleRO,
@@ -168,8 +174,8 @@ class Gift_promotions extends BackEndController
             'is_enabled' => $this->input->post('is_enabled') ? 1 : 0,
             'show_on_site' => $this->input->post('show_on_site') ? 1 : 0,
             'is_online' => (int) $channel,
-            'date_from' => $this->input->post('date_from', true) ?: null,
-            'date_to' => $this->input->post('date_to', true) ?: null,
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
             'sorder' => (int) $this->input->post('sorder'),
             'brand_ids' => $brandIds,
         );
@@ -180,6 +186,21 @@ class Gift_promotions extends BackEndController
         }
 
         return $result;
+    }
+
+    private function normalizeOptionalDate($value, $label)
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+
+        $date = DateTime::createFromFormat('!Y-m-d', $value);
+        if (!$date || $date->format('Y-m-d') !== $value) {
+            throw new Exception('Проверьте дату ' . $label . ' акции.');
+        }
+
+        return $value;
     }
 
     private function normalizeProgressMode($value)

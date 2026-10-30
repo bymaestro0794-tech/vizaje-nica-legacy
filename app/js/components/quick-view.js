@@ -798,6 +798,20 @@
 						.html(response.total_items)
 						.toggleClass('d_none', Number(response.total_items) <= 0)
 
+					if (
+						!currentGiftMode &&
+						window.VNB2CProductCart &&
+						typeof window.VNB2CProductCart.onCartAdd === 'function'
+					) {
+						window.VNB2CProductCart.onCartAdd({
+							productId: currentProductId,
+							variantId: state.selectedVariationId,
+							rowId: response.row_id,
+							quantity: response.quantity || 1,
+							maxQuantity: response.max_quantity
+						})
+					}
+
 					close()
 
 					if (window.VNGiftPromotions && response.gift_promotions) {

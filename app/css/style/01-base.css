@@ -9,6 +9,12 @@
 :root {
 	--font-sans: 'Geist';
 	--font-title: 'Geist';
+
+	/* Classic theme palette. Existing components are intentionally unchanged for now. */
+	--color-classic-black: #111111;
+	--color-classic-white: #FFFFFF;
+	--color-classic-cream: #CDBBB0;
+	--color-classic-danger: #8E1F2D;
 }
 
 /*JIVO Chat zindex */

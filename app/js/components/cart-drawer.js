@@ -1478,6 +1478,19 @@
 
 				updateShippingState(response.shipping)
 
+				if (
+					window.VNB2CProductCart &&
+					typeof window.VNB2CProductCart.onCartUpdate === 'function'
+				) {
+					window.VNB2CProductCart.onCartUpdate({
+						rowId: response.row.row_id,
+						productId: response.row.product_id,
+						variantId: response.row.variable_id,
+						quantity: response.row.quantity,
+						maxQuantity: response.row.max_quantity
+					})
+				}
+
 				animateCartCount(response.cart.total_items)
 			},
 
@@ -1557,6 +1570,14 @@
 					// the server instead of leaving a stale gift row visible.
 					if (Array.isArray(response.gift_promotions)) {
 						sendRemoveFromCart(analyticsItem)
+
+					if (
+						window.VNB2CProductCart &&
+						typeof window.VNB2CProductCart.onCartRemove === 'function'
+					) {
+						window.VNB2CProductCart.onCartRemove(rowid)
+					}
+
 						load({ skeleton: false })
 						return
 					}
@@ -1567,6 +1588,14 @@
 					*/
 
 					sendRemoveFromCart(analyticsItem)
+
+					if (
+						window.VNB2CProductCart &&
+						typeof window.VNB2CProductCart.onCartRemove === 'function'
+					) {
+						window.VNB2CProductCart.onCartRemove(rowid)
+					}
+
 					if (!response.cart || !response.shipping) {
 						load({
 							skeleton: false

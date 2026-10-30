@@ -278,6 +278,29 @@ if (!isset($registeredUris[$beautySelectionsUri])) {
 $mobileCatalogItems = [];
 $mobileSecondaryItems = [];
 
+$isHeaderDiscountItem = static function (array $item): bool {
+    $title = mb_strtolower(trim((string) ($item['title'] ?? '')), 'UTF-8');
+    $uri = mb_strtolower(trim((string) ($item['uri'] ?? '')), 'UTF-8');
+
+    return preg_match('/скид|reducer|discount|sale/u', $title . ' ' . $uri) === 1;
+};
+
+$isHeaderPromotionItem = static function (array $item): bool {
+    $title = mb_strtolower(trim((string) ($item['title'] ?? '')), 'UTF-8');
+    $uri = mb_strtolower(trim((string) ($item['uri'] ?? '')), 'UTF-8');
+
+    return preg_match('/акци|promo|promot|akts|promotii/u', $title . ' ' . $uri) === 1;
+};
+
+$isHeaderBeautySelectionsItem = static function (array $item): bool {
+    $title = mb_strtolower(trim((string) ($item['title'] ?? '')), 'UTF-8');
+    $uri = mb_strtolower(trim((string) ($item['uri'] ?? '')), 'UTF-8');
+
+    return $uri === 'beauty-selections'
+        || $uri === 'byuti-podborki'
+        || preg_match('/бьюти-подбор|beauty selections|selecții de frumusețe|selectii de frumusete/u', $title) === 1;
+};
+
 foreach ($desktopNavItems as $navItem) {
     if ($navItem['type'] === 'category') {
         $mobileCatalogItems[] = $navItem;
@@ -285,6 +308,15 @@ foreach ($desktopNavItems as $navItem) {
         $mobileSecondaryItems[] = $navItem;
     }
 }
+
+// Keep these destinations in the mobile secondary menu, but move them out
+// of the desktop navigation into the storefront footer.
+$desktopNavItems = array_values(array_filter(
+    $desktopNavItems,
+    static function (array $item) use ($isHeaderPromotionItem, $isHeaderBeautySelectionsItem): bool {
+        return !$isHeaderPromotionItem($item) && !$isHeaderBeautySelectionsItem($item);
+    }
+));
 
 $makeMobileScreenId = static function (string $level, string $uri): string {
     return 'mobile-' . $level . '-' . md5($uri);
@@ -422,6 +454,9 @@ $headerRouletteStateUrl = $headerWheelEligible
                             search-actions-main-header__icon
                         "
                         aria-label="<?= $isRomanian ? 'Căutare' : 'Поиск' ?>"
+                        aria-expanded="false"
+                        data-search-label="<?= $isRomanian ? 'Căutare' : 'Поиск' ?>"
+                        data-search-close-label="<?= $isRomanian ? 'Închide căutarea' : 'Закрыть поиск' ?>"
                     >
                         <img
                             src="/app/img/icons/search.svg"
@@ -1037,7 +1072,7 @@ $wishlistUrl = $isRomanian
                         >
                             <a
                                 href="<?= htmlspecialchars($navItem['url'], ENT_QUOTES, 'UTF-8') ?>"
-                                class="header-navigation__link <?= $isActive ? 'is-active' : '' ?>"
+                                class="header-navigation__link <?= $isActive ? 'is-active' : '' ?> <?= $isHeaderDiscountItem($navItem) ? 'header-navigation__link--discount' : '' ?>"
                                 <?php if ($navItem['has_children']) : ?>
                                     data-mega-trigger="<?= htmlspecialchars($navItem['uri'], ENT_QUOTES, 'UTF-8') ?>"
                                 <?php endif; ?>
@@ -1205,40 +1240,23 @@ $wishlistUrl = $isRomanian
     </div>
 
     <div class="header__mobile">
-        <?php if (!$isProductDetailPage) : ?>
-			<a
-				href="/<?= htmlspecialchars($lclang, ENT_QUOTES, 'UTF-8') ?>"
-				class="mobile-header__brand<?= $isHalloweenTheme ? ' mobile-header__brand--halloween' : '' ?>"
-				aria-label="Vizaje-Nica"
-			>
-				<img src="<?= htmlspecialchars($isHalloweenTheme ? '/app/img/hellowen-logo.png' : '/app/img/logo_v.webp', ENT_QUOTES, 'UTF-8') ?>" alt="Vizaje-Nica" width="240" height="52">
-			</a>
-
-			<div class="mobile-header__language language-main-header">
-				<?php select_language($clang, $lang_urls); ?>
-			</div>
-		<?php endif; ?>
+        <button
+            type="button"
+            class="mobile-header__search search-actions-main-header__icon"
+            aria-label="<?= $isRomanian ? 'Căutare' : 'Поиск' ?>"
+            aria-expanded="false"
+            data-search-label="<?= $isRomanian ? 'Căutare' : 'Поиск' ?>"
+            data-search-close-label="<?= $isRomanian ? 'Închide căutarea' : 'Закрыть поиск' ?>"
+        >
+            <span class="mobile-header__search-label"><?= $isRomanian ? 'CĂUTARE' : 'ПОИСК' ?></span>
+            <img src="/app/img/icons/search.svg" alt="" width="20" height="20" aria-hidden="true">
+        </button>
     </div>
 
 	<nav
 		class="mobile-tabbar"
 		aria-label="<?= $isRomanian ? 'Navigare principală' : 'Основная навигация' ?>"
 	>
-		<a
-			href="/<?= htmlspecialchars($lclang, ENT_QUOTES, 'UTF-8') ?>"
-			class="mobile-tabbar__item mobile-tabbar__item--brand<?= $isHomeTabActive ? ' is-active' : '' ?>"
-			<?= $isHomeTabActive ? 'aria-current="page"' : '' ?>
-		>
-			<span class="mobile-tabbar__icon">
-				<span class="mobile-tabbar__asset-icon mobile-tabbar__asset-icon--brand" aria-hidden="true"></span>
-				<svg class="lucide lucide-house" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-					<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
-					<path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-				</svg>
-			</span>
-			<span class="mobile-tabbar__label"><?= $isRomanian ? 'Acasă' : 'Главная' ?></span>
-		</a>
-
 		<a
 			href="/<?= htmlspecialchars($lclang, ENT_QUOTES, 'UTF-8') ?>/<?= htmlspecialchars($mobileCatalogUri, ENT_QUOTES, 'UTF-8') ?>"
 			class="mobile-tabbar__item mobile-tabbar__item--catalog<?= $isCatalogTabActive ? ' is-active' : '' ?>"
@@ -1247,12 +1265,6 @@ $wishlistUrl = $isRomanian
 		>
 			<span class="mobile-tabbar__icon">
 				<span class="mobile-tabbar__asset-icon mobile-tabbar__asset-icon--catalog" aria-hidden="true"></span>
-				<svg class="lucide lucide-layout-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-					<rect x="3" y="3" width="7" height="7" rx="1" />
-					<rect x="14" y="3" width="7" height="7" rx="1" />
-					<rect x="14" y="14" width="7" height="7" rx="1" />
-					<rect x="3" y="14" width="7" height="7" rx="1" />
-				</svg>
 			</span>
 			<span class="mobile-tabbar__label"><?= $isRomanian ? 'Catalog' : 'Каталог' ?></span>
 		</a>
@@ -1265,6 +1277,18 @@ $wishlistUrl = $isRomanian
 		>
 			<span class="mobile-tabbar__icon">
 				<span class="mobile-tabbar__asset-icon mobile-tabbar__asset-icon--wishlist" aria-hidden="true"></span>
+			</span>
+			<span class="mobile-tabbar__label"><?= $isRomanian ? 'Favorite' : 'Избранное' ?></span>
+		</a>
+
+		<a
+			href="/<?= htmlspecialchars($lclang, ENT_QUOTES, 'UTF-8') ?>"
+			class="mobile-tabbar__item mobile-tabbar__item--brand<?= $isHomeTabActive ? ' is-active' : '' ?>"
+			aria-label="Vizaje-Nica"
+			<?= $isHomeTabActive ? 'aria-current="page"' : '' ?>
+		>
+			<span class="mobile-tabbar__icon">
+				<span class="mobile-tabbar__asset-icon mobile-tabbar__asset-icon--brand" aria-hidden="true"></span>
 			</span>
 		</a>
 
@@ -1349,6 +1373,9 @@ $wishlistUrl = $isRomanian
                     aria-label="<?= $isRomanian
                         ? 'Căutare'
                         : 'Поиск' ?>"
+                    aria-expanded="false"
+                    data-search-label="<?= $isRomanian ? 'Căutare' : 'Поиск' ?>"
+                    data-search-close-label="<?= $isRomanian ? 'Închide căutarea' : 'Закрыть поиск' ?>"
                 >
                     <img
                         src="/app/img/icons/search.svg"
@@ -1525,13 +1552,15 @@ $wishlistUrl = $isRomanian
 </div>
 
                 <div class="mobile-navigation__language">
-                    <span class="mobile-navigation__language-label">
-                        <?= $isRomanian ? 'Limbă' : 'Язык' ?>
-                    </span>
-
-                    <div class="mobile-navigation__language-switcher language-main-header">
-                        <?php select_language($clang, $lang_urls); ?>
-                    </div>
+                    <button type="button" class="mobile-navigation__language-trigger" data-language-modal-open aria-haspopup="dialog">
+                        <svg class="mobile-navigation__language-globe" stroke="none" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                            <path fill-rule="evenodd" d="M14.416 10.625c-.165 2.77-1.429 5.485-3.791 7.385v-7.385h3.791Zm4.312 0a8.755 8.755 0 0 1-6.794 7.91c2.334-2.116 3.579-4.988 3.734-7.91h3.06Zm0-1.25h-3.06c-.155-2.922-1.4-5.794-3.734-7.91a8.755 8.755 0 0 1 6.794 7.91Zm-8.103 0h3.791c-.165-2.77-1.429-5.485-3.791-7.385v7.385Zm-1.25 10.606V20h1.25v-.02A9.998 9.998 0 0 0 20 10C20 4.687 15.857.342 10.625.02V0h-1.25v.02A10.001 10.001 0 0 0 .019 9.374H0v1.25h.02a10.001 10.001 0 0 0 9.355 9.356Zm-1.642-1.528a8.756 8.756 0 0 1-6.461-7.828h2.817c.153 2.885 1.368 5.72 3.644 7.828Zm1.642-.253c-2.519-1.907-3.864-4.71-4.034-7.575h4.034V18.2ZM5.341 9.375h4.034V1.801C6.856 3.707 5.511 6.51 5.341 9.375Zm2.392-7.828a8.756 8.756 0 0 0-6.461 7.828h2.817c.153-2.885 1.368-5.72 3.644-7.828Z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span><?= $isRomanian ? 'Limba: Română' : 'Язык: Русский' ?></span>
+                        <svg class="mobile-navigation__language-chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
+                            <path d="m6 3 5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
                 </div>
 
                 <?php if (!empty($mobileCatalogItems)) : ?>
@@ -1599,6 +1628,7 @@ $wishlistUrl = $isRomanian
                                     '/акци|скид|promo|reducer/u',
                                     $normalizedTitle
                                 );
+                                $isDiscount = $isHeaderDiscountItem($navItem);
                                 ?>
 
                                 <li class="mobile-navigation__secondary-item">
@@ -1606,7 +1636,7 @@ $wishlistUrl = $isRomanian
                                         href="<?= htmlspecialchars($navItem['url'], ENT_QUOTES, 'UTF-8') ?>"
                                         class="mobile-navigation__secondary-link <?= $isPromotion
                                             ? 'mobile-navigation__secondary-link--strong'
-                                            : '' ?>"
+                                            : '' ?> <?= $isDiscount ? 'mobile-navigation__secondary-link--discount' : '' ?>"
                                     >
                                         <?= htmlspecialchars($navItem['title'], ENT_QUOTES, 'UTF-8') ?>
                                     </a>
@@ -1783,6 +1813,25 @@ $wishlistUrl = $isRomanian
         <div class="form-header-search__container _container">
             <div class="form-header-search__main">
                 <div class="form-header-search__top">
+                    <button
+                        type="button"
+                        class="form-header-search__close"
+                        data-header-search-close
+                        aria-label="<?= $isRomanian ? 'Închide căutarea' : 'Закрыть поиск' ?>"
+                    >
+                        <span class="form-header-search__close-icon" aria-hidden="true">
+                            <svg viewBox="0 0 20 20" focusable="false">
+                                <path stroke-width="1.5" d="m2 2 16 16"></path>
+                                <path stroke-width="1.5" d="M2 18 18 2"></path>
+                            </svg>
+                        </span>
+                        <span class="form-header-search__back-icon" aria-hidden="true">
+                            <img src="/app/img/icons/back.svg" alt="" width="20" height="20">
+                        </span>
+                        <span class="form-header-search__close-label">
+                            <?= $isRomanian ? 'Închide căutarea' : 'Закрыть поиск' ?>
+                        </span>
+                    </button>
                     <form
                         action="/<?= $lclang ?>/<?= htmlspecialchars(
                             $searchUri,
@@ -1793,13 +1842,7 @@ $wishlistUrl = $isRomanian
                         method="get"
                         role="search"
                     >
-                        <img
-                            src="/app/img/icons/search.svg"
-                            alt=""
-                            width="22"
-                            height="22"
-                        >
-
+                        <span class="form-header-search__completion" aria-hidden="true"></span>
                         <input
                             type="text"
                             name="search"
@@ -1815,26 +1858,41 @@ $wishlistUrl = $isRomanian
                                     ? 'Ce căutați?'
                                     : 'Что вы ищете?') ?>"
                             autocomplete="off"
+                            enterkeyhint="search"
                             aria-label="<?= $isRomanian
                                 ? 'Căutare'
                                 : 'Поиск' ?>"
                         >
-                    </form>
 
-                    <button
-                        type="button"
-                        class="form-header-search__close"
-                        aria-label="<?= $isRomanian
-                            ? 'Închide căutarea'
-                            : 'Закрыть поиск' ?>"
-                        data-header-search-close
-                    >
-                        <span></span>
-                        <span></span>
-                    </button>
+                        <button
+                            type="button"
+                            class="form-header-search__clear"
+                            aria-label="<?= $isRomanian ? 'Șterge căutarea' : 'Очистить поиск' ?>"
+                            hidden
+                        >
+                            <span aria-hidden="true">×</span>
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="form-header-search__submit"
+                            aria-label="<?= $isRomanian
+                                ? 'Caută'
+                                : 'Найти' ?>"
+                            data-search-submit-label="<?= $isRomanian
+                                ? 'Caută'
+                                : 'Найти' ?>"
+                        >
+                            <svg class="form-header-search__submit-icon" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+                                <path fill-rule="evenodd" stroke-width="0" d="M25.96 5.96 40 20 25.96 34.04l-1.415-1.414L36.172 21H1v-2h35.172L24.545 7.374 25.96 5.96Z" clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+                    </form>
                 </div>
 
-                <div class="form-header-search__body"></div>
+                <div class="form-header-search__mobile-suggestion" aria-live="polite" hidden></div>
+
+                <div class="form-header-search__body search_result"></div>
             </div>
         </div>
     </div>
@@ -1845,5 +1903,18 @@ $wishlistUrl = $isRomanian
 	class="header-overlay"
 	data-header-overlay
 ></div>
+
+<dialog class="mobile-language-modal" data-language-modal aria-labelledby="mobile-language-modal-title">
+    <section class="mobile-language-modal__sheet">
+        <div class="mobile-language-modal__handle" aria-hidden="true"></div>
+        <header class="mobile-language-modal__header">
+            <h2 id="mobile-language-modal-title"><?= $isRomanian ? 'Alegeți limba' : 'Выберите язык' ?></h2>
+            <button type="button" class="mobile-language-modal__close" data-language-modal-close aria-label="<?= $isRomanian ? 'Închide' : 'Закрыть' ?>">×</button>
+        </header>
+        <div class="mobile-language-modal__options language-main-header">
+            <?php select_language($clang, $lang_urls); ?>
+        </div>
+    </section>
+</dialog>
    
 </header>

@@ -172,19 +172,6 @@
     $mobileCatalogSupportUrl = $mobileCatalogSupportEnabled && isset($telegram_support['url'])
         ? (string) $telegram_support['url']
         : (defined('TELEGRAM_SUPPORT_BOT') ? TELEGRAM_SUPPORT_BOT : '/' . $lclang . '/kontaktyi');
-    $mobileCatalogLanguageOptions = [
-        [
-            'code' => 'ru',
-            'title' => $lclang === 'ro' ? 'Rusă' : 'Русский',
-            'url' => '/ru/katalog',
-        ],
-        [
-            'code' => 'ro',
-            'title' => $lclang === 'ro' ? 'Română' : 'Румынский',
-            'url' => '/ro/catalog',
-        ],
-    ];
-    $mobileCatalogCurrentLanguageTitle = $lclang === 'ro' ? 'Română' : 'Русский';
     $mobileCatalogRootIconAssets = [
         'discounts' => 'catalog-discount.png',
         'new' => 'catalog-new.png',
@@ -246,19 +233,20 @@
                 </h1>
             </div>
 
-            <button
-                type="button"
-                class="mobile-catalog-page__search search-actions-main-header__icon"
-                aria-label="<?= $lclang === 'ro' ? 'Căutare în catalog' : 'Поиск по каталогу' ?>"
-                aria-expanded="false"
-            >
-                <i class="icon-magnifier" aria-hidden="true"></i>
-                <span><?= $lclang === 'ro' ? 'Căutare în catalog' : 'Поиск по каталогу' ?></span>
-            </button>
-
             <nav class="mobile-catalog-page__nav" aria-label="<?= htmlspecialchars($menu['all'][3]->title, ENT_QUOTES, 'UTF-8') ?>">
                 <div class="mobile-catalog-page__screen is-active" data-mobile-catalog-screen="root">
                     <ul class="mobile-catalog-page__list">
+                        <li class="mobile-catalog-page__item mobile-catalog-page__item--utility mobile-catalog-page__item--language">
+                            <button type="button" class="mobile-catalog-page__link mobile-catalog-page__link--utility mobile-catalog-page__link--language" data-language-modal-open aria-haspopup="dialog">
+                                <span class="mobile-catalog-page__utility-icon" aria-hidden="true">
+                                    <svg stroke="none" viewBox="0 0 20 20" focusable="false">
+                                        <path fill-rule="evenodd" d="M14.416 10.625c-.165 2.77-1.429 5.485-3.791 7.385v-7.385h3.791Zm4.312 0a8.755 8.755 0 0 1-6.794 7.91c2.334-2.116 3.579-4.988 3.734-7.91h3.06Zm0-1.25h-3.06c-.155-2.922-1.4-5.794-3.734-7.91a8.755 8.755 0 0 1 6.794 7.91Zm-8.103 0h3.791c-.165-2.77-1.429-5.485-3.791-7.385v7.385Zm-1.25 10.606V20h1.25v-.02A9.998 9.998 0 0 0 20 10C20 4.687 15.857.342 10.625.02V0h-1.25v.02A10.001 10.001 0 0 0 .019 9.374H0v1.25h.02a10.001 10.001 0 0 0 9.355 9.356Zm-1.642-1.528a8.756 8.756 0 0 1-6.461-7.828h2.817c.153 2.885 1.368 5.72 3.644 7.828Zm1.642-.253c-2.519-1.907-3.864-4.71-4.034-7.575h4.034V18.2ZM5.341 9.375h4.034V1.801C6.856 3.707 5.511 6.51 5.341 9.375Zm2.392-7.828a8.756 8.756 0 0 0-6.461 7.828h2.817c.153-2.885 1.368-5.72 3.644-7.828Z" clip-rule="evenodd" />
+                                    </svg>
+                                </span>
+                                <span class="mobile-catalog-page__utility-label"><?= $lclang === 'ro' ? 'Limba: Română' : 'Язык: Русский' ?></span>
+                                <svg class="mobile-catalog-page__language-chevron" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="m6 3 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.3" /></svg>
+                            </button>
+                        </li>
                         <li class="mobile-catalog-page__item">
                             <button
                                 type="button"
@@ -313,32 +301,6 @@
                             </a>
                         </li>
                         <?php endif; ?>
-                        <li class="mobile-catalog-page__item mobile-catalog-page__item--utility mobile-catalog-page__item--language">
-                            <button
-                                type="button"
-                                class="mobile-catalog-page__link mobile-catalog-page__link--utility mobile-catalog-page__link--language"
-                                data-mobile-catalog-open="languages"
-                                data-mobile-catalog-screen-title="<?= $lclang === 'ro' ? 'Limbă' : 'Язык' ?>"
-                            >
-                                <span class="mobile-catalog-page__utility-label"><?= htmlspecialchars($mobileCatalogCurrentLanguageTitle, ENT_QUOTES, 'UTF-8') ?></span>
-                                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="m6 3 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.3" /></svg>
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="mobile-catalog-page__screen" data-mobile-catalog-screen="languages" data-mobile-catalog-screen-title="<?= $lclang === 'ro' ? 'Limbă' : 'Язык' ?>" hidden>
-                    <ul class="mobile-catalog-page__list mobile-catalog-page__list--languages">
-                        <?php foreach ($mobileCatalogLanguageOptions as $languageOption) : ?>
-                            <li class="mobile-catalog-page__item">
-                                <a
-                                    class="mobile-catalog-page__link mobile-catalog-page__link--utility mobile-catalog-page__link--language-option <?= $languageOption['code'] === $lclang ? 'is-current' : '' ?>"
-                                    href="<?= htmlspecialchars($languageOption['url'], ENT_QUOTES, 'UTF-8') ?>"
-                                >
-                                    <span class="mobile-catalog-page__utility-label"><?= htmlspecialchars($languageOption['title'], ENT_QUOTES, 'UTF-8') ?></span>
-                                </a>
-                            </li>
-                        <?php endforeach; ?>
                     </ul>
                 </div>
 

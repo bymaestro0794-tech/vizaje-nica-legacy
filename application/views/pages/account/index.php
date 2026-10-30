@@ -58,6 +58,15 @@ if (!empty($menu['top'])) {
                 <section class="account-dashboard" aria-label="<?= $lclang === 'ro' ? 'Contul meu' : 'Мой кабинет' ?>">
                     <h3 class="account-dashboard__title"><?= $lclang === 'ro' ? 'Contul meu' : 'Мой кабинет' ?></h3>
                     <nav class="account-dashboard__links" aria-label="<?= $lclang === 'ro' ? 'Navigare cont' : 'Разделы кабинета' ?>">
+                        <button class="account-dashboard__link account-dashboard__language" type="button" data-language-modal-open aria-haspopup="dialog">
+                            <span class="account-dashboard__link-main">
+                                <span class="account-dashboard__icon account-dashboard__icon--globe" aria-hidden="true">
+                                    <svg stroke="none" viewBox="0 0 20 20" focusable="false"><path fill-rule="evenodd" d="M14.416 10.625c-.165 2.77-1.429 5.485-3.791 7.385v-7.385h3.791Zm4.312 0a8.755 8.755 0 0 1-6.794 7.91c2.334-2.116 3.579-4.988 3.734-7.91h3.06Zm0-1.25h-3.06c-.155-2.922-1.4-5.794-3.734-7.91a8.755 8.755 0 0 1 6.794 7.91Zm-8.103 0h3.791c-.165-2.77-1.429-5.485-3.791-7.385v7.385Zm-1.25 10.606V20h1.25v-.02A9.998 9.998 0 0 0 20 10C20 4.687 15.857.342 10.625.02V0h-1.25v.02A10.001 10.001 0 0 0 .019 9.374H0v1.25h.02a10.001 10.001 0 0 0 9.355 9.356Zm-1.642-1.528a8.756 8.756 0 0 1-6.461-7.828h2.817c.153 2.885 1.368 5.72 3.644 7.828Zm1.642-.253c-2.519-1.907-3.864-4.71-4.034-7.575h4.034V18.2ZM5.341 9.375h4.034V1.801C6.856 3.707 5.511 6.51 5.341 9.375Zm2.392-7.828a8.756 8.756 0 0 0-6.461 7.828h2.817c.153-2.885 1.368-5.72 3.644-7.828Z" clip-rule="evenodd" /></svg>
+                                </span>
+                                <span><?= $lclang === 'ro' ? 'Limba: Română' : 'Язык: Русский' ?></span>
+                            </span>
+                            <img src="/app/img/icons/arrow-more.svg" alt="" aria-hidden="true">
+                        </button>
                         <a class="account-dashboard__link" href="<?= htmlspecialchars($accountUri, ENT_QUOTES, 'UTF-8') ?>" data-account-profile-open aria-controls="account-profile-dialog">
                             <span class="account-dashboard__link-main">
                                 <span class="account-dashboard__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21c.7-4 3.2-6 7.5-6s6.8 2 7.5 6"/></svg></span>

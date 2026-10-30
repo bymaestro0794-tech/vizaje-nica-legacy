@@ -95,6 +95,7 @@ if (!empty($_SESSION['isb2b'])) {
 <?php }else{ ?>
 <div
     class="products-colection__product
+        b2c-product-card
         <?php if (empty($item->stock)) { ?>stock_off<?php } ?>"
     data-prod_id="<?= (int) $item->id ?>"
     data-product-image="<?= htmlspecialchars(

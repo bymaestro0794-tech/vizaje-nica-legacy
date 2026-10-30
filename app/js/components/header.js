@@ -152,6 +152,7 @@
 		const search = header.querySelector(SELECTORS.search)
 
 		const searchInput = header.querySelector(SELECTORS.searchInput)
+		const languageModal = header.querySelector('[data-language-modal]')
 
 		const catalogToolbar = document.querySelector(
 			'.catalog-category-page .catalog-category__toolbar'
@@ -180,6 +181,9 @@
 		let mobileScreenHistory = ['root']
 		let mobileCatalogHistory = ['root']
 		let lastFocusedElement = null
+		let languageModalReturnFocus = null
+		let languageModalCloseTimer = null
+		let isLanguageModalClosing = false
 
 		let mobileTimeline = null
 		let mobileScreenTimeline = null
@@ -267,8 +271,35 @@
 		const syncBodyLock = () => {
 			document.body.classList.toggle(
 				'is-header-locked',
-				isMobileMenuOpen() || isSearchOpen()
+				isMobileMenuOpen() || isSearchOpen() || Boolean(languageModal?.open)
 			)
+		}
+
+		const closeLanguageModal = () => {
+			if (!languageModal?.open || isLanguageModalClosing) {
+				return
+			}
+
+			const sheet = languageModal.querySelector('.mobile-language-modal__sheet')
+			isLanguageModalClosing = true
+			languageModal.classList.add('is-closing')
+
+			const finishClose = () => {
+				window.clearTimeout(languageModalCloseTimer)
+				if (languageModal.open) {
+					languageModal.close()
+				}
+			}
+
+			const onExitAnimationEnd = event => {
+				if (event.target === sheet && event.animationName === 'mobileLanguageSheetOut') {
+					sheet.removeEventListener('animationend', onExitAnimationEnd)
+					finishClose()
+				}
+			}
+
+			sheet?.addEventListener('animationend', onExitAnimationEnd)
+			languageModalCloseTimer = window.setTimeout(finishClose, 280)
 		}
 
 		const clearMegaTimers = () => {
@@ -1276,6 +1307,24 @@
 			return Boolean(search?.classList.contains('is-open'))
 		}
 
+		const updateSearchTop = () => {
+			if (!search) {
+				return
+			}
+
+			if (window.innerWidth <= 560) {
+				search.style.setProperty('--header-search-top', '0px')
+				return
+			}
+
+			const headerBottom = Math.max(
+				0,
+				Math.round(header.getBoundingClientRect().bottom)
+			)
+
+			search.style.setProperty('--header-search-top', `${headerBottom}px`)
+		}
+
 		const openSearch = trigger => {
 			if (!search || !searchInput) {
 				console.warn(
@@ -1298,17 +1347,38 @@
 
 			closeUserPanels()
 
+			header.classList.remove('is-scrolling-down')
+
+			if (Math.max(window.scrollY, 0) > getScrollThreshold()) {
+				header.classList.add('is-scrolling-up')
+			} else {
+				header.classList.remove('is-scrolling-up')
+			}
+
 			search.classList.add('is-open')
+			header.classList.add('is-search-open')
 
 			search.setAttribute('aria-hidden', 'false')
+			window.dispatchEvent(new Event('vn:header-search-opened'))
 
 			header.querySelectorAll(SELECTORS.searchOpen).forEach(button => {
 				button.setAttribute('aria-expanded', 'true')
+				button.setAttribute(
+					'aria-label',
+					button.dataset.searchCloseLabel || 'Close search'
+				)
 			})
 
 			syncBodyLock()
 
 			window.requestAnimationFrame(() => {
+				updateSearchTop()
+				window.setTimeout(() => {
+					if (isSearchOpen()) {
+						updateSearchTop()
+					}
+				}, 260)
+
 				searchInput.focus({
 					preventScroll: true
 				})
@@ -1323,11 +1393,17 @@
 			}
 
 			search.classList.remove('is-open')
+			header.classList.remove('is-search-open')
+			search.style.removeProperty('--header-search-top')
 
 			search.setAttribute('aria-hidden', 'true')
 
 			header.querySelectorAll(SELECTORS.searchOpen).forEach(button => {
 				button.setAttribute('aria-expanded', 'false')
+				button.setAttribute(
+					'aria-label',
+					button.dataset.searchLabel || 'Search'
+				)
 			})
 
 			syncBodyLock()
@@ -1732,6 +1808,29 @@
 				return
 			}
 
+			const languageOpenButton = target.closest('[data-language-modal-open]')
+			if (languageOpenButton && languageModal) {
+				event.preventDefault()
+				languageModalReturnFocus = languageOpenButton
+				window.clearTimeout(languageModalCloseTimer)
+				isLanguageModalClosing = false
+				languageModal.classList.remove('is-closing')
+				if (!languageModal.open) {
+					languageModal.showModal()
+				}
+				syncBodyLock()
+				languageModal.querySelector('[data-language-modal-close]')?.focus({
+					preventScroll: true
+				})
+				return
+			}
+
+			if (target.closest('[data-language-modal-close]') && languageModal?.open) {
+				event.preventDefault()
+				closeLanguageModal()
+				return
+			}
+
 			const catalogPage = target.closest('[data-mobile-catalog-page]')
 			if (catalogPage) {
 				const catalogOpenButton = target.closest('[data-mobile-catalog-open]')
@@ -1837,7 +1936,13 @@
 			if (searchOpenButton) {
 				event.preventDefault()
 
-				openSearch(searchOpenButton)
+				if (isSearchOpen()) {
+					closeSearch({
+						restore: true
+					})
+				} else {
+					openSearch(searchOpenButton)
+				}
 
 				return
 			}
@@ -1859,6 +1964,28 @@
 
 				toggleUserPanel(userToggle.closest(SELECTORS.user))
 			}
+		})
+
+		languageModal?.addEventListener('click', event => {
+			if (event.target === languageModal && languageModal.open) {
+				closeLanguageModal()
+			}
+		})
+
+		languageModal?.addEventListener('cancel', event => {
+			event.preventDefault()
+			closeLanguageModal()
+		})
+
+		languageModal?.addEventListener('close', () => {
+			window.clearTimeout(languageModalCloseTimer)
+			languageModal.classList.remove('is-closing')
+			isLanguageModalClosing = false
+			syncBodyLock()
+			if (languageModalReturnFocus instanceof HTMLElement && document.contains(languageModalReturnFocus)) {
+				languageModalReturnFocus.focus({ preventScroll: true })
+			}
+			languageModalReturnFocus = null
 		})
 
 		/* ==========================================================
@@ -1887,6 +2014,9 @@
 
 		document.addEventListener('keydown', event => {
 			if (event.key !== 'Escape') {
+				return
+			}
+			if (languageModal?.open) {
 				return
 			}
 			if (isMobileMenuOpen()) {
@@ -2003,6 +2133,10 @@
 				updateCatalogToolbarPastState(
 					header.classList.contains('is-scrolling-up')
 				)
+
+				if (isSearchOpen()) {
+					updateSearchTop()
+				}
 			}, 100)
 		})
 

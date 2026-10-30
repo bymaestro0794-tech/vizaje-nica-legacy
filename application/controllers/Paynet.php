@@ -138,11 +138,27 @@ class Paynet extends CI_Controller
             $data = array(
                 'order_id' => 'certificat callback',
                 'message' => 'paymentInfo',
-                'response' => $paymentInfo,
+                'response' => '{}',
                 'date' => date("Y-m-d H:i:s")
             );
 
             $this->db->insert('paynet_logs', $data);
+
+            if (
+                !is_object($paymentObj)
+                || empty($paymentObj->Payment)
+                || !is_object($paymentObj->Payment)
+                || empty($paymentObj->Payment->ExternalId)
+                || !isset($paymentObj->EventType)
+            ) {
+                $this->db->insert('paynet_logs', array(
+                    'order_id' => 'certificat callback',
+                    'message' => 'invalid callback payload',
+                    'response' => '{}',
+                    'date' => date('Y-m-d H:i:s')
+                ));
+                return;
+            }
 
             $order = $this->db->where('ExternalID', $paymentObj->Payment->ExternalId)->get('orders')->row();
 
@@ -165,7 +181,7 @@ class Paynet extends CI_Controller
 
         $data = array(
             'order_id' => 'paymentInfo',
-            'response' => json_encode($paymentObj),
+            'response' => '{}',
             'date' => date("Y-m-d H:i:s")
         );
         $this->db->insert('paynet_logs', $data);
@@ -173,7 +189,7 @@ class Paynet extends CI_Controller
         if (!$paymentObj) {
             $data = array(
                 'order_id' => 'error paymentObj',
-                'response' => json_encode($paymentObj),
+                'response' => '{}',
                 'date' => date("Y-m-d H:i:s")
             );
             $this->db->insert('paynet_logs', $data);
@@ -182,7 +198,7 @@ class Paynet extends CI_Controller
         if ($paymentObj->EventType !== 'PAID') {
             $data = array(
                 'order_id' => 'NOT SUCCESS EventType',
-                'response' => json_encode($paymentObj),
+                'response' => '{}',
                 'date' => date("Y-m-d H:i:s")
             );
             $this->db->insert('paynet_logs', $data);
@@ -206,7 +222,7 @@ class Paynet extends CI_Controller
             if ($paymentStatus !== 4) {
                 $data = array(
                     'order_id' => 'The payment status is not complete. Please wait and try again !!!',
-                    'response' => json_encode($paymentObj),
+                    'response' => '{}',
                     'date' => date("Y-m-d H:i:s")
                 );
                 $this->db->insert('paynet_logs', $data);
@@ -218,7 +234,7 @@ class Paynet extends CI_Controller
             } else {
                 $data = array(
                     'order_id' => 'The payment has confirmed',
-                    'response' => json_encode($paymentObj),
+                    'response' => '{}',
                     'date' => date("Y-m-d H:i:s")
                 );
                 $this->db->insert('paynet_logs', $data);
@@ -314,7 +330,7 @@ class Paynet extends CI_Controller
         $data = array(
             'order_id' => 'certificat callback',
             'message' => 'o venit callback',
-            'response' => json_encode($paymentObj),
+            'response' => '{}',
             'date' => date("Y-m-d H:i:s")
         );
 
@@ -324,7 +340,7 @@ class Paynet extends CI_Controller
             $data = array(
                 'order_id' => 'certificat callback',
                 'message' => 'error paymentObj',
-                'response' => json_encode($paymentObj),
+                'response' => '{}',
                 'date' => date("Y-m-d H:i:s")
             );
             $this->db->insert('paynet_logs', $data);
@@ -335,7 +351,7 @@ class Paynet extends CI_Controller
             $data = array(
                 'order_id' => 'certificat callback',
                 'message' => 'NOT SUCCESS EventType',
-                'response' => json_encode($paymentObj),
+                'response' => '{}',
                 'date' => date("Y-m-d H:i:s")
             );
             $this->db->insert('paynet_logs', $data);
@@ -347,7 +363,7 @@ class Paynet extends CI_Controller
         $data = array(
             'order_id' => 'certificat callback',
             'message' => 'Check obj',
-            'response' => json_encode($checkObj),
+            'response' => json_encode(array('api_ok' => $checkObj->IsOk())),
             'date' => date("Y-m-d H:i:s")
         );
         $this->db->insert('paynet_logs', $data);
@@ -357,7 +373,7 @@ class Paynet extends CI_Controller
             $data = array(
                 'order_id' => 'certificat callback',
                 'message' => 'The payment has confirmed',
-                'response' => json_encode($paymentObj),
+                'response' => '{}',
                 'date' => date("Y-m-d H:i:s")
             );
             $this->db->insert('paynet_logs', $data);
@@ -380,10 +396,7 @@ class Paynet extends CI_Controller
             	$this->db->insert('paynet_logs', [
             		'order_id' => 'certificat callback',
             		'message' => 'CERTIFICATE ALREADY PROCESSED',
-            		'response' => json_encode([
-            			'external_id' => $paymentObj->Payment->ExternalId,
-            			'barcode' => $row['barcode'],
-            		]),
+					'response' => '{}',
             		'date' => date('Y-m-d H:i:s'),
             	]);
             
@@ -447,7 +460,7 @@ class Paynet extends CI_Controller
                         $data = array(
                             'order_id' => 'certificat callback',
                             'message' => 'Push notification response',
-                            'response' => json_encode($send),
+                            'response' => json_encode(array('sent' => !empty($send))),
                             'date' => date('Y-m-d H:i:s')
                         );
 
@@ -588,14 +601,7 @@ class Paynet extends CI_Controller
                         		: 'RECEIPT EMAIL FAILED',
                         
                         	'response' => json_encode([
-                        		'email' => $row['ticket_email'],
-                        
-                        		'external_id' =>
-                        			$paymentObj->Payment->ExternalId,
-                        
-                        		'debug' => $receiptEmailSent
-                        			? null
-                        			: $this->email->print_debugger(),
+								'sent' => (bool) $receiptEmailSent,
                         	], JSON_UNESCAPED_UNICODE),
                         
                         	'date' => date('Y-m-d H:i:s'),
@@ -652,9 +658,29 @@ class Paynet extends CI_Controller
 
         $fullNumber = '+373' . $number;
 
+        $smsUsername = getenv('VIZAJE_SMS_USERNAME');
+        $smsPassword = getenv('VIZAJE_SMS_PASSWORD');
+
+        if ($smsUsername === false && isset($_SERVER['VIZAJE_SMS_USERNAME'])) {
+            $smsUsername = $_SERVER['VIZAJE_SMS_USERNAME'];
+        }
+        if ($smsPassword === false && isset($_SERVER['VIZAJE_SMS_PASSWORD'])) {
+            $smsPassword = $_SERVER['VIZAJE_SMS_PASSWORD'];
+        }
+
+        if (
+            $smsUsername === false
+            || trim($smsUsername) === ''
+            || $smsPassword === false
+            || $smsPassword === ''
+        ) {
+            log_message('error', 'Gift certificate SMS provider is not configured.');
+            return false;
+        }
+
         $url = 'https://messages.inter-mob.com/sms.asp?' . http_build_query([
-            'username' => 'vizaje',
-            'password' => 'z2ZLaKc8',
+            'username' => $smsUsername,
+            'password' => $smsPassword,
             'from' => 'Vizaje-Nica',
             'to' => $fullNumber,
             'text' => $message,
@@ -671,8 +697,8 @@ class Paynet extends CI_Controller
             CURLOPT_MAXREDIRS => 10,
             CURLOPT_TIMEOUT => 30,
             CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_SSL_VERIFYHOST => false,
-            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'GET',
         ]);
@@ -688,23 +714,13 @@ class Paynet extends CI_Controller
 
         curl_close($curl);
 
-        /*
-        * Логируем всё, чтобы больше не гадать:
-        * - какой номер реально отправили;
-        * - HTTP status;
-        * - ответ SMS-провайдера;
-        * - cURL error.
-        */
         $this->db->insert('paynet_logs', [
             'order_id' => 'certificate sms',
             'message' => $curlError
                 ? 'SMS CURL ERROR'
                 : 'SMS RESPONSE',
             'response' => json_encode([
-                'phone' => $fullNumber,
                 'http_code' => $httpCode,
-                'provider_response' => $response,
-                'curl_error' => $curlError,
             ], JSON_UNESCAPED_UNICODE),
             'date' => date('Y-m-d H:i:s'),
         ]);

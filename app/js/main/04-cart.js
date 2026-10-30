@@ -4,6 +4,7 @@ $('body').on('click', '.add_cart:not(.actions-info-card__cart)', function (e) {
 	var button = $(this)
 	var product = button.closest('[data-prod_id]')
 	var productId = product.data('prod_id')
+	var variableId = Number(product.data('product-variant')) || 0
 	var quantity = 1
 
 	var analyticsItem = null
@@ -47,6 +48,19 @@ $('body').on('click', '.add_cart:not(.actions-info-card__cart)', function (e) {
 				}
 
 				updateHeaderCartCount(data.total_items)
+
+				if (
+					window.VNB2CProductCart &&
+					typeof window.VNB2CProductCart.onCartAdd === 'function'
+				) {
+					window.VNB2CProductCart.onCartAdd({
+						productId: productId,
+						variantId: variableId,
+						rowId: data.row_id,
+						quantity: data.quantity || quantity,
+						maxQuantity: data.max_quantity
+					})
+				}
 
 				openCartDrawerAfterAdd(data)
 
