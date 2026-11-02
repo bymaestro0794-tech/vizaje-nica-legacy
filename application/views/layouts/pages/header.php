@@ -1848,9 +1848,15 @@ $wishlistUrl = $isRomanian
                             name="search"
                             id="head_search"
                             class="form-header-search__input"
-                            placeholder="<?= $isRomanian
-                                ? 'Caută cosmetice, branduri și categorii'
-                                : 'Поиск косметики, брендов, категорий' ?>"
+                            placeholder="<?= defined('WANT_TO_BUY')
+                                ? htmlspecialchars(
+                                    WANT_TO_BUY,
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                )
+                                : ($isRomanian
+                                    ? 'Căutați produse cosmetice, branduri și categorii'
+                                    : 'Поиск косметики, брендов и категорий') ?>"
                             autocomplete="off"
                             enterkeyhint="search"
                             aria-label="<?= $isRomanian

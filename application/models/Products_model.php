@@ -2191,6 +2191,8 @@ if (!empty($_SESSION['isb2b'])) {
         );
         $this->db->where('products.isShown', 1);
         $this->applyPublicProductCondition();
+        $this->db->where('products.discount_price >', 0);
+        $this->db->where("products.discount_price < products.price", null, false);
         $this->db->where('products.price >', 0);
         $this->db->where("categories.uri{$lang} != ''", null, false);
         $this->db->where("products.uri{$lang} != ''", null, false);
