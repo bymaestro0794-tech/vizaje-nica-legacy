@@ -15,11 +15,20 @@ class Meilisearch_catalog_sync
         $this->CI->load->library('meilisearch_client');
     }
 
-    public function getProductRows($afterId, $limit)
+    public function getProductRows($afterId, $limit, $phase = 'all')
     {
+        $whereSql = 'p.id > ?';
+        $bindings = array((int) $afterId);
+
+        if ($phase === 'bestsellers') {
+            $whereSql .= ' AND p.best_selling = 1';
+        } elseif ($phase === 'remaining') {
+            $whereSql .= ' AND (p.best_selling <> 1 OR p.best_selling IS NULL)';
+        }
+
         return $this->selectProductRows(
-            'p.id > ?',
-            array((int) $afterId),
+            $whereSql,
+            $bindings,
             max(1, min(1000, (int) $limit)),
             'p.id ASC'
         );

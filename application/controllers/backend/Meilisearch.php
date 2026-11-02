@@ -44,7 +44,8 @@ class Meilisearch extends BackEndController
             . '</style></head><body>'
             . '<h1>Индексация каталога</h1>'
             . '<p>Индекс: <strong>' . $index . '</strong></p>'
-            . '<p class="small">Видимые товары отправляются пакетами по 500. Повторная индексация обновляет документы, не очищая индекс. Кнопка настроек применяет синонимы и правила точного поиска.</p>'
+            . '<p class="small">Сначала индексируются отмеченные бестселлеры, затем остальные видимые товары пакетами по 500. Повторная индексация обновляет документы и не очищает индекс. Настройки применяют синонимы и правила точного поиска.</p>'
+            . '<p class="small">Документов сейчас в индексе: <strong id="index-document-count">загрузка…</strong></p>'
             . '<button id="start" type="button">Запустить индексацию</button>'
             . '<button id="apply-settings" type="button" style="margin-left:8px;background:#555">Применить настройки поиска</button>'
             . '<pre id="status">Готово к запуску.</pre>'
@@ -64,6 +65,18 @@ class Meilisearch extends BackEndController
                     var synonymsInput = document.getElementById("synonym-groups");
                     var output = document.getElementById("status");
                     function report(message) { output.textContent += "\\n" + message; }
+                    async function refreshIndexStats() {
+                        var count = document.getElementById("index-document-count");
+                        try {
+                            var response = await fetch("/cp/meilisearch/stats", { credentials: "same-origin" });
+                            if (response.redirected) throw new Error("Сессия администратора истекла.");
+                            var result = await response.json();
+                            if (!response.ok || !result.ok) throw new Error(result.message || ("HTTP " + response.status));
+                            count.textContent = Number(result.number_of_documents || 0).toLocaleString("ru-RU");
+                        } catch (error) {
+                            count.textContent = "не удалось загрузить";
+                        }
+                    }
                     async function waitForTask(taskUid, label) {
                         if (!taskUid) return;
                         var deadline = Date.now() + 300000;
@@ -148,43 +161,54 @@ class Meilisearch extends BackEndController
                         }
                     });
                     button.addEventListener("click", async function () {
-                        var afterId = 0;
                         var total = 0;
                         var lastTaskUid = null;
+                        var phases = [
+                            { key: "bestsellers", label: "Бестселлеры" },
+                            { key: "remaining", label: "Остальные товары" }
+                        ];
                         button.disabled = true;
                         settingsButton.disabled = true;
-                        output.textContent = "Индексация запущена…";
+                        output.textContent = "Сначала индексируются бестселлеры…";
                         try {
-                            while (true) {
-                                var response = await fetch("/cp/meilisearch/reindex", {
-                                    method: "POST",
-                                    credentials: "same-origin",
-                                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                                    body: new URLSearchParams({ after_id: String(afterId), limit: "500" })
-                                });
-                                if (response.redirected) {
-                                    throw new Error("Сессия администратора истекла. Войди в админку и открой эту страницу снова.");
-                                }
-                                var result = await response.json();
-                                if (!response.ok || !result.ok) {
-                                    throw new Error(result.message || ("HTTP " + response.status));
-                                }
-                                total += result.indexed;
-                                report("Отправлено товаров: " + total + "; последний ID: " + result.next_after_id);
-                                if (result.task && (result.task.taskUid || result.task.uid)) {
-                                    lastTaskUid = result.task.taskUid || result.task.uid;
-                                }
-                                if (result.settings_task && (result.settings_task.taskUid || result.settings_task.uid)) {
-                                    lastTaskUid = result.settings_task.taskUid || result.settings_task.uid;
-                                }
-                                afterId = result.next_after_id;
-                                if (!result.has_more) {
-                                    report("Все пакеты отправлены. Проверяю завершение очереди Meilisearch…");
-                                    await waitForTask(lastTaskUid, "Индексация");
-                                    report("Готово. Индексация завершена; отправлено товаров: " + total);
-                                    break;
+                            for (var phaseIndex = 0; phaseIndex < phases.length; phaseIndex++) {
+                                var phase = phases[phaseIndex];
+                                var afterId = 0;
+                                var phaseTotal = 0;
+                                while (true) {
+                                    var response = await fetch("/cp/meilisearch/reindex", {
+                                        method: "POST",
+                                        credentials: "same-origin",
+                                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                                        body: new URLSearchParams({ after_id: String(afterId), limit: "500", phase: phase.key })
+                                    });
+                                    if (response.redirected) {
+                                        throw new Error("Сессия администратора истекла. Войди в админку и открой эту страницу снова.");
+                                    }
+                                    var result = await response.json();
+                                    if (!response.ok || !result.ok) {
+                                        throw new Error(result.message || ("HTTP " + response.status));
+                                    }
+                                    total += result.indexed;
+                                    phaseTotal += result.indexed;
+                                    report(phase.label + ": отправлено " + phaseTotal + "; всего " + total + "; последний ID: " + result.next_after_id);
+                                    if (result.task && (result.task.taskUid || result.task.uid)) {
+                                        lastTaskUid = result.task.taskUid || result.task.uid;
+                                    }
+                                    if (result.settings_task && (result.settings_task.taskUid || result.settings_task.uid)) {
+                                        lastTaskUid = result.settings_task.taskUid || result.settings_task.uid;
+                                    }
+                                    afterId = result.next_after_id;
+                                    if (!result.has_more) {
+                                        report(phase.label + ": пакеты отправлены.");
+                                        break;
+                                    }
                                 }
                             }
+                            report("Все пакеты отправлены. Проверяю завершение очереди Meilisearch…");
+                            await waitForTask(lastTaskUid, "Индексация");
+                            report("Готово. Индексация завершена; отправлено товаров: " + total);
+                            await refreshIndexStats();
                         } catch (error) {
                             report("Ошибка: " + error.message);
                         } finally {
@@ -192,6 +216,7 @@ class Meilisearch extends BackEndController
                             settingsButton.disabled = false;
                         }
                     });
+                    refreshIndexStats();
                 }());
             </script></body></html>';
 
@@ -270,6 +295,24 @@ class Meilisearch extends BackEndController
             'ok' => $health !== false,
             'health' => $health,
         ), $health === false ? 502 : 200);
+    }
+
+    /** GET /cp/meilisearch/stats */
+    public function stats()
+    {
+        $stats = $this->meilisearch_client->getIndexStats((string) config_item('meilisearch_index'));
+        if ($stats === false) {
+            return $this->json(array(
+                'ok' => false,
+                'message' => 'Не удалось получить статистику индекса: ' . $this->meilisearch_client->getLastError(),
+            ), 502);
+        }
+
+        return $this->json(array(
+            'ok' => true,
+            'number_of_documents' => (int) ($stats['numberOfDocuments'] ?? 0),
+            'is_indexing' => !empty($stats['isIndexing']),
+        ));
     }
 
     /**
@@ -447,7 +490,8 @@ class Meilisearch extends BackEndController
      *
      * Incremental/idempotent batch reindex. The caller may send:
      * - after_id: last product id already processed;
-     * - limit: batch size, capped at 1000.
+     * - limit: batch size, capped at 1000;
+     * - phase: bestsellers, remaining, or all.
      *
      * The index is never cleared here. This makes the first rollout safe and
      * avoids touching an index that could be shared by another service.
@@ -473,8 +517,12 @@ class Meilisearch extends BackEndController
         $afterId = max(0, (int) $this->input->post('after_id', true));
         $limit = (int) $this->input->post('limit', true);
         $limit = $limit > 0 ? min($limit, 1000) : 500;
+        $phase = (string) $this->input->post('phase', true);
+        if (!in_array($phase, array('bestsellers', 'remaining', 'all'), true)) {
+            $phase = 'all';
+        }
 
-        $rows = $this->meilisearch_catalog_sync->getProductRows($afterId, $limit);
+        $rows = $this->meilisearch_catalog_sync->getProductRows($afterId, $limit, $phase);
         $documents = array();
 
         foreach ($rows as $row) {
@@ -495,24 +543,24 @@ class Meilisearch extends BackEndController
                 ), 502);
             }
 
-            $settingsTask = null;
-            if ($afterId === 0) {
-                $settingsTask = $this->meilisearch_client->updateSettings(
-                    (string) config_item('meilisearch_index'),
-                    $this->indexSettings()
-                );
-
-                if ($settingsTask === false) {
-                    return $this->json(array(
-                        'ok' => false,
-                        'message' => 'Documents were accepted, but index settings were not accepted.',
-                        'task' => $task,
-                    ), 502);
-                }
-            }
         } else {
             $task = null;
-            $settingsTask = null;
+        }
+
+        $settingsTask = null;
+        if ($afterId === 0 && in_array($phase, array('bestsellers', 'all'), true)) {
+            $settingsTask = $this->meilisearch_client->updateSettings(
+                (string) config_item('meilisearch_index'),
+                $this->indexSettings()
+            );
+
+            if ($settingsTask === false) {
+                return $this->json(array(
+                    'ok' => false,
+                    'message' => 'Documents were accepted, but index settings were not accepted.',
+                    'task' => $task,
+                ), 502);
+            }
         }
 
         $lastId = $afterId;
@@ -524,6 +572,7 @@ class Meilisearch extends BackEndController
         return $this->json(array(
             'ok' => true,
             'index' => (string) config_item('meilisearch_index'),
+            'phase' => $phase,
             'indexed' => count($documents),
             'after_id' => $afterId,
             'next_after_id' => $lastId,
@@ -597,6 +646,7 @@ class Meilisearch extends BackEndController
             array('тушь', 'тушь для ресниц', 'mascara', 'rimel'),
             array('помада', 'губная помада', 'ruj', 'lipstick'),
             array('clarins', 'кларинс', 'кларанс', 'кларенс'),
+            array('matis', 'matis paris', 'матис', 'матис париж', 'мэтис'),
             array('double serum', 'двойная сыворотка', 'добле серум'),
             array('double', 'добле'),
             array('serum', 'серум'),
@@ -661,7 +711,56 @@ class Meilisearch extends BackEndController
             }
         }
 
-        return empty($validGroups) ? $this->defaultSearchSynonymGroups() : $validGroups;
+        if (empty($validGroups)) {
+            return $this->defaultSearchSynonymGroups();
+        }
+
+        return $this->ensureMatisSynonymGroup($validGroups);
+    }
+
+    private function ensureMatisSynonymGroup(array $groups)
+    {
+        $aliases = array('matis', 'matis paris', 'матис', 'матис париж', 'мэтис');
+        $normalize = static function ($term) {
+            $term = preg_replace('/\s+/u', ' ', trim((string) $term));
+            return function_exists('mb_strtolower')
+                ? mb_strtolower($term, 'UTF-8')
+                : strtolower($term);
+        };
+        $aliasKeys = array();
+        foreach ($aliases as $alias) {
+            $aliasKeys[$normalize($alias)] = true;
+        }
+
+        foreach ($groups as $index => $group) {
+            $containsMatis = false;
+            foreach ($group as $term) {
+                if (isset($aliasKeys[$normalize($term)])) {
+                    $containsMatis = true;
+                    break;
+                }
+            }
+
+            if (!$containsMatis) {
+                continue;
+            }
+
+            $termsByKey = array();
+            foreach ($group as $term) {
+                $termsByKey[$normalize($term)] = $term;
+            }
+            foreach ($aliases as $alias) {
+                $key = $normalize($alias);
+                if (!isset($termsByKey[$key])) {
+                    $termsByKey[$key] = $alias;
+                }
+            }
+            $groups[$index] = array_values($termsByKey);
+            return array_values($groups);
+        }
+
+        $groups[] = $aliases;
+        return $groups;
     }
 
     private function buildSynonymMap(array $groups)

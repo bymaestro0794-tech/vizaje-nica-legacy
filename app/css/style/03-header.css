@@ -3943,6 +3943,7 @@ body:has(.search-actions-main-header.is-open) [id*='jivo'] {
 		line-height: 52px;
 		letter-spacing: 0;
 		text-align: left;
+		color: #343434;
 	}
 
 	.form-header-search__completion {
@@ -4394,6 +4395,82 @@ body:has(.search-actions-main-header.is-open) [id*='jivo'] {
 		border: 1px solid rgba(255, 255, 255, 0.7);
 		font-size: 20px;
 		pointer-events: auto;
+	}
+}
+
+/* Keep the longer search prompt legible while allowing it to fit the input. */
+.form-header-search__input::placeholder {
+	font-size: 30px;
+}
+
+.form-header-search__search--ro .form-header-search__input::placeholder {
+	font-size: 26px;
+}
+
+@media (max-width: 991px) {
+	.form-header-search__input::placeholder {
+		font-size: 17px;
+	}
+
+	.form-header-search__search--ro .form-header-search__input::placeholder {
+		font-size: 15px;
+	}
+}
+
+@media (max-width: 560px) {
+	.form-header-search__input::placeholder {
+		font-size: 13px;
+	}
+
+	.form-header-search__search--ro .form-header-search__input::placeholder {
+		font-size: 11px;
+	}
+}
+
+.header-search-store-notice {
+	margin: 0 0 24px;
+	padding: 16px 18px;
+	border: 1px solid #e6e1dc;
+	background: #faf8f6;
+}
+
+.header-search-store-notice__eyebrow {
+	margin: 0 0 7px;
+	color: #8b6d5d;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: .08em;
+	text-transform: uppercase;
+}
+
+.header-search-store-notice__message {
+	margin: 0;
+	font-size: 15px;
+	font-weight: 600;
+	line-height: 1.45;
+}
+
+.header-search-store-notice__address {
+	margin: 6px 0 0;
+	color: #666;
+	font-size: 13px;
+	line-height: 1.45;
+}
+
+.header-search-store-notice__link {
+	display: inline-block;
+	margin-top: 10px;
+	color: #111;
+	font-size: 13px;
+	font-weight: 600;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+@media (max-width: 767px) {
+	.header-search-store-notice {
+		margin: 0 0 16px;
+		padding: 13px 14px;
 	}
 }
 

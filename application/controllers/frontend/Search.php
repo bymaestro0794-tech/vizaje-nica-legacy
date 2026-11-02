@@ -87,7 +87,9 @@ class Search extends FrontEndController
         }
 
         if ($trackSearchQuery) {
-            $navigationTarget = $this->getExactSearchNavigationTarget($search);
+            $navigationTarget = $this->getMallExclusiveStoreNotice($search) === null
+                ? $this->getExactSearchNavigationTarget($search)
+                : false;
             if ($navigationTarget !== false) {
                 redirect($navigationTarget, 'location', 302);
                 return;
@@ -189,6 +191,7 @@ class Search extends FrontEndController
         }
 
         $this->data['search'] = $search;
+        $this->data['search_store_notice'] = $this->getMallExclusiveStoreNotice($search);
         $this->data['search_track_zero_result'] = $search !== ''
             && $count === 0
             && !$hasActiveFilters;
@@ -619,10 +622,9 @@ class Search extends FrontEndController
         $this->data['search_recent_queries'] = $this->normalizeSearchHistory(
             $this->input->post('recent_queries')
         );
+        $this->data['search_store_notice'] = $this->getMallExclusiveStoreNotice($query);
         $this->data['popular_categories'] = array();
         $this->data['popular_brands'] = array();
-        $this->data['popular_search_queries'] = array();
-        $this->data['matching_popular_search_queries'] = array();
         $this->data['search_inline_completion'] = '';
         $this->data['search_related_brands'] = array();
         $this->data['search_fallback_products'] = array();
@@ -727,6 +729,9 @@ class Search extends FrontEndController
             $brandSearchQuery = !empty($this->data['search_corrected_query'])
                 ? (string) $this->data['search_corrected_query']
                 : $query;
+            if (empty($this->data['search_store_notice'])) {
+                $this->data['search_store_notice'] = $this->getMallExclusiveStoreNotice($brandSearchQuery);
+            }
             $matchedBrand = $this->findExactSearchBrand($brandSearchQuery, $this->data['brands_nav']);
 
             if (!empty($matchedBrand)) {
@@ -782,20 +787,9 @@ class Search extends FrontEndController
                     : 'Результаты по запросу: ' . $query;
             }
 
-            if ($this->hasSearchAnalyticsConsent()) {
-                $popularQueryPrefix = !empty($this->data['search_corrected_query'])
-                    ? (string) $this->data['search_corrected_query']
-                    : $query;
-                $this->data['matching_popular_search_queries'] = $this->site_analytics_model
-                    ->get_matching_popular_search_queries($popularQueryPrefix, 5, 30);
-            }
-
             $completionCandidates = array();
             foreach ((array) $this->data['search_recent_queries'] as $recentQuery) {
                 $completionCandidates[] = $recentQuery;
-            }
-            foreach ((array) $this->data['matching_popular_search_queries'] as $popularQuery) {
-                $completionCandidates[] = $popularQuery;
             }
             foreach ((array) $this->data['brands_nav'] as $brand) {
                 $completionCandidates[] = $brand->title ?? '';
@@ -989,6 +983,100 @@ class Search extends FrontEndController
         return false;
     }
 
+    /**
+     * Show shoppers where Dior and Guerlain can be purchased when those
+     * brand names appear in either the live search panel or full results.
+     */
+    private function getMallExclusiveStoreNotice($query)
+    {
+        $query = trim((string) $query);
+        if ($query === '') {
+            return null;
+        }
+
+        $normalizedQuery = function_exists('mb_strtolower')
+            ? mb_strtolower($query, 'UTF-8')
+            : strtolower($query);
+        $normalizedQuery = str_replace('ё', 'е', $normalizedQuery);
+        $diorMatch = preg_match('/(?<![\p{L}\p{N}])(?:dior|диор)(?![\p{L}\p{N}])/iu', $normalizedQuery) === 1;
+        $guerlainMatch = preg_match('/(?<![\p{L}\p{N}])(?:guerlain|герлен|герлэн|герлайн|герлин)(?![\p{L}\p{N}])/iu', $normalizedQuery) === 1;
+        if (!$diorMatch && !$guerlainMatch) {
+            return null;
+        }
+
+        $storeName = 'MallDova';
+        $address = $this->clang === 'RO'
+            ? 'str. Arborilor 21, etajul 1, Chișinău'
+            : 'ул. Arborilor 21, первый этаж, Кишинёв';
+        $coordinates = '';
+
+        $mallStoreCacheKey = 'header_search_mall_store_v1_' . strtolower((string) $this->clang);
+        $mallStore = $this->cache->get($mallStoreCacheKey);
+        if (!is_array($mallStore)) {
+            $mallStore = array();
+            if (isset($this->stores_model) && method_exists($this->stores_model, 'get_stores')) {
+                foreach ((array) $this->stores_model->get_stores($this->clang) as $store) {
+                    $storeDetails = implode(' ', array(
+                        (string) ($store->title ?? ''),
+                        (string) ($store->text ?? ''),
+                        (string) ($store->desc ?? ''),
+                    ));
+                    if (!preg_match('/mall\s*dova|moldova\s*mall|arborilor.{0,30}21/iu', $storeDetails)) {
+                        continue;
+                    }
+
+                    $rawAddress = (string) ($store->text ?? '');
+                    $rawAddress = preg_replace('/<\s*br\s*\/?\s*>|<\s*\/(?:p|div|li)\s*>/iu', ' ', $rawAddress);
+                    $storeAddress = html_entity_decode(
+                        trim(preg_replace('/\s+/u', ' ', strip_tags($rawAddress))),
+                        ENT_QUOTES,
+                        'UTF-8'
+                    );
+                    $mallStore = array(
+                        'title' => trim(strip_tags((string) ($store->title ?? ''))),
+                        'address' => $storeAddress,
+                        'coords' => trim((string) ($store->coords ?? '')),
+                    );
+                    break;
+                }
+            }
+            $this->cache->save($mallStoreCacheKey, $mallStore, 1800);
+        }
+
+        if (!empty($mallStore)) {
+            $storeName = trim((string) ($mallStore['title'] ?? '')) ?: $storeName;
+            $storeAddress = trim((string) ($mallStore['address'] ?? ''));
+            if ($storeAddress !== '') {
+                $address = $storeAddress;
+            }
+            $coordinates = trim((string) ($mallStore['coords'] ?? ''));
+        }
+
+        $brandNames = array();
+        if ($diorMatch) $brandNames[] = 'Dior';
+        if ($guerlainMatch) $brandNames[] = 'Guerlain';
+        $brands = implode($this->clang === 'RO' ? ' și ' : ' и ', $brandNames);
+        if ($this->clang === 'RO') {
+            $message = count($brandNames) > 1
+                ? $brands . ' sunt disponibile doar în magazinul ' . $storeName . '.'
+                : 'Brandul ' . $brands . ' este disponibil doar în magazinul ' . $storeName . '.';
+        } else {
+            $message = count($brandNames) > 1
+                ? $brands . ' доступны только в магазине ' . $storeName . '.'
+                : $brands . ' доступен только в магазине ' . $storeName . '.';
+        }
+
+        $mapQuery = preg_match('/^-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?$/', $coordinates)
+            ? $coordinates
+            : $address;
+
+        return array(
+            'message' => $message,
+            'address' => $address,
+            'map_url' => 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode($mapQuery),
+        );
+    }
+
     private function setPopularSearchNavigation($excludeBrandId = 0, $useCuratedLandingLists = false)
     {
         $this->load->driver('cache', array(
@@ -1002,12 +1090,7 @@ class Search extends FrontEndController
         if (!is_array($popular)) {
             $popular = $this->analytics_model->get_header_search_popular(10);
         }
-        if (!isset($popular['search_queries']) || !is_array($popular['search_queries'])) {
-            $popular['search_queries'] = $this->site_analytics_model->get_popular_search_queries(5, 30);
-        }
         $this->cache->save($cacheKey, $popular, 300);
-
-        $this->data['popular_search_queries'] = array_slice($popular['search_queries'], 0, 3);
 
         if ($useCuratedLandingLists) {
             $this->data['popular_categories'] = $this->getCuratedInitialSearchCategories();
@@ -1040,7 +1123,7 @@ class Search extends FrontEndController
 
     private function getCuratedInitialSearchCategories()
     {
-        $cacheKey = 'header_search_curated_categories_v1_' . strtolower((string) $this->clang);
+        $cacheKey = 'header_search_curated_categories_v2_' . strtolower((string) $this->clang);
         $cachedCategories = $this->cache->get($cacheKey);
         if (is_array($cachedCategories)) {
             return $cachedCategories;
@@ -1050,9 +1133,6 @@ class Search extends FrontEndController
             'Тональные средства',
             'Парфюмированная вода для женщин',
             'Тушь',
-            'Нишевая парфюмерия',
-            'Пудры',
-            'Помада для губ',
         );
         $categories = (array) $this->categories_model->get_categories_by_ru_titles(
             $this->clang,
@@ -1085,13 +1165,13 @@ class Search extends FrontEndController
 
     private function getCuratedInitialSearchBrands()
     {
-        $cacheKey = 'header_search_curated_brands_v1_' . strtolower((string) $this->clang);
+        $cacheKey = 'header_search_curated_brands_v2_' . strtolower((string) $this->clang);
         $cachedBrands = $this->cache->get($cacheKey);
         if (is_array($cachedBrands)) {
             return $cachedBrands;
         }
 
-        $titles = array('Clarins', 'Pupa', 'MAC', 'Artdeco', 'Divage', 'Clinique', 'Naj Oleari');
+        $titles = array('Clarins', 'Pupa', 'MAC', 'Artdeco');
         $normalize = static function ($value) {
             $value = trim((string) $value);
             if (function_exists('iconv')) {

@@ -1428,6 +1428,19 @@ body._order-page .vn-checkout-phone__confirm[hidden] {
 	background: var(--b2c-color-cream);
 }
 
+@media (max-width: 767px) {
+	.form-header-search__input,
+	.form-header-search__input:focus {
+		color: #343434;
+		-webkit-text-fill-color: #343434;
+	}
+
+	.form-header-search__input::placeholder {
+		color: #343434;
+		opacity: 1;
+	}
+}
+
 .form-header-search__submit:focus-visible {
 	outline: 0;
 	box-shadow: var(--b2c-focus-ring);

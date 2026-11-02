@@ -49,6 +49,16 @@ class Meilisearch_client
         );
     }
 
+    public function getIndexStats($index)
+    {
+        return $this->request(
+            'GET',
+            '/indexes/' . rawurlencode((string) $index) . '/stats',
+            null,
+            true
+        );
+    }
+
     public function createIndex($index, $primaryKey = 'id')
     {
         return $this->request(

@@ -1307,6 +1307,9 @@
 			return Boolean(search?.classList.contains('is-open'))
 		}
 
+		let pointerOpenedSearchButton = null
+		let pointerOpenedSearchTimer = null
+
 		const updateSearchTop = () => {
 			if (!search) {
 				return
@@ -1359,6 +1362,9 @@
 			header.classList.add('is-search-open')
 
 			search.setAttribute('aria-hidden', 'false')
+			searchInput.focus({
+				preventScroll: true
+			})
 			window.dispatchEvent(new Event('vn:header-search-opened'))
 
 			header.querySelectorAll(SELECTORS.searchOpen).forEach(button => {
@@ -1801,6 +1807,41 @@
 		   Click delegation
 		   ========================================================== */
 
+		/*
+		 * Open on pointerdown so the input receives focus during the user's
+		 * original gesture (especially important for the mobile keyboard).
+		 * Prevent the follow-up click from immediately toggling the panel closed.
+		 */
+		document.addEventListener('pointerdown', event => {
+			const target = event.target
+
+			if (!(target instanceof Element) || event.button !== 0) {
+				return
+			}
+
+			const searchOpenButton = target.closest(SELECTORS.searchOpen)
+			if (!searchOpenButton) {
+				return
+			}
+
+			if (isSearchOpen()) {
+				if (pointerOpenedSearchButton === searchOpenButton) {
+					pointerOpenedSearchButton = null
+					window.clearTimeout(pointerOpenedSearchTimer)
+				}
+				return
+			}
+
+			event.preventDefault()
+			pointerOpenedSearchButton = searchOpenButton
+			window.clearTimeout(pointerOpenedSearchTimer)
+			pointerOpenedSearchTimer = window.setTimeout(() => {
+				pointerOpenedSearchButton = null
+			}, 750)
+
+			openSearch(searchOpenButton)
+		}, true)
+
 		document.addEventListener('click', event => {
 			const target = event.target
 
@@ -1935,6 +1976,12 @@
 
 			if (searchOpenButton) {
 				event.preventDefault()
+
+				if (pointerOpenedSearchButton === searchOpenButton) {
+					pointerOpenedSearchButton = null
+					window.clearTimeout(pointerOpenedSearchTimer)
+					return
+				}
 
 				if (isSearchOpen()) {
 					closeSearch({

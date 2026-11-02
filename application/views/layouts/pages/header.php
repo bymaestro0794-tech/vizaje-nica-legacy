@@ -1838,7 +1838,7 @@ $wishlistUrl = $isRomanian
                             ENT_QUOTES,
                             'UTF-8'
                         ) ?>"
-                        class="form-header-search__search"
+                        class="form-header-search__search<?= $isRomanian ? ' form-header-search__search--ro' : '' ?>"
                         method="get"
                         role="search"
                     >
@@ -1848,15 +1848,9 @@ $wishlistUrl = $isRomanian
                             name="search"
                             id="head_search"
                             class="form-header-search__input"
-                            placeholder="<?= defined('WANT_TO_BUY')
-                                ? htmlspecialchars(
-                                    WANT_TO_BUY,
-                                    ENT_QUOTES,
-                                    'UTF-8'
-                                )
-                                : ($isRomanian
-                                    ? 'Ce căutați?'
-                                    : 'Что вы ищете?') ?>"
+                            placeholder="<?= $isRomanian
+                                ? 'Caută cosmetice, branduri și categorii'
+                                : 'Поиск косметики, брендов, категорий' ?>"
                             autocomplete="off"
                             enterkeyhint="search"
                             aria-label="<?= $isRomanian

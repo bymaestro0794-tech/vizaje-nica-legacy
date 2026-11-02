@@ -84,6 +84,22 @@
                 </p>
             <?php } ?>
 
+            <?php if (!empty($search_store_notice['message'])) { ?>
+                <aside class="search-results__store-notice" role="note">
+                    <div>
+                        <strong><?= html_escape((string) $search_store_notice['message']) ?></strong>
+                        <?php if (!empty($search_store_notice['address'])) { ?>
+                            <p><?= html_escape((string) $search_store_notice['address']) ?></p>
+                        <?php } ?>
+                    </div>
+                    <?php if (!empty($search_store_notice['map_url'])) { ?>
+                        <a href="<?= html_escape((string) $search_store_notice['map_url']) ?>" target="_blank" rel="noopener noreferrer">
+                            <?= $isRomanianSearchPage ? 'Vezi pe hartă' : 'Посмотреть на карте' ?>
+                        </a>
+                    <?php } ?>
+                </aside>
+            <?php } ?>
+
             <?php if (!empty($search_corrected_query)) { ?>
                 <p class="search-results__correction">
                     <?= $isRomanianSearchPage ? 'Ați vrut să spuneți:' : 'Возможно, вы искали:' ?>

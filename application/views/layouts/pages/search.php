@@ -12,9 +12,8 @@ $searchCategories = (array) ($categories ?? array());
 $searchBrands = (array) ($brands_nav ?? array());
 $popularCategories = (array) ($popular_categories ?? array());
 $popularBrands = (array) ($popular_brands ?? array());
-$popularSearchQueries = (array) ($popular_search_queries ?? array());
-$matchingPopularSearchQueries = (array) ($matching_popular_search_queries ?? array());
 $recentSearchQueries = (array) ($search_recent_queries ?? array());
+$searchStoreNotice = is_array($search_store_notice ?? null) ? $search_store_notice : array();
 $inlineCompletion = trim((string) ($search_inline_completion ?? ''));
 $relatedBrands = (array) ($search_related_brands ?? array());
 $searchWishlist = isset($wishlist) && is_array($wishlist) ? $wishlist : array();
@@ -153,23 +152,27 @@ $renderSearchLinkList = static function ($items, $heading, $root, $modifier = ''
     </main>
 
     <aside class="header-search-panel__aside">
+        <?php if (!empty($searchStoreNotice['message'])) { ?>
+            <section class="header-search-store-notice" role="note">
+                <p class="header-search-store-notice__eyebrow">
+                    <?= $isRomanianSearch ? 'Disponibil în magazin' : 'Доступно в магазине' ?>
+                </p>
+                <p class="header-search-store-notice__message">
+                    <?= htmlspecialchars((string) $searchStoreNotice['message'], ENT_QUOTES, 'UTF-8') ?>
+                </p>
+                <?php if (!empty($searchStoreNotice['address'])) { ?>
+                    <p class="header-search-store-notice__address">
+                        <?= htmlspecialchars((string) $searchStoreNotice['address'], ENT_QUOTES, 'UTF-8') ?>
+                    </p>
+                <?php } ?>
+                <?php if (!empty($searchStoreNotice['map_url'])) { ?>
+                    <a class="header-search-store-notice__link" href="<?= htmlspecialchars((string) $searchStoreNotice['map_url'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">
+                        <?= $isRomanianSearch ? 'Vezi pe hartă' : 'Посмотреть на карте' ?>
+                    </a>
+                <?php } ?>
+            </section>
+        <?php } ?>
         <?php if (($search_mode ?? '') === 'landing') { ?>
-            <?php if (!empty($popularSearchQueries)) { ?>
-                <section class="header-search-panel__section header-search-panel__section--popular">
-                    <h3 class="header-search-panel__section-title">
-                        <?= $isRomanianSearch ? 'Căutări populare' : 'Популярные запросы' ?>
-                    </h3>
-                    <ul class="header-search-panel__query-list">
-                        <?php foreach ($popularSearchQueries as $popularQuery) { ?>
-                            <li>
-                                <button type="button" data-search-query="<?= htmlspecialchars((string) $popularQuery, ENT_QUOTES, 'UTF-8') ?>">
-                                    <?= htmlspecialchars((string) $popularQuery, ENT_QUOTES, 'UTF-8') ?>
-                                </button>
-                            </li>
-                        <?php } ?>
-                    </ul>
-                </section>
-            <?php } ?>
             <?php $renderSearchLinkList(
                 $popularCategories,
                 $isRomanianSearch ? 'Categorii populare' : 'Популярные категории',
@@ -193,22 +196,6 @@ $renderSearchLinkList = static function ($items, $heading, $root, $modifier = ''
                             <li>
                                 <button type="button" data-search-query="<?= htmlspecialchars((string) $recentQuery, ENT_QUOTES, 'UTF-8') ?>">
                                     <?= htmlspecialchars((string) $recentQuery, ENT_QUOTES, 'UTF-8') ?>
-                                </button>
-                            </li>
-                        <?php } ?>
-                    </ul>
-                </section>
-            <?php } ?>
-            <?php if (!empty($matchingPopularSearchQueries)) { ?>
-                <section class="header-search-panel__section header-search-panel__section--popular-queries">
-                    <h3 class="header-search-panel__section-title">
-                        <?= $isRomanianSearch ? 'Căutări populare' : 'Популярные запросы' ?>
-                    </h3>
-                    <ul class="header-search-panel__query-list">
-                        <?php foreach ($matchingPopularSearchQueries as $popularQuery) { ?>
-                            <li>
-                                <button type="button" data-search-query="<?= htmlspecialchars((string) $popularQuery, ENT_QUOTES, 'UTF-8') ?>">
-                                    <?= htmlspecialchars((string) $popularQuery, ENT_QUOTES, 'UTF-8') ?>
                                 </button>
                             </li>
                         <?php } ?>
