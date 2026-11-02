@@ -3444,6 +3444,7 @@ body:has(.search-actions-main-header.is-open) [id*='jivo'] {
 	letter-spacing: .015em;
 	text-transform: uppercase;
 	opacity: 1;
+	font-size: calc(50px - 10px);
 }
 
 .form-header-search__submit {
@@ -3512,6 +3513,10 @@ body:has(.search-actions-main-header.is-open) [id*='jivo'] {
 
 	.form-header-search__submit {
 		right: -21.95%;
+	}
+
+	.form-header-search__input::placeholder {
+		font-size: calc(clamp(30px, 5vw, 46px) - 10px);
 	}
 	.header__announcement,
 	.header__mobile {

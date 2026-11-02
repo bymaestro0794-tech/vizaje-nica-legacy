@@ -1855,8 +1855,8 @@ $wishlistUrl = $isRomanian
                                     'UTF-8'
                                 )
                                 : ($isRomanian
-                                    ? 'Ce căutați?'
-                                    : 'Что вы ищете?') ?>"
+                                    ? 'Căutați produse cosmetice, branduri și categorii'
+                                    : 'Поиск косметики, брендов и категорий') ?>"
                             autocomplete="off"
                             enterkeyhint="search"
                             aria-label="<?= $isRomanian

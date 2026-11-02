@@ -2254,6 +2254,10 @@
 		font-size: 26px;
 	}
 
+	.form-header-search__input::placeholder {
+		font-size: 16px;
+	}
+
 	.form-header-search__lists {
 		-webkit-column-gap: 30px;
 		-moz-column-gap: 30px;
@@ -2686,6 +2690,10 @@
 	.form-header-search__input {
 		font-size: 18px;
 		padding-bottom: 0;
+	}
+
+	.form-header-search__input::placeholder {
+		font-size: 8px;
 	}
 
 	.form-header-search__lists {
