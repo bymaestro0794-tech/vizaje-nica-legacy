@@ -60,6 +60,9 @@ $route['404_override'] = 'pages/not_found';
 $route['translate_uri_dashes'] = FALSE;
 $route['sitemapGenerator'] = "pages/sitemapGenerator";
 
+// M5.1 internal, HMAC-authenticated catalog resolver.
+$route['internal/v1/referrals/resolve-target'] = 'internal_referrals/resolve_target';
+
 $route['api/orders/item'] = 'orders/item';
 $route['api/orders/demo'] = 'orders/demo';
 
