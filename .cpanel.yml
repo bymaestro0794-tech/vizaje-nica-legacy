@@ -1,8 +1,8 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/vizajeni/dev.vizaje-nica.com/
-    - test "$DEPLOYPATH" = "/home/vizajeni/dev.vizaje-nica.com/" && test -d "$DEPLOYPATH"
+    - export DEPLOYPATH=/home/vizajeni/developer.vizaje-nica.com/
+    - test "$DEPLOYPATH" = "/home/vizajeni/developer.vizaje-nica.com/" && test -d "$DEPLOYPATH"
     - cd "$(git rev-parse --show-toplevel)" && tar -cf -
       --exclude=".git" --exclude=".env"
       --exclude="application/config/database.php" --exclude="application/logs"
