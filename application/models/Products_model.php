@@ -16,6 +16,35 @@ class Products_model extends BaseModel
     }
 
     /**
+     * Exact route lookup used by the authenticated M5.1 resolver.
+     * Includes unpublished rows so the caller can distinguish unavailable
+     * entities from unknown routes and detect ambiguous public URIs.
+     */
+    public function find_referral_route_products($categoryId, $locale, $productUri)
+    {
+        $uriField = $locale === 'ru' ? 'uriRU' : ($locale === 'ro' ? 'uriRO' : null);
+        if ($uriField === null || (int) $categoryId < 1 || !is_string($productUri)) {
+            return array();
+        }
+
+        $guidField = $this->db->field_exists('GUID', $this->tblname)
+            ? 'GUID'
+            : 'NULL';
+        $giftField = $this->db->field_exists('isGift', $this->tblname)
+            ? 'isGift'
+            : '0';
+
+        return $this->db
+            ->select("id, category_id, {$uriField} AS route_uri, uriRU, uriRO, isShown, {$guidField} AS source_guid, {$giftField} AS is_gift", false)
+            ->from($this->tblname)
+            ->where('category_id', (int) $categoryId)
+            ->where($uriField, $productUri)
+            ->limit(2)
+            ->get()
+            ->result();
+    }
+
+    /**
      * Decide whether a product page should be indexed.
      * `seo_indexable` is nullable: NULL means automatic, 1/0 are overrides.
      */

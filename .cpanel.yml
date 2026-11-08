@@ -2,10 +2,5 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/vizajeni/public_html/
-    - cd /home/vizajeni/repositories/vizaje-nica-prod && tar -cf -
-      --exclude=".git" --exclude=".env"
-      --exclude="application/config/database.php" --exclude="application/logs"
-      --exclude="public/uploads" . | (cd "$DEPLOYPATH" && tar -xf -
-      --no-same-permissions --no-same-owner)
-    - find "$DEPLOYPATH" -type d -exec chmod 755 {} +
-    - find "$DEPLOYPATH" -type f -exec chmod 644 {} +
+    - test "$DEPLOYPATH" = "/home/vizajeni/public_html/" && test -d "$DEPLOYPATH" && test -w "$DEPLOYPATH"
+    - cd "$(git rev-parse --show-toplevel)" && set -o pipefail && git archive --format=tar HEAD | tar -xf - -C "$DEPLOYPATH" --no-same-permissions --no-same-owner --exclude='application/config/database.php' --exclude='application/logs' --exclude='application/cache/vn_frontend_*' --exclude='public/uploads' --exclude='site-meilisearch.env' --exclude='.env'

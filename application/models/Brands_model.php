@@ -10,6 +10,22 @@ class Brands_model extends BaseModel
         parent::__construct();
     }
 
+    /** Exact shared brand URI lookup for the M5.1 resolver (including hidden rows). */
+    public function find_referral_route_brands($brandUri)
+    {
+        if (!is_string($brandUri)) {
+            return array();
+        }
+
+        return $this->db
+            ->select('id, uri, isShown')
+            ->from($this->tblname)
+            ->where('uri', $brandUri)
+            ->limit(2)
+            ->get()
+            ->result();
+    }
+
     public function get_brands()
     {
         $this->db->select("

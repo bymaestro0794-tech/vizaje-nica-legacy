@@ -9,6 +9,23 @@ class Categories_model extends BaseModel
     {
         parent::__construct();
     }
+
+    /** Exact localized route lookup for the M5.1 resolver (including hidden rows). */
+    public function find_referral_route_categories($locale, $categoryUri)
+    {
+        $uriField = $locale === 'ru' ? 'uriRU' : ($locale === 'ro' ? 'uriRO' : null);
+        if ($uriField === null || !is_string($categoryUri)) {
+            return array();
+        }
+
+        return $this->db
+            ->select("id, parent_id, {$uriField} AS route_uri, uriRU, uriRO, isShown", false)
+            ->from($this->tblname)
+            ->where($uriField, $categoryUri)
+            ->limit(2)
+            ->get()
+            ->result();
+    }
     public function getCategories($lang = 'RO')
     {
         return $this->db->select(['id', 'title' . $lang . ' AS title', 'parent_id', 'uri' . $lang . ' AS uri', 'parent_id', 'step'])->where(['isShown' => 1])->order_by('sorder ASC, id DESC')->get($this->tblname)->result();
