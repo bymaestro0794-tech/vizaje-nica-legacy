@@ -1710,40 +1710,48 @@
        COLOR PICKER -> TEXT
        ================================================================ */
 
+    function syncColorPickerToValue(event) {
+        if (
+            !event.target.matches(
+                '[data-variant-color-picker]'
+            )
+        ) {
+            return;
+        }
+
+        var row =
+            event.target.closest(
+                '[data-variant-color-row]'
+            );
+
+        if (!row) {
+            return;
+        }
+
+        var valueInput =
+            row.querySelector(
+                '[data-variant-color-value]'
+            );
+
+        if (!valueInput) {
+            return;
+        }
+
+        valueInput.value =
+            String(
+                event.target.value
+            ).toUpperCase();
+    }
+
+    /* Some browsers report the final color-picker selection on change. */
     document.addEventListener(
         'input',
-        function (event) {
-            if (
-                !event.target.matches(
-                    '[data-variant-color-picker]'
-                )
-            ) {
-                return;
-            }
+        syncColorPickerToValue
+    );
 
-            var row =
-                event.target.closest(
-                    '[data-variant-color-row]'
-                );
-
-            if (!row) {
-                return;
-            }
-
-            var valueInput =
-                row.querySelector(
-                    '[data-variant-color-value]'
-                );
-
-            if (!valueInput) {
-                return;
-            }
-
-            valueInput.value =
-                String(
-                    event.target.value
-                ).toUpperCase();
-        }
+    document.addEventListener(
+        'change',
+        syncColorPickerToValue
     );
 
     /* ================================================================
