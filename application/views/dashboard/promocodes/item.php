@@ -436,6 +436,9 @@ $brandIds =
 
                                             <span></span>
                                         </label>
+                                        <?php if (strtoupper(trim((string) ($item->code ?? ''))) === 'WELCOME18') : ?>
+                                            <p class="help-block">Если флажок снят, диалог и выдача WELCOME18 всё равно работают; скидка применяется только к товарам без другой скидки.</p>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
 

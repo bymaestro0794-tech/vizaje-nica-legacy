@@ -332,8 +332,9 @@ class Promocodes_model extends BaseModel
     }
 
     /**
-     * The welcome campaign is displayed only when its admin-managed promo
-     * matches the advertised terms and all three excluded brands are linked.
+     * Check that the admin-managed welcome campaign matches its fixed terms.
+     * Product-discount eligibility is evaluated per cart row and must not
+     * hide the whole offer or prevent it from being issued.
      */
     public function isWelcomeOfferConfigured($promo)
     {
@@ -344,7 +345,6 @@ class Promocodes_model extends BaseModel
             || (string) $promo->type !== 'percentage'
             || (float) $promo->value !== 18.0
             || (int) $promo->per_user_limit !== 1
-            || empty($promo->allow_discounted)
             || (string) $promo->brand_scope !== 'all'
             || $promo->min_amount !== null
             || $promo->max_discount !== null

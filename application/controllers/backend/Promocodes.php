@@ -282,6 +282,18 @@ public function item($id = 0)
                 );
             }
 
+            if (
+                strtoupper(trim((string) ($item->code ?? ''))) === 'WELCOME18'
+                || strtoupper(trim((string) ($post['code'] ?? ''))) === 'WELCOME18'
+            ) {
+                $this->load->driver('cache', array(
+                    'adapter' => 'file',
+                    'backup' => 'dummy',
+                    'key_prefix' => 'vn_frontend_',
+                ));
+                $this->cache->delete('welcome_promo_18');
+            }
+
             $_SESSION['success'] =
                 $this->success_edit;
         } catch (Exception $e) {
