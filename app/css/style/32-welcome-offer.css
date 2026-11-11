@@ -226,8 +226,8 @@ html.welcome-offer-lock body {
 	flex-wrap: wrap;
 	gap: 5px 12px;
 	padding: 10px 20px;
-	background: #f4f4f2;
-	color: #111;
+	background: #111;
+	color: #fff;
 	font-size: 12px;
 	line-height: 1.4;
 }
@@ -241,7 +241,7 @@ html.welcome-offer-lock body {
 }
 
 .welcome-offer-countdown small {
-	color: #696969;
+	color: rgba(255, 255, 255, .72);
 	font-size: 10px;
 }
 

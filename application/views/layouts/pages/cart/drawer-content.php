@@ -359,6 +359,12 @@ if (
     </div>
 </section>
 
+        <?php if (!empty($welcome_offer_timer)) : ?>
+            <div class="cart-drawer-welcome-offer">
+                <?php $this->load->view('layouts/pages/welcome-offer-countdown'); ?>
+            </div>
+        <?php endif; ?>
+
         <div
             class="cart-drawer-products"
             data-cart-products

@@ -2677,6 +2677,33 @@ public function cart_drawer()
             ? $this->data['client_info']
             : null;
 
+    $welcomeOfferTimer = null;
+    if (!empty($clientInfo)) {
+        $this->load->model('promocodes_model');
+        $welcomePromo = $this->promocodes_model->findByCode('WELCOME18');
+        $startedAt = !empty($clientInfo->welcome_offer_started_at)
+            ? strtotime($clientInfo->welcome_offer_started_at)
+            : false;
+        $expiresAt = !empty($clientInfo->welcome_offer_expires_at)
+            ? strtotime($clientInfo->welcome_offer_expires_at)
+            : false;
+
+        if (
+            $this->promocodes_model->isWelcomeOfferConfigured($welcomePromo)
+            && $startedAt
+            && $expiresAt
+            && $startedAt <= time()
+            && $expiresAt > time()
+            && $this->promocodes_model->countClientUsages($welcomePromo->id, $clientInfo->id) === 0
+            && $this->db->where('client_id', (int) $clientInfo->id)->count_all_results('orders') === 0
+        ) {
+            $welcomeOfferTimer = array(
+                'expires_at' => $expiresAt,
+                'code' => 'WELCOME18',
+            );
+        }
+    }
+
     $isB2B =
         !empty(
             $_SESSION['isb2b']
@@ -2784,6 +2811,9 @@ public function cart_drawer()
 
                 'client_info' =>
                     $clientInfo,
+
+                'welcome_offer_timer' =>
+                    $welcomeOfferTimer,
 
                 'is_b2b' =>
                     $isB2B,

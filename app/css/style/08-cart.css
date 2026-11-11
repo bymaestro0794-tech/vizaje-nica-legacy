@@ -3,6 +3,10 @@
 	padding-bottom: 60px;
 }
 
+.cart__welcome-offer-countdown {
+	margin: 18px 0;
+}
+
 .cart__head {
 	border-bottom: 2px solid #eaeaea;
 	padding-bottom: 20px;

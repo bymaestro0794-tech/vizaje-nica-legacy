@@ -18,12 +18,41 @@
 
 	let checkoutObserver = null
 	let activeActionRow = null
+	let welcomeCountdownInterval = null
 
 	/*
 	|--------------------------------------------------------------------------
 	| Helpers
 	|--------------------------------------------------------------------------
 	*/
+
+	function updateWelcomeCountdowns() {
+		document.querySelectorAll('[data-welcome-countdown]').forEach(function (element) {
+			var expiresAt = Number(element.dataset.expiresAt) * 1000
+			var output = element.querySelector('[data-welcome-countdown-value]')
+			if (!expiresAt || !output) return
+
+			var remaining = expiresAt - Date.now()
+			if (remaining <= 0) {
+				element.hidden = true
+				return
+			}
+
+			var seconds = Math.floor(remaining / 1000)
+			var days = Math.floor(seconds / 86400)
+			var hours = Math.floor((seconds % 86400) / 3600)
+			var minutes = Math.floor((seconds % 3600) / 60)
+			var rest = seconds % 60
+			output.textContent = element.dataset.language === 'ro'
+				? days + 'z ' + hours + 'h ' + minutes + 'm ' + rest + 's'
+				: days + 'д ' + hours + 'ч ' + minutes + 'м ' + rest + 'с'
+		})
+	}
+
+	updateWelcomeCountdowns()
+	if (!welcomeCountdownInterval) {
+		welcomeCountdownInterval = window.setInterval(updateWelcomeCountdowns, 1000)
+	}
 
 	function initStickyCheckout() {
 		const sticky = drawer.querySelector('[data-cart-drawer-sticky]')
@@ -241,6 +270,7 @@
 					}
 
 					body.innerHTML = response.html || ''
+					updateWelcomeCountdowns()
 
 					const sticky = drawer.querySelector('[data-cart-drawer-sticky]')
 

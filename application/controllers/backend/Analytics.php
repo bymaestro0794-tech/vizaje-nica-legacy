@@ -14,88 +14,46 @@ class Analytics extends BackEndController
 
     public function index()
     {
-        $range = $this->analytics_model->normalize_date_range(
-            $this->input->get('date_from', true),
-            $this->input->get('date_to', true)
-        );
+        $period = $this->normalize_period($this->input->get('period', true));
+        $range = $this->period_range($period);
 
-        $productSort = $this->input->get('product_sort', true);
-        $brandSort = $this->input->get('brand_sort', true);
-        $categorySort = $this->input->get('category_sort', true);
-        $direction = $this->input->get('direction', true);
-        $groupBy = $this->input->get('group_by', true);
-        $brandId = $this->input->get('brand_id', true);
-        $orderSource = $this->input->get('order_source', true);
-
-        $productSorts = array('quantity', 'revenue', 'orders', 'title');
-        $brandSorts = array('quantity', 'revenue', 'orders', 'title');
-        $categorySorts = array('quantity', 'revenue', 'orders', 'title');
-
-        if (!in_array($productSort, $productSorts, true)) {
-            $productSort = 'quantity';
-        }
-
-        if (!in_array($brandSort, $brandSorts, true)) {
-            $brandSort = 'quantity';
-        }
-
-        if (!in_array($categorySort, $categorySorts, true)) {
-            $categorySort = 'quantity';
-        }
-
-        if (!in_array($direction, array('asc', 'desc'), true)) {
-            $direction = 'desc';
-        }
-
-        if (!in_array($groupBy, array('day', 'month'), true)) {
-            $rangeStart = new DateTime($range['date_from']);
-            $rangeEnd = new DateTime($range['date_to']);
-            $rangeDays = (int) $rangeStart->diff($rangeEnd)->days;
-            $groupBy = $rangeDays <= 90 ? 'day' : 'month';
-        }
-
-        $orderSource = in_array($orderSource, array('web', 'app'), true) ? $orderSource : '';
-
-        $brandId = ctype_digit((string) $brandId) && (int) $brandId > 0
-            ? (int) $brandId
-            : null;
-
-        $this->data['date_from'] = $range['date_from'];
-        $this->data['date_to'] = $range['date_to'];
-        $this->data['product_sort'] = $productSort;
-        $this->data['brand_sort'] = $brandSort;
-        $this->data['category_sort'] = $categorySort;
-        $this->data['direction'] = $direction;
-        $this->data['group_by'] = $groupBy;
-        $this->data['brand_id'] = $brandId;
-        $this->data['order_source'] = $orderSource;
-        $previousRange = $this->previous_range($range);
-        $this->data['brands'] = $this->analytics_model->get_brands();
-        $this->data['analytics'] = $this->analytics_model->get_dashboard(
-            $range['from_datetime'],
-            $range['to_datetime'],
-            array(
-                'product_sort' => $productSort,
-                'brand_sort' => $brandSort,
-                'category_sort' => $categorySort,
-                'direction' => $direction,
-                'group_by' => $groupBy,
-                'brand_id' => $brandId,
-                'order_source' => $orderSource,
-            )
-        );
-        $this->data['previous_analytics'] = array('summary' => $this->analytics_model->get_summary_for_range(
-            $previousRange['from_datetime'],
-            $previousRange['to_datetime'],
-            array(
-                'brand_id' => $brandId,
-                'order_source' => $orderSource,
-            )
-        ));
+        $this->data['period'] = $period;
+        $this->data['period_label'] = $this->period_label($period);
+        $this->data['range_label'] = $range['date_from'] . ' — ' . $range['date_to'];
+        $this->data['analytics_data_url'] = '/' . ADM_CONTROLLER . '/analytics/data?period=' . rawurlencode($period);
 
         $this->data['inner_view'] = $this->index_view;
         $this->load->vars($this->data);
         $this->load->view($this->main_layout);
+    }
+
+    /** Load sales tables separately so the admin shell can render first. */
+    public function data()
+    {
+        $period = $this->normalize_period($this->input->get('period', true));
+        $range = $this->period_range($period);
+        $from = new DateTime($range['date_from']);
+        $to = new DateTime($range['date_to']);
+        $groupBy = (int) $from->diff($to)->days <= 90 ? 'day' : 'month';
+
+        $analytics = $this->analytics_model->get_popular_sales_dashboard(
+            $range['from_datetime'],
+            $range['to_datetime'],
+            $groupBy
+        );
+
+        $html = $this->load->view('dashboard/analytics/_sales_data', array(
+            'analytics' => $analytics,
+            'group_by' => $groupBy,
+        ), true);
+
+        $this->output
+            ->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode(array(
+                'ok' => true,
+                'html' => $html,
+                'range_label' => $range['date_from'] . ' — ' . $range['date_to'],
+            ), JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
     }
 
     public function funnel()
@@ -179,5 +137,51 @@ class Analytics extends BackEndController
             'from_datetime' => $previousFrom->format('Y-m-d 00:00:00'),
             'to_datetime' => $previousToExclusive->format('Y-m-d 00:00:00'),
         );
+    }
+
+    private function normalize_period($period)
+    {
+        $allowed = array('current_month', 'previous_month', 'last_3_months', 'year');
+        return in_array($period, $allowed, true) ? $period : 'current_month';
+    }
+
+    private function period_range($period)
+    {
+        $today = new DateTime('today');
+        $from = clone $today;
+        $to = clone $today;
+
+        if ($period === 'previous_month') {
+            $from->modify('first day of this month')->modify('-1 month');
+            $to = clone $from;
+            $to->modify('last day of this month');
+        } elseif ($period === 'last_3_months') {
+            $from->modify('first day of this month')->modify('-2 months');
+        } elseif ($period === 'year') {
+            $from->setDate((int) $today->format('Y'), 1, 1);
+        } else {
+            $from->modify('first day of this month');
+        }
+
+        $toExclusive = clone $to;
+        $toExclusive->modify('+1 day');
+
+        return array(
+            'date_from' => $from->format('Y-m-d'),
+            'date_to' => $to->format('Y-m-d'),
+            'from_datetime' => $from->format('Y-m-d 00:00:00'),
+            'to_datetime' => $toExclusive->format('Y-m-d 00:00:00'),
+        );
+    }
+
+    private function period_label($period)
+    {
+        $labels = array(
+            'current_month' => 'Этот месяц',
+            'previous_month' => 'Предыдущий месяц',
+            'last_3_months' => 'Последние 3 месяца',
+            'year' => 'Год',
+        );
+        return isset($labels[$period]) ? $labels[$period] : $labels['current_month'];
     }
 }

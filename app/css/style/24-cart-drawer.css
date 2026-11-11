@@ -345,6 +345,15 @@ body.cart-drawer-lock {
 	flex-direction: column;
 }
 
+.cart-drawer-welcome-offer {
+	margin: 14px 0 18px;
+}
+
+.cart-drawer-welcome-offer .welcome-offer-countdown {
+	padding-right: 14px;
+	padding-left: 14px;
+}
+
 .cart-drawer-item {
 	position: relative;
 	display: grid;

@@ -31,6 +31,11 @@ $cartProductPrice = !empty($item['subtotal'])
                 </div>
                 <a href="/<?= $lclang ?>/delete_all" class="head-cart__clear"><?= CLEAR ?></a>
             </div>
+            <?php if (!empty($welcome_offer_timer)) { ?>
+                <div class="cart__welcome-offer-countdown">
+                    <?php $this->load->view('layouts/pages/welcome-offer-countdown'); ?>
+                </div>
+            <?php } ?>
             <div class="cart__main main-cart">
                 <?php if (!empty($cart_items)) { ?>
                     <div class="main-cart__products products-cart">
@@ -337,3 +342,6 @@ $cartProductPrice = !empty($item['subtotal'])
         </div>
     </section>
 </main>
+<?php if (!empty($welcome_offer_timer)) { ?>
+    <script src="/app/js/components/welcome-offer.js" defer></script>
+<?php } ?>

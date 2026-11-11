@@ -90,6 +90,41 @@ class Analytics_model extends BaseModel
     }
 
     /**
+     * Sales tables shown on the admin analytics screen. Kept separate from
+     * the full dashboard query so lazy loading does not calculate unused KPIs.
+     */
+    public function get_popular_sales_dashboard($fromDateTime, $toDateTime, $groupBy = 'day')
+    {
+        $groupBy = $groupBy === 'month' ? 'month' : 'day';
+
+        return array(
+            'top_products' => $this->get_top_products(
+                $fromDateTime,
+                $toDateTime,
+                'quantity',
+                'desc'
+            ),
+            'top_brands' => $this->get_top_brands(
+                $fromDateTime,
+                $toDateTime,
+                'quantity',
+                'desc'
+            ),
+            'top_categories' => $this->get_top_categories(
+                $fromDateTime,
+                $toDateTime,
+                'quantity',
+                'desc'
+            ),
+            'period_sales' => $this->get_period_sales(
+                $fromDateTime,
+                $toDateTime,
+                $groupBy
+            ),
+        );
+    }
+
+    /**
      * Sales-based suggestions for the frontend search landing state.
      * Uses the same completed-order statistics and default 30-day window as
      * the admin dashboard.

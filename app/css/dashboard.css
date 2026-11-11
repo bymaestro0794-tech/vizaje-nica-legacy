@@ -1190,6 +1190,101 @@ body.analytics-filter-scroll-locked {
 .analytics-sales-card .table > tbody > tr > td { border-color: #edf0f4; }
 .analytics-sales-card .table > tbody > tr:hover { background: #f7faff; }
 
+.analytics-period-toolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+    margin: 0 0 18px;
+    padding: 15px 18px;
+    border: 1px solid #e5eaf0;
+    border-radius: 10px;
+    background: #fff;
+}
+.analytics-period-toolbar > div:first-child { display: grid; gap: 4px; }
+.analytics-period-toolbar__eyebrow {
+    color: #8992a0;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+.analytics-period-toolbar strong { color: #263244; font-size: 14px; font-weight: 600; }
+.analytics-period-buttons { display: flex; flex-wrap: wrap; gap: 7px; }
+.analytics-period-button {
+    min-height: 34px;
+    padding: 6px 12px;
+    border: 1px solid #dfe5ec;
+    border-radius: 7px;
+    background: #fff;
+    color: #596579;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.analytics-period-button:hover { border-color: #9aa8b9; color: #243143; }
+.analytics-period-button.is-active { border-color: #253143; background: #253143; color: #fff; }
+.analytics-sales-lazy { min-height: 220px; }
+.analytics-sales-loading {
+    display: grid;
+    gap: 14px;
+    transition: opacity .15s ease;
+}
+.analytics-sales-loading__card {
+    display: grid;
+    gap: 11px;
+    padding: 18px;
+    border: 1px solid #e5eaf0;
+    border-radius: 10px;
+    background: #fff;
+}
+.analytics-sales-loading__card span {
+    height: 13px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #f0f2f5 25%, #e5e9ee 45%, #f0f2f5 65%);
+    background-size: 220% 100%;
+    animation: analytics-loading-shimmer 1.3s ease-in-out infinite;
+}
+.analytics-sales-loading__card span:first-child { width: 28%; height: 18px; margin-bottom: 2px; }
+.analytics-sales-loading__card span:nth-child(2) { width: 100%; }
+.analytics-sales-loading__card span:nth-child(3) { width: 92%; }
+.analytics-sales-loading__card span:nth-child(4) { width: 76%; }
+@keyframes analytics-loading-shimmer { to { background-position: -220% 0; } }
+.analytics-sales-results { display: grid; gap: 14px; }
+.analytics-sales-results .analytics-sales-card { margin: 0; padding: 0 16px 10px; }
+.analytics-sales-card__heading {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 46px;
+    border-bottom: 1px solid #edf0f4;
+}
+.analytics-sales-card__heading > i { color: #8b97a7; font-size: 14px; }
+.analytics-sales-card__heading h2 { margin: 0; color: #293548; font-size: 14px; font-weight: 600; }
+.analytics-sales-results .table-responsive { border: 0; }
+.analytics-sales-results .table { margin-bottom: 0; color: #364254; font-size: 12px; }
+.analytics-sales-results .table > thead > tr > th { color: #737f90; font-size: 10px; font-weight: 600; }
+.analytics-sales-results .table > thead > tr > th,
+.analytics-sales-results .table > tbody > tr > td { border-color: #edf0f4; }
+.analytics-sales-results .table > tbody > tr:hover { background: #f7faff; }
+.analytics-sales-lazy__error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px;
+    color: #687486;
+}
+.analytics-sales-lazy__error button {
+    padding: 7px 12px;
+    border: 1px solid #dfe5ec;
+    border-radius: 6px;
+    background: #fff;
+    color: #263244;
+    cursor: pointer;
+}
+
 @media (max-width: 767px) {
     .analytics-sales-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .analytics-sales-metric { padding: 11px 8px 12px 0; }
@@ -1201,4 +1296,8 @@ body.analytics-filter-scroll-locked {
     .analytics-sales-metric__change { font-size: 9px; }
     .analytics-sales-chart-card { padding: 14px 12px 8px; }
     .analytics-dashboard-sales .analytics-sales-chart { height: 190px; }
+    .analytics-period-toolbar { align-items: stretch; flex-direction: column; padding: 13px; }
+    .analytics-period-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .analytics-period-button { padding-right: 7px; padding-left: 7px; }
+    .analytics-sales-results .analytics-sales-card { padding-right: 10px; padding-left: 10px; }
 }
