@@ -1,45 +1,16 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-$partnersAnalyticsEnv = static function ($name, $default = '') {
-    $value = getenv($name);
-    if ($value !== false) {
-        return $value;
-    }
-    if (isset($_SERVER[$name])) {
-        return $_SERVER[$name];
-    }
-    if (isset($_ENV[$name])) {
-        return $_ENV[$name];
-    }
-    return $default;
-};
+require_once APPPATH . 'libraries/Partners_referral_analytics_config_loader.php';
 
-$apiOrigin = rtrim(trim((string) $partnersAnalyticsEnv('PARTNERS_REFERRAL_ANALYTICS_API_URL')), '/');
-$parsedOrigin = $apiOrigin !== '' ? parse_url($apiOrigin) : false;
-$validOrigin = is_array($parsedOrigin)
-    && isset($parsedOrigin['scheme'], $parsedOrigin['host'])
-    && !isset($parsedOrigin['user'], $parsedOrigin['pass'], $parsedOrigin['query'], $parsedOrigin['fragment'])
-    && (!isset($parsedOrigin['path']) || $parsedOrigin['path'] === '' || $parsedOrigin['path'] === '/');
-
-if ($validOrigin && strtolower($parsedOrigin['scheme']) === 'https') {
-    $apiOrigin = 'https://' . strtolower($parsedOrigin['host'])
-        . (isset($parsedOrigin['port']) ? ':' . (int) $parsedOrigin['port'] : '');
-} elseif ($validOrigin && ENVIRONMENT !== 'production'
-    && strtolower($parsedOrigin['scheme']) === 'http'
-    && in_array(strtolower($parsedOrigin['host']), array('localhost', '127.0.0.1', '::1'), true)) {
-    $apiOrigin = 'http://' . strtolower($parsedOrigin['host'])
-        . (isset($parsedOrigin['port']) ? ':' . (int) $parsedOrigin['port'] : '');
-} else {
-    $apiOrigin = '';
-}
+$partnersAnalyticsSettings = Partners_referral_analytics_config_loader::load(
+    '/home/vizajeni/private/partners-referral-analytics.php'
+);
 
 $config['partners_referral_analytics'] = array(
-    'enabled' => strtolower(trim((string) $partnersAnalyticsEnv('PARTNERS_REFERRAL_ANALYTICS_ENABLED', 'false'))) === 'true',
-    'api_origin' => $apiOrigin,
-    // Provision this server environment variable through the PHP-FPM/pool environment,
-    // never in the webroot or source control. Schema matches Partners' keyring entries.
-    'hmac_keys_json' => (string) $partnersAnalyticsEnv('LEGACY_ANALYTICS_HMAC_KEYS', ''),
+    'enabled' => $partnersAnalyticsSettings['enabled'],
+    'api_origin' => $partnersAnalyticsSettings['api_origin'],
+    'hmac_keys_json' => $partnersAnalyticsSettings['hmac_keys_json'],
     'connect_timeout_ms' => 500,
     'timeout_ms' => 2000,
     'max_request_bytes' => 65536,
@@ -47,4 +18,4 @@ $config['partners_referral_analytics'] = array(
     'max_context_bytes' => 512,
 );
 
-unset($partnersAnalyticsEnv, $apiOrigin, $parsedOrigin, $validOrigin);
+unset($partnersAnalyticsSettings);

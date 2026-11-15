@@ -1,0 +1,11 @@
+<?php
+
+// Copy this file to /home/vizajeni/private/partners-referral-analytics.php.
+// Replace the placeholder key material on the server; never commit the real file.
+return array(
+    'enabled' => false,
+    'api_url' => 'https://partners-api.vizaje-nica.com',
+    // Add the real Partners-provisioned key only on the server:
+    // array('keyId' => 'legacy-analytics-to-partners-<id>', 'secret' => '<base64url>', 'active' => true)
+    'hmac_keys' => array(),
+);
