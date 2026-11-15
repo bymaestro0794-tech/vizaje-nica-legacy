@@ -1,0 +1,26 @@
+<?php
+/**
+ * Example only. Store the real file outside the web document root and keep it
+ * out of Git/deploys. Replace every placeholder before enabling integration.
+ * These public zero-byte placeholders are intentionally unusable as secrets.
+ */
+return array(
+    'enabled' => false,
+    'api_url' => 'https://partners-api.vizaje-nica.com',
+    'partner_origin' => 'https://partners.vizaje-nica.com',
+    'redirect_uri' => 'https://dev.vizaje-nica.com/account/creator-link/callback',
+    'hmac_keys' => array(
+        array(
+            'keyId' => 'legacy-to-partners-REPLACE-ME',
+            'secret' => str_repeat('A', 43), // public all-zero placeholder; never enable with this value
+            'active' => true,
+        ),
+    ),
+    'grant_encryption_keys' => array(
+        array(
+            'keyId' => 'grant-key-REPLACE-ME',
+            'secret' => str_repeat('A', 43), // public all-zero placeholder; never enable with this value
+            'active' => true,
+        ),
+    ),
+);

@@ -1,27 +1,29 @@
 <?php
-$creatorStateKeys = array('not_connected', 'connection_required', 'pending_check', 'active', 'suspended', 'error');
-$creatorPartnerState = isset($creator_partner_state) && in_array($creator_partner_state, $creatorStateKeys, true)
-    ? $creator_partner_state
-    : 'not_connected';
-$creatorStateLabels = array(
-    'not_connected' => $lclang === 'ro' ? 'Vizaje Partners nu este conectat.' : 'Vizaje Partners не подключён.',
-    'connection_required' => $lclang === 'ro' ? 'Este necesară conectarea contului.' : 'Требуется подключить аккаунт.',
-    'pending_check' => $lclang === 'ro' ? 'Conectat; statutul nu a fost verificat.' : 'Подключён, статус ещё не проверен.',
-    'active' => $lclang === 'ro' ? 'Cont de creator activ.' : 'Аккаунт креатора активен.',
-    'suspended' => $lclang === 'ro' ? 'Accesul creatorului este suspendat.' : 'Доступ креatorului este suspendat.',
-    'error' => $lclang === 'ro' ? 'Conexiunea nu a putut fi verificată.' : 'Не удалось проверить подключение.',
-);
 $creatorMetricLabels = $lclang === 'ro'
-    ? array('Accesări linkuri', 'Adăugări în coș', 'Comenzi', 'Comenzi confirmate', 'Vânzări, MDL', 'Conversie')
-    : array('Переходы по ссылкам', 'Добавления в корзину', 'Заказы', 'Подтверждённые заказы', 'Продажи, MDL', 'Конверсия');
+    ? array(
+        'clicks' => 'Accesări linkuri', 'add_to_cart' => 'Adăugări în coș', 'orders' => 'Comenzi',
+        'confirmed_orders' => 'Comenzi confirmate', 'sales_mdl' => 'Vânzări, MDL', 'conversion' => 'Conversie',
+    )
+    : array(
+        'clicks' => 'Переходы по ссылкам', 'add_to_cart' => 'Добавления в корзину', 'orders' => 'Заказы',
+        'confirmed_orders' => 'Подтверждённые заказы', 'sales_mdl' => 'Продажи, MDL', 'conversion' => 'Конверсия',
+    );
 $creatorLinkTypeLabels = array(
     'product' => $lclang === 'ro' ? 'Produs' : 'Товар',
     'category' => $lclang === 'ro' ? 'Categorie' : 'Категория',
     'brand' => $lclang === 'ro' ? 'Brand' : 'Бренд',
     'homepage' => $lclang === 'ro' ? 'Pagina principală' : 'Главная',
 );
+$creatorCurrentUrl = trim((string) ($without_get_url ?? $full_url ?? ''));
 ?>
-<div class="creator-account__card">
+<div class="creator-account__card" data-creator-dashboard-root
+    data-dashboard-url="/account/creator-link/dashboard"
+    data-start-url="/account/creator-link/start"
+    data-create-url="/account/creator-link/create"
+    data-unlink-url="/account/creator-link/unlink"
+    data-revoke-prefix="/account/creator-link/revoke/"
+    data-csrf-token="<?= htmlspecialchars((string) ($creator_csrf_token ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+    data-locale="<?= htmlspecialchars($lclang === 'ro' ? 'ro' : 'ru', ENT_QUOTES, 'UTF-8') ?>">
     <header class="creator-account__header">
         <div>
             <span class="creator-account__eyebrow">Vizaje Partners</span>
@@ -32,27 +34,50 @@ $creatorLinkTypeLabels = array(
         </a>
     </header>
     <p class="creator-account__description"><?= $lclang === 'ro'
-        ? 'Statistica și linkurile vor apărea după conectarea sigură cu Vizaje Partners.'
-        : 'Статистика и ссылки появятся после безопасного подключения к Vizaje Partners.' ?></p>
+        ? 'Conectează contul Vizaje Partners pentru a vedea statistica și a administra linkurile.'
+        : 'Подключите аккаунт Vizaje Partners, чтобы смотреть статистику и управлять ссылками.' ?></p>
+    <?php if (!empty($creator_partner_notice)) { ?>
+        <?php
+        $creatorNoticeMessages = array(
+            'connected' => $lclang === 'ro' ? 'Contul Vizaje Partners a fost conectat.' : 'Аккаунт Vizaje Partners подключён.',
+            'inactive' => $lclang === 'ro' ? 'Contul Partners nu este activ. Verifică starea în Partners.' : 'Аккаунт Partners не активен. Проверьте его статус в Partners.',
+            'unavailable' => $lclang === 'ro' ? 'Conectarea nu este disponibilă momentan.' : 'Подключение сейчас недоступно.',
+            'exchange' => $lclang === 'ro' ? 'Nu am putut confirma conectarea. Încearcă din nou.' : 'Не удалось подтвердить подключение. Попробуйте ещё раз.',
+            'storage' => $lclang === 'ro' ? 'Conectarea a reușit, dar nu a putut fi salvată local.' : 'Partners подтвердил связь, но её не удалось сохранить на сайте.',
+            'callback_invalid' => $lclang === 'ro' ? 'Conectarea a expirat sau nu a putut fi verificată.' : 'Подключение истекло или не прошло проверку.',
+        );
+        $creatorNotice = $creatorNoticeMessages[$creator_partner_notice] ?? '';
+        ?>
+        <?php if ($creatorNotice !== '') { ?><p class="creator-account__state" role="status"><?= htmlspecialchars($creatorNotice, ENT_QUOTES, 'UTF-8') ?></p><?php } ?>
+    <?php } ?>
 
-    <div class="creator-account__partner-state creator-account__partner-state--<?= htmlspecialchars($creatorPartnerState, ENT_QUOTES, 'UTF-8') ?>" role="status">
+    <div class="creator-account__partner-state" data-creator-partner-state="checking" role="status" aria-live="polite">
         <span class="creator-account__state-dot" aria-hidden="true"></span>
-        <span><?= $creatorStateLabels[$creatorPartnerState] ?></span>
+        <span data-creator-partner-state-text><?= $lclang === 'ro' ? 'Se verifică legătura…' : 'Проверяем подключение…' ?></span>
+    </div>
+    <div class="creator-account__connection-actions">
+        <button type="button" class="creator-account__button" data-creator-link-start data-start-url="/account/creator-link/start" disabled>
+            <?= $lclang === 'ro' ? 'Conectează Vizaje Partners' : 'Подключить Vizaje Partners' ?>
+        </button>
+        <button type="button" class="creator-account__text-button" data-creator-unlink data-unlink-url="/account/creator-link/unlink" hidden>
+            <?= $lclang === 'ro' ? 'Deconectează contul' : 'Отвязать аккаунт' ?>
+        </button>
+        <span class="creator-account__state creator-account__state--error" data-creator-action-message role="status" aria-live="polite"></span>
     </div>
 
-    <section class="creator-account__section" aria-labelledby="creator-stats-title" data-creator-dashboard data-creator-dashboard-state="empty">
+    <section class="creator-account__section" aria-labelledby="creator-stats-title" data-creator-dashboard data-creator-dashboard-state="loading">
         <div class="creator-account__section-heading">
             <h4 id="creator-stats-title"><?= $lclang === 'ro' ? 'Statistici' : 'Статистика' ?></h4>
-            <span><?= $lclang === 'ro' ? 'Disponibile după conectare' : 'После подключения' ?></span>
+            <span data-creator-id></span>
         </div>
-        <div class="creator-account__metrics">
-            <?php foreach ($creatorMetricLabels as $metricLabel) { ?>
-                <div class="creator-account__metric"><span><?= $metricLabel ?></span><strong>—</strong></div>
+        <div class="creator-account__metrics" data-creator-metrics hidden>
+            <?php foreach ($creatorMetricLabels as $key => $label) { ?>
+                <div class="creator-account__metric"><span><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span><strong data-creator-metric="<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>">—</strong></div>
             <?php } ?>
         </div>
-        <p class="creator-account__state" data-creator-dashboard-pane="loading" hidden><?= $lclang === 'ro' ? 'Se încarcă statisticile…' : 'Загружаем статистику…' ?></p>
-        <p class="creator-account__state" data-creator-dashboard-pane="empty"><?= $lclang === 'ro' ? 'Nu există încă date statistice.' : 'Статистики пока нет.' ?></p>
-        <p class="creator-account__state creator-account__state--error" data-creator-dashboard-pane="error" role="alert" hidden><?= $lclang === 'ro' ? 'Statisticile nu sunt disponibile momentan.' : 'Не удалось загрузить статистику. Попробуйте позже.' ?></p>
+        <p class="creator-account__state" data-creator-dashboard-pane="loading"><?= $lclang === 'ro' ? 'Se încarcă datele…' : 'Загружаем данные…' ?></p>
+        <p class="creator-account__state" data-creator-dashboard-pane="empty" hidden><?= $lclang === 'ro' ? 'Nu există încă date statistice.' : 'Статистики пока нет.' ?></p>
+        <p class="creator-account__state creator-account__state--error" data-creator-dashboard-pane="error" role="alert" hidden><?= $lclang === 'ro' ? 'Statistica nu este disponibilă momentan.' : 'Статистика сейчас недоступна.' ?></p>
     </section>
 
     <section class="creator-account__section" id="creator-links" aria-labelledby="creator-links-title">
@@ -60,7 +85,10 @@ $creatorLinkTypeLabels = array(
             <h4 id="creator-links-title"><?= $lclang === 'ro' ? 'Linkurile mele' : 'Мои ссылки' ?></h4>
             <a class="creator-account__text-button" href="#creator-link-form"><?= $lclang === 'ro' ? 'Creează link' : 'Создать ссылку' ?> <span aria-hidden="true">+</span></a>
         </div>
-        <div class="creator-account__links-table-wrap">
+        <p class="creator-account__state" data-creator-links-pane="loading"><?= $lclang === 'ro' ? 'Se încarcă linkurile…' : 'Загружаем ссылки…' ?></p>
+        <p class="creator-account__state" data-creator-links-pane="empty" hidden><?= $lclang === 'ro' ? 'Nu ai creat încă linkuri.' : 'Вы ещё не создали ссылки.' ?></p>
+        <p class="creator-account__state creator-account__state--error" data-creator-links-pane="error" role="alert" hidden><?= $lclang === 'ro' ? 'Linkurile nu sunt disponibile momentan.' : 'Ссылки сейчас недоступны.' ?></p>
+        <div class="creator-account__links-table-wrap" data-creator-links-table hidden>
             <table class="creator-account__links-table">
                 <thead><tr>
                     <th><?= $lclang === 'ro' ? 'Tip' : 'Тип' ?></th>
@@ -70,37 +98,16 @@ $creatorLinkTypeLabels = array(
                     <th><?= $lclang === 'ro' ? 'Statut' : 'Статус' ?></th>
                     <th><?= $lclang === 'ro' ? 'Acțiuni' : 'Действия' ?></th>
                 </tr></thead>
-                <tbody>
-                <?php if (!empty($creator_links) && is_array($creator_links)) { foreach ($creator_links as $creatorLink) {
-                    $creatorLinkUrl = trim((string) ($creatorLink['short_url'] ?? ''));
-                    $creatorLinkType = (string) ($creatorLink['type'] ?? ''); ?>
-                    <tr>
-                        <td><?= htmlspecialchars($creatorLinkTypeLabels[$creatorLinkType] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
-                        <td><?= htmlspecialchars((string) ($creatorLink['title'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
-                        <td><?= htmlspecialchars($creatorLinkUrl, ENT_QUOTES, 'UTF-8') ?></td>
-                        <td><?= htmlspecialchars((string) ($creatorLink['created_at'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
-                        <td><?= htmlspecialchars((string) ($creatorLink['status_label'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
-                        <td class="creator-account__link-actions">
-                            <?php if ($creatorLinkUrl !== '') { ?>
-                                <button type="button" data-creator-copy="<?= htmlspecialchars($creatorLinkUrl, ENT_QUOTES, 'UTF-8') ?>"><?= $lclang === 'ro' ? 'Copiază' : 'Копировать' ?></button>
-                                <a href="<?= htmlspecialchars($creatorLinkUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer"><?= $lclang === 'ro' ? 'Deschide' : 'Открыть' ?></a>
-                            <?php } ?>
-                        </td>
-                    </tr>
-                <?php } } ?>
-                </tbody>
+                <tbody data-creator-links></tbody>
             </table>
-            <?php if (empty($creator_links)) { ?>
-                <p class="creator-account__links-empty"><?= $lclang === 'ro' ? 'Nu ai creat încă linkuri.' : 'Вы ещё не создали ссылки.' ?></p>
-            <?php } ?>
         </div>
 
-        <form class="creator-account__link-create" id="creator-link-form" data-creator-link-form>
+        <form class="creator-account__link-create" id="creator-link-form" data-creator-link-form data-create-url="/account/creator-link/create" data-csrf-token="<?= htmlspecialchars((string) ($creator_csrf_token ?? ''), ENT_QUOTES, 'UTF-8') ?>" data-locale="<?= htmlspecialchars($lclang === 'ro' ? 'ro' : 'ru', ENT_QUOTES, 'UTF-8') ?>">
             <h5><?= $lclang === 'ro' ? 'Link nou' : 'Новая ссылка' ?></h5>
             <div class="creator-account__form-grid">
                 <label><?= $lclang === 'ro' ? 'Denumire (opțional)' : 'Название (необязательно)' ?><input type="text" maxlength="120" data-creator-link-title></label>
-                <label><?= $lclang === 'ro' ? 'Pagina țintă' : 'Целевая страница' ?><input type="url" value="<?= htmlspecialchars((string) ($full_url ?? ''), ENT_QUOTES, 'UTF-8') ?>" data-creator-link-target></label>
-                <label><?= $lclang === 'ro' ? 'Tipul paginii' : 'Тип страницы' ?><select data-creator-link-type>
+                <label><?= $lclang === 'ro' ? 'Pagina țintă' : 'Целевая страница' ?><input type="url" value="<?= htmlspecialchars($creatorCurrentUrl, ENT_QUOTES, 'UTF-8') ?>" required data-creator-link-target></label>
+                <label><?= $lclang === 'ro' ? 'Tipul paginii' : 'Тип страницы' ?><select required data-creator-link-type>
                     <?php foreach ($creatorLinkTypeLabels as $type => $typeLabel) { ?><option value="<?= htmlspecialchars($type, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($typeLabel, ENT_QUOTES, 'UTF-8') ?></option><?php } ?>
                 </select></label>
                 <label><?= $lclang === 'ro' ? 'Limba linkului' : 'Язык ссылки' ?><select data-creator-link-locale>
@@ -108,8 +115,8 @@ $creatorLinkTypeLabels = array(
                     <option value="ro" <?= $lclang === 'ro' ? 'selected' : '' ?>>RO</option>
                 </select></label>
             </div>
-            <button class="creator-account__button" type="button" disabled><?= $lclang === 'ro' ? 'Creează link' : 'Создать ссылку' ?></button>
-            <p class="creator-account__settings-note"><?= $lclang === 'ro' ? 'Crearea va fi activată după configurarea autorizării de pe server.' : 'Создание включим после настройки серверной авторизации.' ?></p>
+            <button class="creator-account__button" type="submit" data-creator-link-submit disabled><?= $lclang === 'ro' ? 'Creează link' : 'Создать ссылку' ?></button>
+            <p class="creator-account__state" data-creator-create-message role="status" aria-live="polite"></p>
         </form>
     </section>
 

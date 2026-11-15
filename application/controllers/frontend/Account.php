@@ -48,6 +48,17 @@ class Account extends FrontEndController
             redirect('/' . $this->lclang . '/' . $this->data['menu']['all'][9]->uri);
         }
 
+        // OAuth callback notices are fixed, one-time values; never render arbitrary session text.
+        $this->data['creator_partner_notice'] = '';
+        if (!empty($this->data['client_info']->is_creator) && session_status() === PHP_SESSION_ACTIVE) {
+            $notice = $_SESSION['creator_partner_notice'] ?? '';
+            unset($_SESSION['creator_partner_notice']);
+            $allowedNotices = array('callback_invalid', 'unavailable', 'exchange', 'inactive', 'storage', 'connected');
+            if (is_string($notice) && in_array($notice, $allowedNotices, true)) {
+                $this->data['creator_partner_notice'] = $notice;
+            }
+        }
+
         $orders = $this->orders_model->get_client_orders($this->data['client_info']->id, $this->clang);
         $this->data['orders'] = $orders;
 

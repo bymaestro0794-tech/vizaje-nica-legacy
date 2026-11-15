@@ -159,6 +159,7 @@ class FrontEndController extends CI_Controller
         $this->load->helper('mine_helper');
 
         $this->_is_logged_in();
+        $this->_prepareCreatorCsrfToken();
         sync_cart();
 
         $this->output->set_header('X-XSS-Protection: 1; mode=block');
@@ -519,6 +520,32 @@ class FrontEndController extends CI_Controller
         ) {
             $_SESSION['cart_promo'] = array('code' => 'WELCOME18');
         }
+    }
+
+    /** Creates a session-bound CSRF token for same-origin creator actions. */
+    private function _prepareCreatorCsrfToken()
+    {
+        $client = $this->data['client_info'] ?? null;
+        if (!is_object($client) || empty($client->id) || empty($client->is_creator)
+            || session_status() !== PHP_SESSION_ACTIVE) {
+            unset($_SESSION['creator_partner_csrf'], $_SESSION['creator_partner_csrf_client_id']);
+            return;
+        }
+
+        $clientId = (string) (int) $client->id;
+        if ((string) ($_SESSION['creator_partner_csrf_client_id'] ?? '') !== $clientId
+            || !is_string($_SESSION['creator_partner_csrf'] ?? null)
+            || strlen($_SESSION['creator_partner_csrf']) !== 64) {
+            try {
+                $_SESSION['creator_partner_csrf'] = bin2hex(random_bytes(32));
+                $_SESSION['creator_partner_csrf_client_id'] = $clientId;
+            } catch (Throwable $error) {
+                unset($_SESSION['creator_partner_csrf'], $_SESSION['creator_partner_csrf_client_id']);
+                return;
+            }
+        }
+
+        $this->data['creator_csrf_token'] = $_SESSION['creator_partner_csrf'];
     }
 
     private function categories_nav()

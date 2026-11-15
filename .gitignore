@@ -19,6 +19,7 @@ application/libraries/secret/
 .htpasswd
 site-meilisearch.env
 **/partners-referral-analytics.php
+/application/config/partners_creator.private.php
 
 # CI logs
 application/logs/log-*.php

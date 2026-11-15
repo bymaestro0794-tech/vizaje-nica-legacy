@@ -63,6 +63,14 @@ $route['sitemapGenerator'] = "pages/sitemapGenerator";
 // M5.1 internal, HMAC-authenticated catalog resolver.
 $route['internal/v1/referrals/resolve-target'] = 'internal_referrals/resolve_target';
 
+// M5.5 Legacy creator account-linking callback and same-origin dashboard bridge.
+$route['account/creator-link/start'] = 'creator_account_linking/start';
+$route['account/creator-link/callback'] = 'creator_account_linking/callback';
+$route['account/creator-link/dashboard'] = 'creator_account_linking/dashboard';
+$route['account/creator-link/create'] = 'creator_account_linking/create_link';
+$route['account/creator-link/revoke/(:any)'] = 'creator_account_linking/revoke_link/$1';
+$route['account/creator-link/unlink'] = 'creator_account_linking/unlink';
+
 $route['api/orders/item'] = 'orders/item';
 $route['api/orders/demo'] = 'orders/demo';
 

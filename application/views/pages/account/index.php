@@ -1,6 +1,6 @@
 <?php
 $isCreator = !empty($client_info->is_creator);
-$isCreatorSection = $isCreator && isset($_GET['creator']);
+$isCreatorSection = $isCreator && (isset($_GET['creator']) || !empty($creator_partner_notice));
 $isAccountDashboard = !isset($_GET['bonus'])
     && !isset($_GET['orders'])
     && !isset($_GET['favorite'])
