@@ -110,6 +110,7 @@
 		activeBrowseMs: 0,
 		lastTick: performance.now(),
 		autoOpened: false,
+		autoRequested: false,
 		prizeExpired: false,
 	}
 
@@ -214,6 +215,11 @@
 			}
 		}
 		setOpen(true)
+		if (manual && window.VNSiteDialogManager) {
+			window.VNSiteDialogManager.cancel('roulette-auto')
+			state.autoRequested = false
+			window.VNSiteDialogManager.markShown('roulette')
+		}
 		if (!manual) storage.set('invite_at', Date.now())
 		return true
 	}
@@ -629,6 +635,21 @@
 				state.autoOpened = true
 				return
 			}
+		}
+		if (window.VNSiteDialogManager) {
+			if (state.autoRequested) return
+			state.autoRequested = true
+			const queued = window.VNSiteDialogManager.requestAutoOpen('roulette-auto', () => {
+				state.autoRequested = false
+				state.autoOpened = openModal()
+				return state.autoOpened
+			}, {
+				priority: 80,
+				ttlMs: 2 * 60 * 60 * 1000,
+				onExpire: () => { state.autoRequested = false },
+			})
+			if (!queued) state.autoRequested = false
+			return
 		}
 		if (anotherDialogIsOpen() || cookieUiIsVisible()) return
 		state.autoOpened = openModal()

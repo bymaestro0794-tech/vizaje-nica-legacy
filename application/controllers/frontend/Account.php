@@ -172,6 +172,7 @@ class Account extends FrontEndController
                     $_SESSION['user_login'] = $this->data['client_info']->email;
                     $_SESSION['usr_key'] = hash('sha512', $this->data['client_info']->email . $this->data['client_info']->password);
                     $_SESSION['isb2b'] = $user->isb2b == 1 ? true : false;
+                    sync_creator_session_preferences($user);
                 }
             } else {
                 if (empty($post['sms_subscribe'])) $post['sms_subscribe'] = 0;
@@ -348,6 +349,7 @@ class Account extends FrontEndController
                             $_SESSION['user_login'] = $user->email;
                             $_SESSION['usr_key'] = hash('sha512', $user->email . $post['password_new']);
                             $_SESSION['isb2b'] = $user->isb2b == 1 ? true : false;
+                            sync_creator_session_preferences($user);
                             $return['info'] = SUCCESS_EDIT_CONTACT_INFO;
                         }
                     } else {
@@ -421,6 +423,7 @@ class Account extends FrontEndController
                         $_SESSION['user_login'] = $user->email;
                         $_SESSION['usr_key'] = hash('sha512', $user->email . $user->password);
                         $_SESSION['isb2b'] = $user->isb2b == 1 ? true : false;
+                        sync_creator_session_preferences($user);
                         if (!empty($_GET['checkout'])) {
                             redirect('/' . $this->lclang . '/' . $this->data['menu']['all'][4]->uri);
                         } else {
@@ -476,6 +479,7 @@ class Account extends FrontEndController
                         $_SESSION['user_login'] = $user->email;
                         $_SESSION['usr_key'] = hash('sha512', $user->email . $user->password);
                         $_SESSION['isb2b'] = $user->isb2b == 1 ? true : false;
+                        sync_creator_session_preferences($user);
                         $response['success'] = 1;
 
                         $this->workappGet($user);
@@ -732,6 +736,7 @@ class Account extends FrontEndController
                     $_SESSION['user_login'] = $user->email;
                     $_SESSION['usr_key'] = hash('sha512', $user->email . $user->password);
                     $_SESSION['isb2b'] = $user->isb2b == 1 ? true : false;
+                    sync_creator_session_preferences($user);
                     $response['success'] = 1;
 
                     $this->workappGet($user);
@@ -1106,6 +1111,8 @@ class Account extends FrontEndController
         unset($_SESSION['user_login']);
         unset($_SESSION['usr_key']);
         unset($_SESSION['isb2b']);
+        unset($_SESSION['is_creator']);
+        unset($_SESSION['creator_widget_enabled'], $_SESSION['creator_b2c_mode']);
         unset($_SESSION['welcome_offer_removed']);
         unset($_SESSION['pending_welcome_registration_id']);
 

@@ -421,8 +421,12 @@ $deferredCss = [
     'app/css/style/33-chat-widget.css',
     'app/css/style/34-roulette-wheel.css',
     'app/css/style/35-telegram-support.css',
+    'app/css/style/36-site-dialogs.css',
     'app/css/style/site-feedback.css',
 ];
+if (!empty($client_info->is_creator)) {
+    $deferredCss[] = 'app/css/style/38-creator-widget.css';
+}
 
 /*
  * CSS конкретной страницы.
@@ -826,8 +830,14 @@ if (!empty($is_privacy_policy_page)) {
     <?php if (!empty($welcome_offer_prompt_enabled) && empty($client_info)) { ?>
         <?php $this->load->view('layouts/pages/welcome-offer-modal'); ?>
     <?php } ?>
+    <?php if (!empty($site_dialogs)) { ?>
+        <?php $this->load->view('layouts/pages/site-dialogs'); ?>
+    <?php } ?>
     <?php if ($rouletteShouldRender) { ?>
         <?php $this->load->view('layouts/pages/roulette-modal'); ?>
+    <?php } ?>
+    <?php if (!empty($client_info->is_creator)) { ?>
+        <?php $this->load->view('partials/creator-link-widget'); ?>
     <?php } ?>
     <div class="select_variation d_none">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -952,12 +962,15 @@ if (!empty($is_privacy_policy_page)) {
         defer
     ></script> -->
     <script src="/app/js/components/auth-drawer.js?v=20261019-bonus-register" defer></script>
+    <script src="<?= asset_url('app/js/components/site-dialog-manager.js?v=20261113-1') ?>" defer></script>
     <script src="/app/js/components/welcome-offer.js" defer></script>
+    <?php if (!empty($site_dialogs)) { ?><script src="<?= asset_url('app/js/components/site-dialogs.js?v=20261113-1') ?>" defer></script><?php } ?>
     <script src="<?= asset_url('app/js/components/header-promo-slider.js') ?>" defer></script>
     <?php if ($rouletteShouldRender) { ?><script src="<?= asset_url('app/js/components/roulette-wheel.js') ?>" defer></script><?php } ?>
+    <?php if (!empty($client_info->is_creator)) { ?><script src="<?= asset_url('app/js/components/creator-link-widget.js') ?>" defer></script><?php } ?>
     <!-- APP JS START HERE -->
      <?php if ($currentView === 'pages/main/index') { ?>
-         <script type="module" src="/app/js/pages/home/home.js?v=20261013-product-hover-gallery"></script>
+         <script type="module" src="/app/js/pages/home/home.js?v=20261112-static-home-products"></script>
      <?php } ?>
      <?php if ($currentView === 'pages/catalog/item') { ?>
          <script type="module" src="/app/js/pages/home/products-slider.js?v=20261026-product-recommendations"></script>

@@ -119,6 +119,7 @@ class FrontEndController extends CI_Controller
         parent::__construct();
 
         @session_start();
+        $this->_consumePartnersAttributionHandoff();
         $this->load->helper('cookie');
         $this->load->library(['cart', 'user_agent']);
 
@@ -263,6 +264,52 @@ class FrontEndController extends CI_Controller
 
     }
 
+    /** Consume and remove the one-time Partners token before rendering any storefront page. */
+    private function _consumePartnersAttributionHandoff()
+    {
+        if (!array_key_exists('vp_attribution', $_GET)) {
+            return;
+        }
+
+        $requestUri = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '/';
+        $parts = parse_url($requestUri);
+        $path = is_array($parts) && isset($parts['path']) ? (string) $parts['path'] : '/';
+        if ($path === '' || $path[0] !== '/' || strpos($path, '//') === 0
+            || strpos($path, "\r") !== false || strpos($path, "\n") !== false || strpos($path, "\\") !== false) {
+            $path = '/';
+        }
+
+        $queryParts = array();
+        if (is_array($parts) && isset($parts['query']) && $parts['query'] !== '') {
+            foreach (explode('&', (string) $parts['query']) as $queryPart) {
+                $rawKey = explode('=', $queryPart, 2)[0];
+                if (urldecode($rawKey) !== 'vp_attribution') {
+                    $queryParts[] = $queryPart;
+                }
+            }
+        }
+        $cleanLocation = $path . (empty($queryParts) ? '' : '?' . implode('&', $queryParts));
+
+        $handoffToken = $_GET['vp_attribution'];
+        if (is_string($handoffToken)) {
+            try {
+                $this->load->model('Partners_referral_analytics_model');
+                $this->partners_referral_analytics_model->exchangeAttributionHandoff($handoffToken);
+            } catch (Throwable $exception) {
+                // A failed or disabled attribution exchange must not affect storefront access.
+            }
+        }
+
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        header('Referrer-Policy: no-referrer');
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+        header('Location: ' . $cleanLocation, true, 302);
+        exit;
+    }
+
     protected function _render()
     {
         $currentView = trim((string) ($this->data['inner_view'] ?? ''), '/');
@@ -281,7 +328,7 @@ class FrontEndController extends CI_Controller
         ) {
             $this->load->model('products_model');
             $cacheKey = 'header_discount_' . strtolower($this->clang)
-                . (!empty($_SESSION['isb2b']) ? '_b2b' : '_retail');
+                . (client_uses_wholesale_prices() ? '_wholesale' : '_retail');
 
             $this->data['header_discount_products'] = $this->_frontend_cached(
                 $cacheKey,
@@ -292,6 +339,24 @@ class FrontEndController extends CI_Controller
             );
         } else {
             $this->data['header_discount_products'] = array();
+        }
+
+        $dialogExcludedViews = array(
+            'pages/cart/checkout',
+            'pages/cart/success',
+            'pages/cart/error',
+            'pages/account/login',
+            'pages/account/registration',
+            'pages/account/reset_password',
+        );
+        $this->data['site_dialogs'] = array();
+        if (empty($this->data['checkout_on']) && empty($this->data['minimal_page'])
+            && !in_array($currentView, $dialogExcludedViews, true)) {
+            $this->load->model('site_dialogs_model');
+            $this->data['site_dialogs'] = $this->site_dialogs_model->getActiveForDisplay(
+                $this->lclang,
+                !empty($this->data['client_info']->id)
+            );
         }
 
         $this->load->vars($this->data);
@@ -379,6 +444,8 @@ class FrontEndController extends CI_Controller
             unset($_SESSION['user_login']);
             unset($_SESSION['usr_key']);
             unset($_SESSION['isb2b']);
+            unset($_SESSION['is_creator']);
+            unset($_SESSION['creator_widget_enabled'], $_SESSION['creator_b2c_mode']);
         } else {
             $client_info = $this->clients_model->get_client_login($user_id);
             if (empty($client_info)) {
@@ -386,8 +453,11 @@ class FrontEndController extends CI_Controller
                 unset($_SESSION['user_login']);
                 unset($_SESSION['usr_key']);
                 unset($_SESSION['isb2b']);
+                unset($_SESSION['is_creator']);
+                unset($_SESSION['creator_widget_enabled'], $_SESSION['creator_b2c_mode']);
             } else {
                 $this->data['client_info'] = $client_info;
+                sync_creator_session_preferences($client_info);
                 if (empty($this->data['client_info']->discount)) $this->data['client_info']->discount = 10;
             }
         }

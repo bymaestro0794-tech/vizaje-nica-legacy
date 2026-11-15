@@ -12,7 +12,7 @@ $productId = isset($item->id)
 	: 0;
 
 $isB2B =
-    !empty($_SESSION['isb2b']);
+    client_uses_wholesale_prices();
 
 $isVariable =
     !empty($item->has_variable)
@@ -135,6 +135,10 @@ $displayWholesalePrice = isset($item->effective_price_wholesale)
 		?? $displayPrice
 	);
 
+$displayPrice = mdl_ceil($displayPrice);
+$displayDiscountPrice = mdl_ceil($displayDiscountPrice);
+$displayWholesalePrice = mdl_ceil($displayWholesalePrice);
+
 $displayStock = isset($item->effective_stock)
 	? (int) $item->effective_stock
 	: (int) ($item->on_stock ?? 0);
@@ -195,12 +199,7 @@ $bonusAmount =
 		? $currentPrice * ($bonusPercent / 100)
 		: 0;
 
-$notificationPrice = number_format(
-	$currentPrice,
-	0,
-	'.',
-	' '
-) . ' ' . MDL;
+$notificationPrice = mdl_format($currentPrice) . ' ' . MDL;
 
 $isRomanian = $lclang === 'ro';
 $isCatalogProductCard = !empty($is_catalog_product_card);
@@ -395,12 +394,7 @@ $useHomeProductCardStyle = !$isCatalogProductCard && (!empty($is_home_product_ta
 				<?php if ($isB2B) : ?>
 					<div class="price-product__prices">
 						<span class="price-product__value">
-							<?= number_format(
-								$displayPrice,
-								0,
-								'.',
-								' '
-							) ?>
+							<?= mdl_format($displayPrice) ?>
 							<?= MDL ?>
 						</span>
 					</div>
@@ -411,12 +405,7 @@ $useHomeProductCardStyle = !$isCatalogProductCard && (!empty($is_home_product_ta
 						</span>
 
 						<span class="price-product__value">
-							<?= number_format(
-								$displayWholesalePrice,
-								0,
-								'.',
-								' '
-							) ?>
+							<?= mdl_format($displayWholesalePrice) ?>
 							<?= MDL ?>
 						</span>
 					</div>
@@ -428,12 +417,7 @@ $useHomeProductCardStyle = !$isCatalogProductCard && (!empty($is_home_product_ta
 								<?= $salePercent ?>%
 							</span>
 							<span class="price-product__old">
-								<?= number_format(
-									$displayPrice,
-									0,
-									'.',
-									' '
-								) ?>
+								<?= mdl_format($displayPrice) ?>
 								<?= MDL ?>
 							</span>
 						</div>
@@ -441,23 +425,13 @@ $useHomeProductCardStyle = !$isCatalogProductCard && (!empty($is_home_product_ta
 
 					<div class="price-product__prices">
 						<span class="price-product__value">
-							<?= number_format(
-								$currentPrice,
-								0,
-								'.',
-								' '
-							) ?>
+							<?= mdl_format($currentPrice) ?>
 							<?= MDL ?>
 						</span>
 
 						<?php if (!$useHomeProductCardStyle && !$isCatalogProductCard) : ?>
 							<span class="price-product__old">
-								<?= number_format(
-									$displayPrice,
-									0,
-									'.',
-									' '
-								) ?>
+								<?= mdl_format($displayPrice) ?>
 								<?= MDL ?>
 							</span>
 						<?php endif; ?>
@@ -465,12 +439,7 @@ $useHomeProductCardStyle = !$isCatalogProductCard && (!empty($is_home_product_ta
 				<?php else : ?>
 					<div class="price-product__prices">
 						<span class="price-product__value">
-							<?= number_format(
-								$currentPrice,
-								0,
-								'.',
-								' '
-							) ?>
+							<?= mdl_format($currentPrice) ?>
 							<?= MDL ?>
 						</span>
 					</div>

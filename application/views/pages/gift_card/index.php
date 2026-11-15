@@ -75,7 +75,7 @@ $cartUri = $isRomanian ? 'cos' : 'korzina';
                                 data-gift-card-image="<?= htmlspecialchars($image, ENT_QUOTES, 'UTF-8') ?>"
                                 aria-pressed="<?= $index === 0 ? 'true' : 'false' ?>"
                             >
-                                <span><?= number_format((int) $amount, 0, '.', ' ') ?></span>
+                                <span><?= mdl_format($amount) ?></span>
                                 <small>MDL</small>
                             </button>
                         <?php endforeach; ?>
@@ -101,7 +101,7 @@ $cartUri = $isRomanian ? 'cos' : 'korzina';
 
                 <div class="gift-card-page__summary">
                     <span><?= $isRomanian ? 'Total' : 'Итого' ?></span>
-                    <strong data-gift-card-total><?= number_format($initialAmount, 0, '.', ' ') ?> MDL</strong>
+                    <strong data-gift-card-total><?= mdl_format($initialAmount) ?> MDL</strong>
                 </div>
 
                 <button class="gift-card-page__submit" type="submit">
@@ -155,7 +155,7 @@ $cartUri = $isRomanian ? 'cos' : 'korzina';
                     <span></span>
                 </div>
                 <p class="gift-card-page__preview-amount" data-gift-card-preview>
-                    <?= number_format($initialAmount, 0, '.', ' ') ?> MDL
+                    <?= mdl_format($initialAmount) ?> MDL
                 </p>
             </div>
         </aside>

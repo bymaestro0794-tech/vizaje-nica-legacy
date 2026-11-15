@@ -2,11 +2,30 @@
 	'use strict'
 
 	const DISMISS_KEY = 'vn_welcome_offer_dismissed_until'
-	const DISMISS_MS = 30 * 24 * 60 * 60 * 1000
+	const LEGACY_DISMISS_MS = 30 * 24 * 60 * 60 * 1000
+	const DISMISS_MS = 4 * 24 * 60 * 60 * 1000
 	const SHOW_DELAY_MS = 21 * 1000
 	const OFFER = document.querySelector('[data-welcome-offer]')
+	const manager = window.VNSiteDialogManager
+
+	// Convert the old 30-day dismissal timestamp to the agreed 4-day window.
+	if (manager) {
+		let oldUntil = 0
+		try { oldUntil = Number(window.localStorage.getItem(DISMISS_KEY)) || 0 } catch (error) {}
+		if (!oldUntil) {
+			const cookieMatch = document.cookie.match(/(?:^|; )vn_welcome_offer_dismissed_until=(\d+)/)
+			oldUntil = Number(cookieMatch?.[1]) || 0
+		}
+		if (oldUntil > Date.now()) {
+			const migratedUntil = oldUntil - LEGACY_DISMISS_MS + DISMISS_MS
+			if (migratedUntil > Date.now()) manager.dismissUntil('welcome18', migratedUntil)
+		}
+		try { window.localStorage.removeItem(DISMISS_KEY) } catch (error) {}
+		document.cookie = `${DISMISS_KEY}=; Max-Age=0; Path=/; SameSite=Lax`
+	}
 
 	const readDismissal = () => {
+		if (manager) return manager.isDismissed('welcome18') ? Date.now() + 1 : 0
 		try {
 			const value = Number(window.localStorage.getItem(DISMISS_KEY))
 			if (value > Date.now()) return value
@@ -21,11 +40,15 @@
 	}
 
 	const saveDismissal = () => {
+		if (manager) {
+			manager.dismiss('welcome18')
+			return
+		}
 		const until = Date.now() + DISMISS_MS
 		try {
 			window.localStorage.setItem(DISMISS_KEY, String(until))
 		} catch (error) {
-			document.cookie = `vn_welcome_offer_dismissed_until=${until}; Max-Age=2592000; Path=/; SameSite=Lax`
+			document.cookie = `vn_welcome_offer_dismissed_until=${until}; Max-Age=345600; Path=/; SameSite=Lax`
 		}
 	}
 
@@ -105,8 +128,8 @@
 	}
 
 	const openOffer = () => {
-		if (dismissed > Date.now() || cookieUiIsVisible()) return
-		if (document.querySelector('.auth-drawer.is-open')) return
+		if (dismissed > Date.now() || cookieUiIsVisible()) return false
+		if (document.querySelector('.auth-drawer.is-open')) return false
 
 		scrollYBeforeOpen = window.scrollY
 		focusBeforeOpen = document.activeElement
@@ -115,6 +138,7 @@
 		document.documentElement.classList.add('welcome-offer-lock')
 		OFFER.querySelector('[data-welcome-offer-register]')?.focus({ preventScroll: true })
 		restoreScrollPosition()
+		return true
 	}
 
 	const scheduleOffer = () => {
@@ -127,7 +151,16 @@
 	}
 
 	const startOfferDelayAfterPageLoad = () => {
-		if (!dismissed) openTimer = window.setTimeout(scheduleOffer, SHOW_DELAY_MS)
+		if (dismissed) return
+		if (manager) {
+			manager.requestAutoOpen('welcome18', openOffer, {
+				delayMs: SHOW_DELAY_MS,
+				priority: 100,
+				ttlMs: 2 * 60 * 60 * 1000,
+			})
+		} else {
+			openTimer = window.setTimeout(scheduleOffer, SHOW_DELAY_MS)
+		}
 	}
 
 	if (document.readyState === 'complete') {

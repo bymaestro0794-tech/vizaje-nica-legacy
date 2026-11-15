@@ -203,12 +203,7 @@ $deliveryIcons = array(
 							<span class="vn-checkout-option__price">
 								<?php if (!empty($delivery_price)) : ?>
 
-									<?= number_format(
-										(float) $delivery_price,
-										0,
-										'.',
-										' '
-									) ?>
+									<?= mdl_format($delivery_price) ?>
 									<?= MDL ?>
 
 								<?php else : ?>

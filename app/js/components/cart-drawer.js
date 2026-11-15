@@ -554,7 +554,7 @@
 
 	function formatMoney(value) {
 		return (
-			Math.round(Number(value) || 0)
+			Math.ceil(Math.max(0, Number(value) || 0))
 				.toLocaleString('ru-RU')
 				.replace(/\u00a0/g, ' ') + ' MDL'
 		)

@@ -1,6 +1,6 @@
 /* ==========================================================================
    Home product pages
-   Vertical reveal transition
+   Static page switching
    ========================================================================== */
 
 const initProductsSlider = section => {
@@ -23,13 +23,11 @@ const initProductsSlider = section => {
 	}
 
 	const isMobile = window.matchMedia('(max-width: 767px)').matches
-
 	const reduceMotion = window.matchMedia(
 		'(prefers-reduced-motion: reduce)'
 	).matches
 
 	let activeIndex = 0
-	let isAnimating = false
 
 	const updateControls = () => {
 		if (previousButton) {
@@ -57,7 +55,6 @@ const initProductsSlider = section => {
 
 	const showPage = nextIndex => {
 		if (
-			isAnimating ||
 			nextIndex < 0 ||
 			nextIndex >= pages.length ||
 			nextIndex === activeIndex
@@ -65,187 +62,12 @@ const initProductsSlider = section => {
 			return
 		}
 
-		const direction = nextIndex > activeIndex ? 1 : -1
+		pages[activeIndex].classList.remove('is-active')
+		pages[nextIndex].classList.add('is-active')
+		activeIndex = nextIndex
 
-		const currentPage = pages[activeIndex]
-		const nextPage = pages[nextIndex]
-
-		const currentCards = [...currentPage.children]
-
-		const nextCards = [...nextPage.children]
-
-		isAnimating = true
-
-		gsap.killTweensOf([currentPage, nextPage, currentCards, nextCards])
-
-		/*
-	|--------------------------------------------------------------------------
-	| Обе сетки занимают одинаковые позиции
-	|--------------------------------------------------------------------------
-	*/
-
-		currentPage.classList.add('is-transitioning')
-
-		nextPage.classList.add('is-transitioning')
-
-		gsap.set(currentPage, {
-			position: 'relative',
-			zIndex: 1,
-			visibility: 'visible'
-		})
-
-		gsap.set(nextPage, {
-			position: 'absolute',
-			inset: 0,
-			zIndex: 2,
-			visibility: 'visible',
-			pointerEvents: 'none'
-		})
-
-		/*
-	|--------------------------------------------------------------------------
-	| Каждая новая карточка раскрывается отдельно
-	|--------------------------------------------------------------------------
-	*/
-
-		nextCards.forEach(card => {
-			gsap.set(card, {
-				clipPath: reduceMotion
-					? 'none'
-					: direction > 0
-						? 'inset(0 100% 0 0)'
-						: 'inset(0 0 0 100%)',
-
-				opacity: reduceMotion ? 0 : 1
-			})
-
-			const cardContent = card.firstElementChild
-
-			if (cardContent) {
-				gsap.set(cardContent, {
-					x: reduceMotion ? 0 : 32 * direction
-				})
-			}
-		})
-
-		const timeline = gsap.timeline({
-			defaults: {
-				overwrite: 'auto'
-			},
-
-			onComplete: () => {
-				currentPage.classList.remove('is-active', 'is-transitioning')
-
-				nextPage.classList.remove('is-transitioning')
-
-				nextPage.classList.add('is-active')
-
-				activeIndex = nextIndex
-
-				gsap.set([currentPage, nextPage, ...currentCards, ...nextCards], {
-					clearProps: 'all'
-				})
-
-				currentCards.forEach(card => {
-					if (card.firstElementChild) {
-						gsap.set(card.firstElementChild, {
-							clearProps: 'all'
-						})
-					}
-				})
-
-				nextCards.forEach(card => {
-					if (card.firstElementChild) {
-						gsap.set(card.firstElementChild, {
-							clearProps: 'all'
-						})
-					}
-				})
-
-				updateAccessibility()
-				updateControls()
-
-				isAnimating = false
-			}
-		})
-
-		if (reduceMotion) {
-			timeline.to(nextCards, {
-				opacity: 1,
-				duration: 0.14,
-				stagger: 0,
-				ease: 'none'
-			})
-
-			return
-		}
-
-		/*
-	|--------------------------------------------------------------------------
-	| Старые карточки мягко уходят
-	|--------------------------------------------------------------------------
-	*/
-
-		timeline.to(
-			currentCards,
-			{
-				x: -22 * direction,
-				opacity: 0,
-				duration: 0.3,
-
-				stagger: {
-					each: 0.035,
-					from: direction > 0 ? 'start' : 'end'
-				},
-
-				ease: 'power2.in'
-			},
-			0
-		)
-
-		/*
-	|--------------------------------------------------------------------------
-	| Новые карточки раскрываются по отдельности
-	|--------------------------------------------------------------------------
-	*/
-
-		timeline.to(
-			nextCards,
-			{
-				clipPath: 'inset(0 0% 0 0%)',
-				duration: 0.58,
-
-				stagger: {
-					each: 0.055,
-					from: direction > 0 ? 'start' : 'end'
-				},
-
-				ease: 'power3.inOut'
-			},
-			0.08
-		)
-
-		/*
-	|--------------------------------------------------------------------------
-	| Контент внутри карточек слегка движется
-	|--------------------------------------------------------------------------
-	*/
-
-		timeline.to(
-			nextCards.map(card => card.firstElementChild).filter(Boolean),
-			{
-				x: 0,
-				duration: 0.62,
-
-				stagger: {
-					each: 0.055,
-					from: direction > 0 ? 'start' : 'end'
-				},
-
-				ease: 'power3.out'
-			},
-			0.08
-		)
+		updateAccessibility()
+		updateControls()
 	}
 
 	previousButton?.addEventListener('click', () => {

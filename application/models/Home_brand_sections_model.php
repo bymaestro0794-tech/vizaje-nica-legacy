@@ -531,7 +531,7 @@ class Home_brand_sections_model extends CI_Model
 		);
 
 		$hasVariableField =
-			!empty($_SESSION['isb2b'])
+			client_uses_wholesale_prices()
 				? "
 					EXISTS (
 						SELECT 1
@@ -654,7 +654,7 @@ class Home_brand_sections_model extends CI_Model
 			1
 		);
 
-		if (!empty($_SESSION['isb2b'])) {
+		if (client_uses_wholesale_prices()) {
 			$this->db->where(
 				'products.priceWH >',
 				0

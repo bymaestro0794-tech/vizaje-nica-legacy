@@ -2266,7 +2266,7 @@ public function variable()
         );
     }
 
-    $isB2B = !empty($_SESSION['isb2b']);
+    $isB2B = client_uses_wholesale_prices();
 
     $currentPrice = $isB2B
         ? (float) $info->priceWH

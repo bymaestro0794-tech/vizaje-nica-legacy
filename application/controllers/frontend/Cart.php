@@ -43,13 +43,14 @@ class Cart extends FrontEndController
     {
         $this->load->library('CartCalculator');
         $cartState = $this->cartcalculator->calculate($this->lclang);
+        $calculatedCart = (array) ($cartState['cart'] ?? array());
         $calculatedRows = array();
         foreach ((array) ($cartState['rows'] ?? array()) as $calculatedRow) {
             $calculatedRows[(string) $calculatedRow['row_id']] = $calculatedRow;
         }
         $this->data['cart_items'] = $this->cart->contents();
         $this->data['total_items_cart'] = $this->cart->total_items();
-        $this->data['total_price_cart'] = $this->cart->total();
+        $this->data['total_price_cart'] = (float) ($calculatedCart['cart_total'] ?? 0);
 
         $page = $this->menu_model->get_page_data_by_id($this->clang, $this->page_id);
         if (empty($page)) throw_on_404();
@@ -65,11 +66,7 @@ class Cart extends FrontEndController
 
         $this->data['class_page'] = '';
 
-        if ($this->cart->total() < (float)FREE_SHIPPING_VALUE) {
-            $delivery_price = (float)SHIPPING_PRICE;
-        } else {
-            $delivery_price = 0;
-        }
+        $delivery_price = (float) ($calculatedCart['delivery_price'] ?? 0);
 
         $bonus_total = 0;
         if (!empty($this->data['cart_items'])) {
@@ -711,7 +708,10 @@ public function checkout()
             }
 
             if ($discountChoice !== 'none') {
-                $promoDiscount = round((float) $orderState['cart']['promo_discount_total'], 2);
+                $promoDiscount = (float) ceil(max(
+                    0,
+                    (float) $orderState['cart']['promo_discount_total']
+                ));
             }
 
             $rouletteSpinId = $discountChoice === 'roulette'
@@ -735,10 +735,10 @@ public function checkout()
             */
 
             $total =
-                round(
-                    (float) $orderState['cart']['cart_total'],
-                    2
-                );
+                (float) ceil(max(
+                    0,
+                    (float) $orderState['cart']['cart_total']
+                ));
 
             /*
             |--------------------------------------------------------------------------
@@ -826,6 +826,9 @@ public function checkout()
                 */
                 $delivery_price = 0;
             }
+
+            $total = (float) ceil(max(0, $total));
+            $delivery_price = (float) ceil(max(0, $delivery_price));
 
             /*
             |--------------------------------------------------------------------------
@@ -1203,6 +1206,23 @@ public function checkout()
                         : 0,
             );
 			$rouletteGiftReward = null;
+
+            // Persist the already server-validated, opaque attribution context
+            // with the order row when the feature is enabled and its SQL patch
+            // has been installed. Checkout remains unchanged if not installed.
+            $partnersAnalyticsOrderTracked = false;
+            $this->load->config('partners_referral_analytics');
+            $partnersAnalyticsConfig = (array) $this->config->item('partners_referral_analytics');
+            if (!empty($partnersAnalyticsConfig['enabled'])) {
+                try {
+                    $this->load->model('Partners_referral_analytics_model');
+                    $partnersAnalyticsOrderTracked = $this->partners_referral_analytics_model
+                        ->addAttributionToOrderData($data);
+                } catch (Throwable $analyticsException) {
+                    $partnersAnalyticsOrderTracked = false;
+                }
+            }
+
             if ($rouletteSpinId > 0) {
                 $this->db->trans_begin();
             }
@@ -1272,6 +1292,9 @@ public function checkout()
                 */
 
                 $items = array();
+                $partnersAnalyticsExpectedRows = count($orderState['rows']);
+                $partnersAnalyticsSavedRows = 0;
+                $partnersAnalyticsAllRowsSaved = true;
 
                 foreach ($orderState['rows'] as $row) {
                     $productId =
@@ -1281,22 +1304,13 @@ public function checkout()
                         (int) $row['quantity'];
 
                     $unitPrice =
-                        round(
-                            (float) $row['unit_price'],
-                            2
-                        );
+                        (float) ceil(max(0, (float) $row['unit_price']));
 
                     $promoRowDiscount =
-                        round(
-                            (float) $row['promo_discount'],
-                            2
-                        );
+                        (float) ceil(max(0, (float) $row['promo_discount']));
 
                     $finalRowTotal =
-                        round(
-                            (float) $row['final_total'],
-                            2
-                        );
+                        (float) ceil(max(0, (float) $row['final_total']));
 
                     $variableId =
                         !empty($row['variable_id'])
@@ -1363,6 +1377,7 @@ public function checkout()
                             $product
                         )
                     ) {
+                        $partnersAnalyticsAllRowsSaved = false;
                         log_message(
                             'error',
                             'Order product insert failed.'
@@ -1370,6 +1385,8 @@ public function checkout()
 
                         continue;
                     }
+
+                    $partnersAnalyticsSavedRows++;
 
                     /*
                     |--------------------------------------------------------------------------
@@ -1433,6 +1450,22 @@ public function checkout()
                         'modifiers' =>
                             '',
                     );
+                }
+
+                // Queue order.created only after every immutable item snapshot
+                // was inserted. The worker can reconcile this marker if the
+                // optional outbox write is unavailable at checkout time.
+                if ($partnersAnalyticsOrderTracked
+                    && $partnersAnalyticsAllRowsSaved
+                    && $partnersAnalyticsExpectedRows > 0
+                    && $partnersAnalyticsSavedRows === $partnersAnalyticsExpectedRows) {
+                    try {
+                        if ($this->partners_referral_analytics_model->markOrderItemsComplete($order_id)) {
+                            $this->partners_referral_analytics_model->recordOrderCreated($order_id);
+                        }
+                    } catch (Throwable $analyticsException) {
+                        // Order creation and payment must remain independent of analytics.
+                    }
                 }
 
                 /*
@@ -2558,37 +2591,24 @@ public function checkout()
      */
 
     $data['products_total'] =
-        round(
-            (float) $data['total']
-            + $promoDiscount,
-            2
-        );
+        (float) ceil(max(0, (float) $data['total'] + $promoDiscount));
 
     $data['promo_discount'] =
-        round(
-            $promoDiscount,
-            2
-        );
+        (float) ceil(max(0, $promoDiscount));
 
     $data['delivery_price'] =
-        round(
-            (float) $data['delivery_price'],
-            2
-        );
+        (float) ceil(max(0, (float) $data['delivery_price']));
 
     $data['bonus_minus'] =
-        round(
-            $bonusMinus,
-            2
-        );
+        (float) floor(max(0, $bonusMinus));
 
     $data['final_total'] =
-        round(
+        (float) ceil(max(
+            0,
             (float) $data['total']
             + $data['delivery_price']
-            - $bonusMinus,
-            2
-        );
+            - $data['bonus_minus']
+        ));
 
     /*
     |--------------------------------------------------------------------------
@@ -2646,12 +2666,7 @@ public function checkout()
                     "
                 >
                     −'
-                    . number_format(
-                        $data['promo_discount'],
-                        2,
-                        '.',
-                        ''
-                    )
+                    . mdl_format($data['promo_discount'], '.', '')
                     . ' MDL
                 </td>
             </tr>
@@ -2692,12 +2707,7 @@ public function checkout()
                     "
                 >
                     −'
-                    . number_format(
-                        $data['bonus_minus'],
-                        2,
-                        '.',
-                        ''
-                    )
+                    . mdl_format($data['bonus_minus'], '.', '')
                     . ' MDL
                 </td>
             </tr>
@@ -2832,12 +2842,7 @@ public function checkout()
                         "
                     >
                         '
-                        . number_format(
-                            (float) $product['price'],
-                            2,
-                            '.',
-                            ''
-                        )
+                        . mdl_format((float) $product['price'], '.', '')
                         . ' MDL × '
                         . (int) $product['amount']
                         . '
@@ -2856,12 +2861,7 @@ public function checkout()
                 >
                     Reducere promocod:
                     −'
-                    . number_format(
-                        $promoRowDiscount,
-                        2,
-                        '.',
-                        ''
-                    )
+                    . mdl_format($promoRowDiscount, '.', '')
                     . ' MDL
                 </p>
             ';
@@ -2887,12 +2887,7 @@ public function checkout()
                     "
                 >
                     '
-                    . number_format(
-                        $rowTotal,
-                        2,
-                        '.',
-                        ''
-                    )
+                    . mdl_format($rowTotal, '.', '')
                     . ' MDL
                 </td>
             </tr>
@@ -2901,6 +2896,10 @@ public function checkout()
 
     $data['products'] =
         $productContent;
+
+    $data['products_total'] = mdl_format($data['products_total'], '.', ' ');
+    $data['delivery_price'] = mdl_format($data['delivery_price'], '.', ' ');
+    $data['final_total'] = mdl_format($data['final_total'], '.', ' ');
 
     /*
     |--------------------------------------------------------------------------

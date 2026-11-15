@@ -30,6 +30,7 @@ class Clients extends BackEndController
     public function index()
     {
         init_load_img($this->main_page);
+        $this->data['creator_flag_supported'] = $this->db->field_exists('is_creator', 'clients');
 
 
         if(isset($_GET['search']) && !empty($_GET['search'])){
@@ -126,6 +127,7 @@ class Clients extends BackEndController
     {
         $id = (int)$id;
         init_load_img($this->main_page);
+        $this->data['creator_flag_supported'] = $this->db->field_exists('is_creator', 'clients');
         $item = $this->clients_model->find_first($id);
         if (empty($item)) throw_on_404();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {

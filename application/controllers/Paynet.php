@@ -238,8 +238,40 @@ class Paynet extends CI_Controller
                     'date' => date("Y-m-d H:i:s")
                 );
                 $this->db->insert('paynet_logs', $data);
+
+                $analyticsPaidAt = date('Y-m-d H:i:s');
+                $analyticsTrackedOrder = false;
+                try {
+                    $this->load->config('partners_referral_analytics');
+                    $analyticsConfig = (array) $this->config->item('partners_referral_analytics');
+                    if (!empty($analyticsConfig['enabled'])
+                        && !empty($order->partners_referral_context)
+                        && isset($order->partners_referral_items_complete)
+                        && (int) $order->partners_referral_items_complete === 1) {
+                        $oldDbDebug = $this->db->db_debug;
+                        $this->db->db_debug = false;
+                        $hasPaidAtColumn = $this->db->field_exists('partners_referral_paid_at', 'orders');
+                        $this->db->db_debug = $oldDbDebug;
+                        if ($hasPaidAtColumn) {
+                            $analyticsTrackedOrder = true;
+                            if (!empty($order->partners_referral_paid_at)) {
+                                $analyticsPaidAt = (string) $order->partners_referral_paid_at;
+                            } else {
+                                $order->partners_referral_paid_at = $analyticsPaidAt;
+                            }
+                        }
+                    }
+                } catch (Throwable $analyticsException) {
+                    $this->db->db_debug = isset($oldDbDebug) ? $oldDbDebug : $this->db->db_debug;
+                    $analyticsTrackedOrder = false;
+                }
+
                 $this->db->where('ExternalID', $paymentObj->Payment->ExternalId);
-                $this->db->update('orders', array('pay_success' => 1));
+                $paymentUpdate = array('pay_success' => 1);
+                if ($analyticsTrackedOrder && empty($order->partners_referral_paid_at)) {
+                    $paymentUpdate['partners_referral_paid_at'] = $analyticsPaidAt;
+                }
+                $this->db->update('orders', $paymentUpdate);
 
                 $order =
                     $this->db
@@ -254,6 +286,18 @@ class Paynet extends CI_Controller
                 $this->roulette_game_model->confirmPaynetReservation(
                     (string) $paymentObj->Payment->ExternalId
                 );
+
+                if ($analyticsTrackedOrder && !empty($order)) {
+                    try {
+                        $this->load->model('Partners_referral_analytics_model');
+                        $this->partners_referral_analytics_model->recordOrderPaid(
+                            (int) $order->id,
+                            $analyticsPaidAt
+                        );
+                    } catch (Throwable $analyticsException) {
+                        // The CLI reconciliation worker can recover a missing outbox event.
+                    }
+                }
 
                 if (
                     !empty($order)

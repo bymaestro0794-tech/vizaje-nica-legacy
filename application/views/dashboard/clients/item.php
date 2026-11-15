@@ -92,6 +92,18 @@
                                             <input type="text" name="phone" class="form-control" value="<?=$item->phone?>" required>
                                         </td>
                                     </tr>
+                                    <?php if (!empty($creator_flag_supported)) { ?>
+                                        <tr>
+                                            <td width="200">Креатор</td>
+                                            <td>
+                                                <input type="hidden" name="is_creator" value="0">
+                                                <label class="mt-checkbox mt-checkbox-outline">
+                                                    <input type="checkbox" name="is_creator" value="1" <?= !empty($item->is_creator) ? 'checked' : '' ?>> Доступ к кабинету креатора и оптовым ценам
+                                                    <span></span>
+                                                </label>
+                                            </td>
+                                        </tr>
+                                    <?php } ?>
                                     <tr>
                                         <td width="200"><?=lang('Address')?></td>
                                         <td>

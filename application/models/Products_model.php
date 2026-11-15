@@ -112,7 +112,7 @@ class Products_model extends BaseModel
             $this->applyPublicProductCondition();
         }
 
-        if (!empty($_SESSION['isb2b'])) {
+        if (client_uses_wholesale_prices()) {
             $this->db->where("\n                (\n                    products.priceWH > 0\n                    OR EXISTS (\n                        SELECT 1\n                        FROM products_variable pv\n                        WHERE pv.product_id = products.id\n                          AND pv.priceWH > 0\n                          AND pv.qtyWH > 0\n                    )\n                )\n            ", null, false);
 
             return;
@@ -125,7 +125,7 @@ class Products_model extends BaseModel
     {
         $this->applyPublicProductCondition();
 
-        if (!empty($_SESSION['isb2b'])) {
+        if (client_uses_wholesale_prices()) {
             $this->db->where("(
                 products.on_stockWH > 0
                 OR EXISTS (
@@ -191,7 +191,7 @@ class Products_model extends BaseModel
         $priceMin = max(0, (float) $priceMin);
         $priceMax = max($priceMin, (float) $priceMax);
 
-        if (!empty($_SESSION['isb2b'])) {
+        if (client_uses_wholesale_prices()) {
             $expression = "\n                CASE\n                    WHEN products.priceWH > 0 THEN products.priceWH\n                    ELSE (\n                        SELECT MIN(pv.priceWH)\n                        FROM products_variable pv\n                        WHERE pv.product_id = products.id\n                          AND pv.priceWH > 0\n                          AND pv.qtyWH > 0\n                    )\n                END\n            ";
         } else {
             $expression = "\n                CASE\n                    WHEN products.price > 0 THEN products.price\n                    ELSE (\n                        SELECT MIN(pv.price)\n                        FROM products_variable pv\n                        WHERE pv.product_id = products.id\n                          AND pv.price > 0\n                          AND pv.qty > 0\n                    )\n                END\n            ";
@@ -755,7 +755,7 @@ public function get_product_variable(
     |
     */
 
-    if (!empty($_SESSION['isb2b'])) {
+    if (client_uses_wholesale_prices()) {
         $this->db->where(
             'priceWH >',
             0
@@ -987,7 +987,7 @@ public function get_product_card_options($product, $lang = 'RU')
             : null;
 
     if ($variants === null) {
-        $isB2B = !empty($_SESSION['isb2b']);
+        $isB2B = client_uses_wholesale_prices();
         $availabilityPriceField = $isB2B ? 'priceWH' : 'price';
         $availabilityQuantityField = $isB2B ? 'qtyWH' : 'qty';
 
@@ -1080,7 +1080,7 @@ private function isProductCardVariantAvailable($variant)
         return false;
     }
 
-    $isB2B = !empty($_SESSION['isb2b']);
+    $isB2B = client_uses_wholesale_prices();
     $priceField = $isB2B ? 'priceWH' : 'price';
     $quantityField = $isB2B ? 'qtyWH' : 'qty';
 
@@ -1352,7 +1352,7 @@ private function decodeVariantColorData($colorData)
     |--------------------------------------------------------------------------
     */
 
-    if (!empty($_SESSION['isb2b'])) {
+    if (client_uses_wholesale_prices()) {
         $candidatePrice = "
             CASE
                 WHEN products.priceWH > 0
@@ -1591,7 +1591,7 @@ private function decodeVariantColorData($colorData)
 |
 */
 
-if (!empty($_SESSION['isb2b'])) {
+if (client_uses_wholesale_prices()) {
     $this->db->group_start();
 
     $this->db->group_start();
@@ -2183,13 +2183,13 @@ if (!empty($_SESSION['isb2b'])) {
             AND pv_sale.discount_price > 0
             AND pv_sale.discount_price < pv_sale.price
         )";
-        $parentStockField = !empty($_SESSION['isb2b'])
+        $parentStockField = client_uses_wholesale_prices()
             ? 'products.on_stockWH'
             : 'products.on_stock';
-        $variantStockConditions = !empty($_SESSION['isb2b'])
+        $variantStockConditions = client_uses_wholesale_prices()
             ? 'pv_sale.priceWH > 0 AND pv_sale.qtyWH > 0'
             : 'pv_sale.qty > 0';
-        $rankVariantStockConditions = !empty($_SESSION['isb2b'])
+        $rankVariantStockConditions = client_uses_wholesale_prices()
             ? 'pv_rank.priceWH > 0 AND pv_rank.qtyWH > 0'
             : 'pv_rank.qty > 0';
         $discountPercent = "GREATEST(
@@ -3349,7 +3349,7 @@ if (!empty($_SESSION['isb2b'])) {
         }
 
         if (!empty($_GET['in_stock'])) {
-            if (!empty($_SESSION['isb2b'])) {
+            if (client_uses_wholesale_prices()) {
                 $this->db->where(
                     "(
                         products.on_stockWH > 0
@@ -3451,7 +3451,7 @@ if (!empty($_SESSION['isb2b'])) {
     {
         if (empty($categoriesId)) return (object) array('price_min' => 0, 'price_max' => 0);
 
-        if (!empty($_SESSION['isb2b'])) {
+        if (client_uses_wholesale_prices()) {
             $priceExpression = "CASE WHEN products.priceWH > 0 THEN products.priceWH ELSE (SELECT MIN(pv.priceWH) FROM products_variable pv WHERE pv.product_id = products.id AND pv.priceWH > 0 AND pv.qtyWH > 0) END";
         } else {
             $priceExpression = "CASE WHEN products.price > 0 THEN products.price ELSE (SELECT MIN(pv.price) FROM products_variable pv WHERE pv.product_id = products.id AND pv.price > 0 AND pv.qty > 0) END";
@@ -4227,7 +4227,7 @@ if (!empty($_SESSION['isb2b'])) {
             LIMIT 1
         ";
 
-        $availableStockField = !empty($_SESSION['isb2b'])
+        $availableStockField = client_uses_wholesale_prices()
             ? "
                 CASE
                     WHEN products.on_stockWH > 0 THEN 1
@@ -4560,19 +4560,19 @@ if (!empty($_SESSION['isb2b'])) {
             END
         ";
 
-        $effectivePrice = !empty($_SESSION['isb2b'])
+        $effectivePrice = client_uses_wholesale_prices()
             ? $wholesalePrice
             : $retailPrice;
 
-        $effectiveStock = !empty($_SESSION['isb2b'])
+        $effectiveStock = client_uses_wholesale_prices()
             ? $wholesaleStock
             : $retailStock;
 
-        $hasAvailableStock = !empty($_SESSION['isb2b'])
+        $hasAvailableStock = client_uses_wholesale_prices()
             ? $wholesaleHasAvailableStock
             : $retailHasAvailableStock;
 
-        $hasVariable = !empty($_SESSION['isb2b'])
+        $hasVariable = client_uses_wholesale_prices()
             ? "
                 EXISTS (
                     SELECT 1
@@ -4616,7 +4616,7 @@ if (!empty($_SESSION['isb2b'])) {
      */
     private function getHasVariableField()
     {
-        if (!empty($_SESSION['isb2b'])) {
+        if (client_uses_wholesale_prices()) {
             return "
                 EXISTS (
                     SELECT 1

@@ -126,6 +126,17 @@ class Clients_model extends BaseModel
 
     public function get_client_login($id)
     {
+        $creatorField = $this->db->field_exists('is_creator', $this->tblname)
+            ? 'is_creator'
+            : '0';
+        $widgetField = $this->db->field_exists('creator_widget_enabled', $this->tblname)
+            ? 'creator_widget_enabled'
+            : '1';
+        $creatorB2cField = $this->db->field_exists('creator_b2c_mode', $this->tblname)
+            ? 'creator_b2c_mode'
+            : '0';
+        $creatorPreferencesSupported = $this->db->field_exists('creator_widget_enabled', $this->tblname)
+            && $this->db->field_exists('creator_b2c_mode', $this->tblname);
         $this->db->select("
             id as id,
             name as name,
@@ -136,7 +147,11 @@ class Clients_model extends BaseModel
             Bonus as Bonus, 
             address as address,  
             welcome_offer_started_at as welcome_offer_started_at,
-            welcome_offer_expires_at as welcome_offer_expires_at
+            welcome_offer_expires_at as welcome_offer_expires_at,
+            {$creatorField} as is_creator,
+            {$widgetField} as creator_widget_enabled,
+            {$creatorB2cField} as creator_b2c_mode,
+            " . ($creatorPreferencesSupported ? '1' : '0') . " as creator_preferences_supported
         ");
         $this->db->where('id', $id);
         return $this->db->get($this->tblname)->row();

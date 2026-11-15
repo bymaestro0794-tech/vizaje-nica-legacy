@@ -155,7 +155,7 @@ class Articles extends FrontEndController
                 continue;
             }
 
-            $isB2B = !empty($_SESSION['isb2b']);
+            $isB2B = client_uses_wholesale_prices();
             $stock = $isB2B
                 ? (int) ($sourceProduct->effective_stock_wholesale ?? $sourceProduct->on_stockWH ?? 0)
                 : (int) ($sourceProduct->effective_stock ?? $sourceProduct->on_stock ?? 0);

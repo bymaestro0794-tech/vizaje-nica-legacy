@@ -150,6 +150,9 @@
             'class' => $rootDefinition['class'],
             'title' => $title,
             'uri' => trim($menuItem->uri, '/'),
+            'url' => $rootDefinition['key'] === 'gifts'
+                ? '/ro/catalog/certificate/107557'
+                : '/' . $lclang . '/' . trim($menuItem->uri, '/'),
         ];
     }
 
@@ -263,7 +266,7 @@
                                 <?php $rootIconAsset = $mobileCatalogRootIconAssets[$rootItem['key']] ?? ''; ?>
                                 <a
                                     class="mobile-catalog-page__link mobile-catalog-page__link--<?= htmlspecialchars($rootItem['class'], ENT_QUOTES, 'UTF-8') ?><?= $rootIconAsset !== '' ? ' mobile-catalog-page__link--has-icon' : '' ?>"
-                                    href="/<?= htmlspecialchars($lclang, ENT_QUOTES, 'UTF-8') ?>/<?= htmlspecialchars($rootItem['uri'], ENT_QUOTES, 'UTF-8') ?>"
+                                    href="<?= htmlspecialchars($rootItem['url'], ENT_QUOTES, 'UTF-8') ?>"
                                 >
                                     <?php if ($rootIconAsset !== '') : ?>
                                         <span class="mobile-catalog-page__visual-icon" aria-hidden="true">

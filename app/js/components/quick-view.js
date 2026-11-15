@@ -890,10 +890,12 @@
 		}
 
 		function formatPrice(value) {
+			const amount = Math.ceil(Math.max(0, Number(value) || 0))
+
 			return (
 				new Intl.NumberFormat(data.language === 'ro' ? 'ro-MD' : 'ru-MD', {
 					maximumFractionDigits: 0
-				}).format(Number(value) || 0) +
+				}).format(amount) +
 				' ' +
 				data.currency
 			)

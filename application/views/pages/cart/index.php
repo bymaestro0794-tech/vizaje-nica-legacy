@@ -12,12 +12,7 @@ $cartProductVariant = !empty($item['options'])
     : '';
 
 $cartProductPrice = !empty($item['subtotal'])
-    ? number_format(
-        (float) $item['subtotal'],
-        0,
-        '.',
-        ' '
-    ) . ' ' . MDL
+    ? mdl_format($item['subtotal']) . ' ' . MDL
     : '';
 ?>
 
@@ -110,7 +105,7 @@ $cartProductPrice = !empty($item['subtotal'])
                                             <div class="quantity">
                                                 <?php if (!$isGift) : ?><div class="quantity__button quantity__button_minus"></div><?php endif; ?>
                                                 <div class="quantity__input">
-                                                    <?php if (!empty($_SESSION['isb2b'])) { ?>
+                                                    <?php if (client_uses_wholesale_prices()) { ?>
                                                     <input autocomplete="off" type="text" name="counts"
                                                            value="<?= $item['qty'] ?>"
                                                            data-rowid="<?= $item['rowid'] ?>"
@@ -129,13 +124,13 @@ $cartProductPrice = !empty($item['subtotal'])
                                             <div class="price-other-products-cart__row">
                                                 <span class="price-other-products-cart__name"><?= PRICE_1_ITEM ?></span>
                                                 <span class="price-other-products-cart__value">
-                                                    <?php if (!empty($_SESSION['isb2b'])) { ?>
-                                                        <?= $item['variable']->priceWH ?> <?= MDL ?>
+                                                    <?php if (client_uses_wholesale_prices()) { ?>
+										<?= mdl_format($item['variable']->priceWH) ?> <?= MDL ?>
                                                     <?php } else { ?>
                                                         <?php if (!empty($item['variable']->discount_price)) { ?>
-                                                            <span><?= $item['variable']->price ?> <?= MDL ?></span> <?= $item['variable']->discount_price ?> <?= MDL ?>
+											<span><?= mdl_format($item['variable']->price) ?> <?= MDL ?></span> <?= mdl_format($item['variable']->discount_price) ?> <?= MDL ?>
                                                         <?php } else { ?>
-                                                            <?= $item['variable']->price ?> <?= MDL ?>
+											<?= mdl_format($item['variable']->price) ?> <?= MDL ?>
                                                         <?php } ?>
                                                     <?php } ?>
                                                 </span>
@@ -151,7 +146,7 @@ $cartProductPrice = !empty($item['subtotal'])
                                                     <div class="price-other-products-cart__row _total">
                                                 <span class="price-other-products-cart__name"></span>
                                                 <span class="price-other-products-cart__total"><span
-                                                            class="item-total"><?= $item['price'] * $item['qty'] ?></span> <?= MDL ?></span>
+                                                            class="item-total"><?= mdl_format($calculatedItem['final_total'] ?? ($item['price'] * $item['qty'])) ?></span> <?= MDL ?></span>
                                             </div>
                                         </div>
                                         <div class="other-products-cart__actions actions-other-products-cart"
@@ -213,7 +208,7 @@ $cartProductPrice = !empty($item['subtotal'])
                                             <div class="quantity">
                                                 <?php if (!$isGift) : ?><div class="quantity__button quantity__button_minus"></div><?php endif; ?>
                                                 <div class="quantity__input">
-                                                    <?php if (!empty($_SESSION['isb2b'])) { ?>
+                                                    <?php if (client_uses_wholesale_prices()) { ?>
                                                     <input autocomplete="off" type="text" name="counts"
                                                            value="<?= $item['qty'] ?>"
                                                            data-rowid="<?= $item['rowid'] ?>"
@@ -232,13 +227,13 @@ $cartProductPrice = !empty($item['subtotal'])
                                             <div class="price-other-products-cart__row">
                                                 <span class="price-other-products-cart__name"><?= PRICE_1_ITEM ?></span>
                                                 <span class="price-other-products-cart__value">
-                                                    <?php if (!empty($_SESSION['isb2b'])) { ?>
-                                                        <?= $item['products']->priceWH ?> <?= MDL ?>
+                                                    <?php if (client_uses_wholesale_prices()) { ?>
+									<?= mdl_format($item['products']->priceWH) ?> <?= MDL ?>
                                                     <?php } else { ?>
                                                         <?php if (!empty($item['products']->discount_price)) { ?>
-                                                            <span><?= $item['products']->price ?> <?= MDL ?></span> <?= $item['products']->discount_price ?> <?= MDL ?>
+										<span><?= mdl_format($item['products']->price) ?> <?= MDL ?></span> <?= mdl_format($item['products']->discount_price) ?> <?= MDL ?>
                                                         <?php } else { ?>
-                                                            <?= $item['products']->price ?> <?= MDL ?>
+										<?= mdl_format($item['products']->price) ?> <?= MDL ?>
                                                         <?php } ?>
                                                     <?php } ?>
                                                 </span>
@@ -254,7 +249,7 @@ $cartProductPrice = !empty($item['subtotal'])
                                             <div class="price-other-products-cart__row _total">
                                                 <span class="price-other-products-cart__name"></span>
                                                 <span class="price-other-products-cart__total"><span
-                                                            class="item-total"><?= $item['price'] * $item['qty'] ?></span> <?= MDL ?></span>
+                                                            class="item-total"><?= mdl_format($calculatedItem['final_total'] ?? ($item['price'] * $item['qty'])) ?></span> <?= MDL ?></span>
                                             </div>
                                         </div>
                                         <div class="other-products-cart__actions actions-other-products-cart"
@@ -308,7 +303,7 @@ $cartProductPrice = !empty($item['subtotal'])
                             <span class="list-main-cart__name"><?= PRODUCTS ?> <span
                                         class="items_count"><?= $total_items_cart ?></span></span>
                             <span class="list-main-cart__value"><span
-                                        class="items_total"><?= $total_price_cart ?></span><?= MDL ?></span>
+                                        class="items_total"><?= mdl_format($total_price_cart) ?></span><?= MDL ?></span>
                         </li>
                         <li class="list-main-cart__row">
                             <span class="list-main-cart__name"><?= SALE ?></span>
@@ -316,12 +311,12 @@ $cartProductPrice = !empty($item['subtotal'])
                         </li>
                         <li class="list-main-cart__row">
                             <span class="list-main-cart__name"><?= DELIVERY ?></span>
-                            <span class="list-main-cart__value"><span class="delivery_price"><?=$delivery_price?></span> <?= MDL ?></span>
+                            <span class="list-main-cart__value"><span class="delivery_price"><?= mdl_format($delivery_price) ?></span> <?= MDL ?></span>
                         </li>
                         <li class="list-main-cart__row _total">
                             <span class="list-main-cart__name"><?= TOTAL_PRICE ?></span>
                             <span class="list-main-cart__value"><span
-                                        class="items_total"><?= $total_price_cart + $delivery_price ?></span> <?= MDL ?></span>
+                                        class="items_total"><?= mdl_format($total_price_cart + $delivery_price) ?></span> <?= MDL ?></span>
                         </li>
                         <?php if (!empty($client_info) && !empty($client_info->discount)) { ?>
                             <li class="list-main-cart__row _bonus">
@@ -342,6 +337,3 @@ $cartProductPrice = !empty($item['subtotal'])
         </div>
     </section>
 </main>
-<?php if (!empty($welcome_offer_timer)) { ?>
-    <script src="/app/js/components/welcome-offer.js" defer></script>
-<?php } ?>

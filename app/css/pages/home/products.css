@@ -147,9 +147,6 @@
 	pointer-events: auto;
 }
 
-.home-products__page.is-transitioning {
-	visibility: visible;
-}
 @media (max-width: 1439px) and (min-width: 768px) {
 	.home-products__container {
 		width: calc(100% - 48px);

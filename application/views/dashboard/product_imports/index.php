@@ -79,10 +79,10 @@ if ((int) $current_page > 1) $returnParams['page'] = (int) $current_page;
 	<div class="portlet light bordered">
 		<div class="portlet-title">
 			<div class="caption"><i class="fa fa-refresh"></i> <?= $filter_status === 'edited' ? 'Обработанные изменения' : 'Новые записи импорта' ?> <small>(<?= (int) $total_rows ?>)</small></div>
-			<?php if ($filter_status === 'edited' && (int) $total_rows > 0): ?>
+			<?php if ((int) $total_rows > 0): ?>
 				<div class="actions">
-					<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#clearProcessedChangesModal">
-						<i class="fa fa-trash"></i> Удалить все обработанные
+					<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#clearImportChangesModal">
+						<i class="fa fa-trash"></i> Очистить список
 					</button>
 				</div>
 			<?php endif; ?>
@@ -125,25 +125,26 @@ if ((int) $current_page > 1) $returnParams['page'] = (int) $current_page;
 			</ul><?php endif; ?>
 		</div>
 	</div>
-	<?php if ($filter_status === 'edited' && (int) $total_rows > 0): ?>
-		<div class="modal fade" id="clearProcessedChangesModal" tabindex="-1" role="dialog" aria-labelledby="clearProcessedChangesTitle">
+	<?php if ((int) $total_rows > 0): ?>
+		<div class="modal fade" id="clearImportChangesModal" tabindex="-1" role="dialog" aria-labelledby="clearImportChangesTitle">
 			<div class="modal-dialog" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
 						<button type="button" class="close" data-dismiss="modal" aria-label="Закрыть"><span aria-hidden="true">&times;</span></button>
-						<h4 class="modal-title" id="clearProcessedChangesTitle">Удалить обработанные записи?</h4>
+						<h4 class="modal-title" id="clearImportChangesTitle">Очистить текущий список?</h4>
 					</div>
 					<div class="modal-body">
-						Будут удалены <strong><?= (int) $total_rows ?></strong> записей из журнала проверок<?= ($filter_action !== '' || $filter_brand_id > 0 || $filter_search !== '') ? ' с учётом выбранных фильтров' : '' ?>.
+						Будут удалены <strong><?= (int) $total_rows ?></strong> записей из <?= $filter_status === 'edited' ? 'обработанной истории' : 'новой очереди' ?><?= ($filter_action !== '' || $filter_brand_id > 0 || $filter_search !== '') ? ' с учётом выбранных фильтров' : '' ?>.
 						<strong>Товары и их данные в каталоге не удаляются.</strong> Удалённые записи журнала восстановить нельзя.
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
-						<form method="post" action="/<?= ADM_CONTROLLER ?>/product_imports/clear_processed" style="display:inline;">
+						<form method="post" action="/<?= ADM_CONTROLLER ?>/product_imports/clear_current" style="display:inline;">
+							<input type="hidden" name="status" value="<?= html_escape($filter_status) ?>">
 							<?php if ($filter_action !== ''): ?><input type="hidden" name="action" value="<?= html_escape($filter_action) ?>"><?php endif; ?>
 							<?php if ($filter_brand_id > 0): ?><input type="hidden" name="brand_id" value="<?= (int) $filter_brand_id ?>"><?php endif; ?>
 							<?php if ($filter_search !== ''): ?><input type="hidden" name="q" value="<?= html_escape($filter_search) ?>"><?php endif; ?>
-							<button type="submit" class="btn btn-danger">Да, удалить записи</button>
+							<button type="submit" class="btn btn-danger">Да, очистить список</button>
 						</form>
 					</div>
 				</div>

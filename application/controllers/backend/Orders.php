@@ -108,6 +108,7 @@ class Orders extends BackEndController
 
         $item = $this->orders_model->find_first($id);
         if (empty($item)) throw_on_404();
+        $statusBeforeUpdate = (string) $item->status;
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
@@ -142,6 +143,19 @@ class Orders extends BackEndController
             }
 
             $item = $this->orders_model->find_first($id);
+
+            if (!empty($item) && (string) $item->status !== $statusBeforeUpdate) {
+                try {
+                    $this->load->model('Partners_referral_analytics_model');
+                    $this->partners_referral_analytics_model->recordOrderStatusChange(
+                        $id,
+                        $statusBeforeUpdate,
+                        (string) $item->status
+                    );
+                } catch (Throwable $analyticsException) {
+                    // Admin order updates must not depend on the analytics service.
+                }
+            }
 
         }
 

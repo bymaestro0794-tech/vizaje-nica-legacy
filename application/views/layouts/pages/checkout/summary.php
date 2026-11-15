@@ -132,12 +132,7 @@ if (
 				</span>
 
 				<span class="vn-checkout-summary__value">
-					<?= number_format(
-						$summaryProductsTotal,
-						0,
-						'.',
-						' '
-					) ?>
+					<?= mdl_format($summaryProductsTotal) ?>
 					<?= MDL ?>
 				</span>
 			</div>
@@ -157,12 +152,7 @@ if (
 					</span>
 
 					<span class="vn-checkout-summary__value">
-						−<?= number_format(
-							$summaryProductDiscount,
-							0,
-							'.',
-							' '
-						) ?>
+						−<?= mdl_format($summaryProductDiscount) ?>
 						<?= MDL ?>
 					</span>
 				</div>
@@ -194,12 +184,7 @@ if (
 					</span>
 
 					<span class="vn-checkout-summary__value">
-						−<?= number_format(
-							$summaryPromoDiscount,
-							0,
-							'.',
-							' '
-						) ?>
+						−<?= mdl_format($summaryPromoDiscount) ?>
 						<?= MDL ?>
 					</span>
 				</div>
@@ -212,7 +197,7 @@ if (
 					<?php if ($promoChoiceAvailable) : ?>
 						<button type="button" class="vn-checkout-discount-choice__option<?= $discountChoice === 'promo' ? ' is-selected' : '' ?>" data-checkout-discount-choice="promo">
 							<span><?= htmlspecialchars((string) $discountOptions['promo']['code'], ENT_QUOTES, 'UTF-8') ?></span>
-							<strong>−<?= number_format((float) $discountOptions['promo']['discount'], 0, '.', ' ') ?> <?= MDL ?></strong>
+							<strong>−<?= mdl_format($discountOptions['promo']['discount']) ?> <?= MDL ?></strong>
 						</button>
 					<?php endif; ?>
 					<?php if ($rouletteChoiceAvailable) : ?>
@@ -220,7 +205,7 @@ if (
 							<span><?= htmlspecialchars((string) $discountOptions['roulette']['title'], ENT_QUOTES, 'UTF-8') ?></span>
 							<strong><?= !empty($discountOptions['roulette']['free_shipping'])
 								? ($isRomanian ? 'Livrare gratuită' : 'Бесплатная доставка')
-								: '−' . number_format((float) $discountOptions['roulette']['discount'], 0, '.', ' ') . ' ' . MDL ?></strong>
+								: '−' . mdl_format($discountOptions['roulette']['discount']) . ' ' . MDL ?></strong>
 						</button>
 					<?php endif; ?>
 					<p class="vn-checkout-discount-choice__note"><?= $isRomanian ? 'Reducerile nu se cumulează.' : 'Скидки не суммируются.' ?></p>
@@ -275,12 +260,7 @@ if (
 				class="vn-checkout-summary__total-value"
 				data-summary-total
 			>
-				<?= number_format(
-					$summaryCartTotal,
-					0,
-					'.',
-					' '
-				) ?>
+				<?= mdl_format($summaryCartTotal) ?>
 				<?= MDL ?>
 			</span>
 

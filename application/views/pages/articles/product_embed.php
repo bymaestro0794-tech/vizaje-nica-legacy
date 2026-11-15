@@ -36,14 +36,14 @@ $similarProducts = array_slice($similar_products ?? array(), 0, 3);
         </a>
         <?php
             $basePrice = (float) ($product->effective_price ?? $product->price ?? 0);
-            $salePrice = !empty($_SESSION['isb2b'])
+            $salePrice = client_uses_wholesale_prices()
                 ? 0
                 : (float) ($product->effective_discount_price ?? $product->discount_price ?? 0);
             $displayPrice = $salePrice > 0 && $salePrice < $basePrice ? $salePrice : $basePrice;
         ?>
         <?php if ($displayPrice > 0) { ?>
             <strong class="blog-product-embed__price">
-                <?= number_format($displayPrice, 0, '.', ' ') ?> <?= defined('MDL') ? MDL : 'MDL' ?>
+                <?= mdl_format($displayPrice) ?> <?= defined('MDL') ? MDL : 'MDL' ?>
             </strong>
         <?php } ?>
     </div>

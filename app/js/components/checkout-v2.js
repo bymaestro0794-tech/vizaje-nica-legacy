@@ -1517,11 +1517,11 @@ window.VNCheckoutScroll = function (element) {
 	const maxBonusWriteOff = Number(summary.dataset.bonusWriteoff || 0)
 
 	function formatMoney(value) {
-		const number = Math.max(0, Number(value) || 0)
+		const number = Math.ceil(Math.max(0, Number(value) || 0))
 
 		return (
 			new Intl.NumberFormat(lang === 'ro' ? 'ro-MD' : 'ru-RU', {
-				maximumFractionDigits: 2
+				maximumFractionDigits: 0
 			}).format(number) + ' MDL'
 		)
 	}

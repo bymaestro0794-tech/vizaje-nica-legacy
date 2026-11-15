@@ -528,6 +528,29 @@ html.auth-drawer-lock body {
 	margin-top: 24px;
 }
 
+.auth-drawer__partner-login {
+	display: flex;
+	width: 100%;
+	min-height: 48px;
+	align-items: center;
+	justify-content: center;
+	margin-top: 16px;
+	padding: 12px 18px;
+	border: 1px solid #e7e7e4;
+	color: #111111;
+	font-size: 12px;
+	font-weight: 500;
+	line-height: 1.25;
+	text-align: center;
+	text-decoration: none;
+	transition: border-color 180ms ease, background-color 180ms ease;
+}
+
+.auth-drawer__partner-login:hover {
+	border-color: #111111;
+	background-color: #f8f8f7;
+}
+
 /* ==========================================================
    Buttons
    ========================================================== */

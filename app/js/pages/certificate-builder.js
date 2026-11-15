@@ -1561,9 +1561,10 @@
 				return false
 			}
 
-			const value = parseFloat(
+			const enteredValue = parseFloat(
 				input.value.replace(/\s/g, '').replace(/[^\d.]/g, '')
 			)
+			const value = Math.ceil(Math.max(0, enteredValue || 0))
 
 			if (!value || Number.isNaN(value)) {
 				showError(input, window.CERTIFICATE_MESSAGES.amountEmpty)

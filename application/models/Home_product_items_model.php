@@ -216,7 +216,7 @@ public function addProduct($sectionKey, $productId)
 	$limit = max(1, min((int) $limit, 30));
 
 	$hasVariableField =
-	!empty($_SESSION['isb2b'])
+	client_uses_wholesale_prices()
 		? "
 			EXISTS (
 				SELECT 1
@@ -236,7 +236,7 @@ public function addProduct($sectionKey, $productId)
 			) AS has_variable
 		";
 
-	$hasAvailableStockField = !empty($_SESSION['isb2b'])
+	$hasAvailableStockField = client_uses_wholesale_prices()
 		? "
 			CASE
 				WHEN products.on_stockWH > 0 THEN 1
@@ -360,7 +360,7 @@ public function addProduct($sectionKey, $productId)
 		1
 	);
 
-	if (!empty($_SESSION['isb2b'])) {
+	if (client_uses_wholesale_prices()) {
 		$this->db->where('products.priceWH >', 0);
 	} else {
 		$this->db->where('products.price >', 0);

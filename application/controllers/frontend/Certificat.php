@@ -67,10 +67,34 @@ class Certificat extends FrontEndController
         $db = $this->load->database('app', TRUE);
         if ($this->input->server('REQUEST_METHOD') === 'POST') {
             $post = $this->input->post(null, true);
+            $rawDenomination = isset($post['denomination'])
+                ? str_replace(',', '.', trim((string) $post['denomination']))
+                : '';
+
+            if (!is_numeric($rawDenomination)) {
+                show_error(
+                    $this->lclang === 'ro'
+                        ? 'Valoarea certificatului nu este validă.'
+                        : 'Неверный номинал сертификата.',
+                    400
+                );
+                return;
+            }
+
+            $denomination = (int) ceil(max(0, (float) $rawDenomination));
+            if ($denomination < 200 || $denomination > 20000) {
+                show_error(
+                    $this->lclang === 'ro'
+                        ? 'Valoarea certificatului trebuie să fie între 200 și 20 000 MDL.'
+                        : 'Номинал сертификата должен быть от 200 до 20 000 MDL.',
+                    400
+                );
+                return;
+            }
 
             $ins = [
                 'gift_cards_id' => $post['design-certificate'],
-                'price' => $post['denomination'],
+                'price' => $denomination,
                 'name_from' => $post['from'],
                 'name_to' => $post['to'],
                 'text' => $post['text'],

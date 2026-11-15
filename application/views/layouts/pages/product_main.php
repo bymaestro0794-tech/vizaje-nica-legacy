@@ -47,6 +47,10 @@ $displayWholesalePrice = isset($item->effective_price_wholesale)
             : $displayPrice
     );
 
+$displayPrice = mdl_ceil($displayPrice);
+$displayDiscountPrice = mdl_ceil($displayDiscountPrice);
+$displayWholesalePrice = mdl_ceil($displayWholesalePrice);
+
 $displayWholesaleStock = isset($item->effective_stock_wholesale)
     ? (int) $item->effective_stock_wholesale
     : (
@@ -99,7 +103,7 @@ $productUrl =
     $item->uri;
 
 $isLiked = in_array($productId, $wishlist);
-$isB2B = !empty($_SESSION['isb2b']);
+$isB2B = client_uses_wholesale_prices();
 
 $availableStock = $isB2B
     ? $displayWholesaleStock
@@ -190,12 +194,7 @@ $notificationPrice = $isB2B
     : $currentPrice;
 
 $notificationPriceText =
-    number_format(
-        $notificationPrice,
-        0,
-        '.',
-        ' '
-    ) .
+    mdl_format($notificationPrice) .
     ' ' .
     MDL;
 ?>
@@ -364,12 +363,7 @@ $notificationPriceText =
             <?php if ($isB2B) { ?>
                 <div class="price-product__prices">
                     <span class="price-product__value">
-                        <?= number_format(
-                            $displayPrice,
-                            0,
-                            '.',
-                            ' '
-                        ) ?>
+                        <?= mdl_format($displayPrice) ?>
                         <?= MDL ?>
                     </span>
                 </div>
@@ -380,12 +374,7 @@ $notificationPriceText =
                     </span>
 
                     <span class="price-product__value">
-                        <?= number_format(
-                            $displayWholesalePrice,
-                            0,
-                            '.',
-                            ' '
-                        ) ?>
+                        <?= mdl_format($displayWholesalePrice) ?>
                         <?= MDL ?>
                     </span>
                 </div>
@@ -397,25 +386,20 @@ $notificationPriceText =
                             <?= $salePercent ?>%
                         </span>
                         <span class="price-product__old">
-                            <?= number_format($displayPrice, 0, '.', ' ') ?>
+                            <?= mdl_format($displayPrice) ?>
                             <?= MDL ?>
                         </span>
                     </div>
                 <?php } ?>
                 <div class="price-product__prices">
                     <span class="price-product__value">
-                        <?= number_format(
-                            $currentPrice,
-                            0,
-                            '.',
-                            ' '
-                        ) ?>
+                        <?= mdl_format($currentPrice) ?>
                         <?= MDL ?>
                     </span>
 
                     <?php if (!$useHomeProductCardStyle && !$useDiscountCatalogCardStyle) { ?>
                         <span class="price-product__old">
-                            <?= number_format($displayPrice, 0, '.', ' ') ?>
+                            <?= mdl_format($displayPrice) ?>
                             <?= MDL ?>
                         </span>
                     <?php } ?>
@@ -423,12 +407,7 @@ $notificationPriceText =
             <?php } else { ?>
                 <div class="price-product__prices">
                     <span class="price-product__value">
-                        <?= number_format(
-                            $currentPrice,
-                            0,
-                            '.',
-                            ' '
-                        ) ?>
+                        <?= mdl_format($currentPrice) ?>
                         <?= MDL ?>
                     </span>
                 </div>

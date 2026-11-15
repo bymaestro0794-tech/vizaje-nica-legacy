@@ -109,6 +109,7 @@ $route['cart/delete'] = 'ajax/cart_delete';
 $route['cart/update_cart'] = 'ajax/cart_update';
 
 $route['cart/drawer'] = 'ajax/cart_drawer';
+$route['creator/preferences'] = 'ajax/creator_preferences';
 $route['product/quick-view'] =
     'ajax/product_quick_view';
 

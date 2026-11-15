@@ -40,3 +40,8 @@ robots.txt
 
 # Separate Next.js rewrite project; keep it out of the legacy production repository.
 vz-next/
+vz-partners/
+mobile-backend/
+
+# Local temporary settings file; never commit runtime state.
+/inst_user_settings.tmp

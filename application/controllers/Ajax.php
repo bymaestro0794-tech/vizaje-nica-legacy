@@ -88,6 +88,8 @@ class Ajax extends CI_Controller
             unset($_SESSION['user_login']);
             unset($_SESSION['usr_key']);
             unset($_SESSION['isb2b']);
+            unset($_SESSION['is_creator']);
+            unset($_SESSION['creator_widget_enabled'], $_SESSION['creator_b2c_mode']);
         } else {
             $this->load->model('clients_model');
             $client_info = $this->clients_model->get_client_login($user_id);
@@ -96,10 +98,61 @@ class Ajax extends CI_Controller
                 unset($_SESSION['user_login']);
                 unset($_SESSION['usr_key']);
                 unset($_SESSION['isb2b']);
+                unset($_SESSION['is_creator']);
+                unset($_SESSION['creator_widget_enabled'], $_SESSION['creator_b2c_mode']);
             } else {
                 $this->data['client_info'] = $client_info;
+                sync_creator_session_preferences($client_info);
             }
         }
+    }
+
+    /** Save creator-only storefront preferences. */
+    public function creator_preferences()
+    {
+        check_if_POST();
+        $this->_is_logged_in();
+
+        $client = $this->data['client_info'] ?? null;
+        if (empty($client) || empty($client->is_creator)) {
+            return $this->output->set_status_header(403)->set_content_type('application/json', 'utf-8')
+                ->set_output(json_encode(array('status' => 'error', 'code' => 'CREATOR_ACCESS_REQUIRED')));
+        }
+
+        $setting = trim((string) $this->input->post('setting', true));
+        $rawValue = $this->input->post('value', true);
+        if (!in_array($setting, array('widget_enabled', 'b2c_mode'), true) || !in_array((string) $rawValue, array('0', '1'), true)) {
+            return $this->output->set_status_header(422)->set_content_type('application/json', 'utf-8')
+                ->set_output(json_encode(array('status' => 'error', 'code' => 'INVALID_CREATOR_PREFERENCE')));
+        }
+
+        $value = (int) $rawValue;
+        $column = $setting === 'widget_enabled' ? 'creator_widget_enabled' : 'creator_b2c_mode';
+        $persistent = !empty($client->creator_preferences_supported);
+        if ($persistent) {
+            $updated = $this->db
+                ->where('id', (int) $client->id)
+                ->where('is_creator', 1)
+                ->update('clients', array($column => $value));
+
+            if (!$updated) {
+                return $this->output->set_status_header(500)->set_content_type('application/json', 'utf-8')
+                    ->set_output(json_encode(array('status' => 'error', 'code' => 'CREATOR_PREFERENCE_SAVE_FAILED')));
+            }
+        }
+
+        if ($setting === 'widget_enabled') {
+            $_SESSION['creator_widget_enabled'] = (bool) $value;
+        } else {
+            $_SESSION['creator_b2c_mode'] = (bool) $value;
+        }
+
+        return $this->output->set_content_type('application/json', 'utf-8')->set_output(json_encode(array(
+            'status' => 'ok',
+            'setting' => $setting,
+            'value' => (bool) $value,
+            'persistent' => $persistent,
+        )));
     }
 
     /* ======================================================================
@@ -223,7 +276,7 @@ class Ajax extends CI_Controller
     |--------------------------------------------------------------------------
     */
 
-    $isB2B = !empty($_SESSION['isb2b']);
+    $isB2B = client_uses_wholesale_prices();
 
     if (!empty($variable)) {
         if ($isB2B) {
@@ -460,6 +513,18 @@ $response['cart_total'] =
         ''
     );
 
+// Queue analytics only after the cart library confirms a successful save.
+// Delivery is asynchronous; analytics failures never change this AJAX response.
+try {
+    $this->load->model('Partners_referral_analytics_model');
+    $this->partners_referral_analytics_model->recordAddToCart(
+        $productId,
+        $acceptedQuantity
+    );
+} catch (Throwable $analyticsException) {
+    // Best-effort integration: never turn a saved cart mutation into an error.
+}
+
     return $this->cartAddResponse(
         $response,
         $add_item,
@@ -543,7 +608,7 @@ public function gift_promotion_add()
                 ->set_output(json_encode(array('status' => 'error', 'code' => 'GIFT_VARIANT_UNAVAILABLE', 'message' => 'Выбранный вариант подарка недоступен.'), JSON_UNESCAPED_UNICODE));
         }
     } elseif (empty($giftVariants)) {
-        $availableGiftStock = !empty($_SESSION['isb2b'])
+        $availableGiftStock = client_uses_wholesale_prices()
             ? (int) ($product->on_stockWH ?? 0)
             : (int) ($product->on_stock ?? 0);
         if ($availableGiftStock <= 0) {
@@ -1048,8 +1113,7 @@ private function _cart_ui_state(
     |--------------------------------------------------------------------------
     */
 
-    $isB2B =
-        !empty($_SESSION['isb2b']);
+    $isB2B = client_uses_wholesale_prices();
 
     if (!empty($variable)) {
         if ($isB2B) {
@@ -2280,10 +2344,7 @@ public function product_quick_view()
                 'client_info' =>
                     $clientInfo,
 
-                'is_b2b' =>
-                    !empty(
-                        $_SESSION['isb2b']
-                    ),
+                'is_b2b' => client_uses_wholesale_prices(),
             ),
             true
         );
@@ -2704,10 +2765,7 @@ public function cart_drawer()
         }
     }
 
-    $isB2B =
-        !empty(
-            $_SESSION['isb2b']
-        );
+    $isB2B = client_uses_wholesale_prices();
 
     /*
     |--------------------------------------------------------------------------

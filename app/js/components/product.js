@@ -1392,7 +1392,7 @@
 			return 'conic-gradient(' + parts.join(', ') + ')'
 		}
 		function formatPrice(value) {
-			const amount = Number(value) || 0
+			const amount = Math.ceil(Math.max(0, Number(value) || 0))
 
 			return (
 				new Intl.NumberFormat(data.language === 'ro' ? 'ro-MD' : 'ru-MD', {

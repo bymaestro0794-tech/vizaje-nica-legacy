@@ -86,6 +86,7 @@ $sidebar_menu = array(
 		'childs' => array(
 			'site_themes' => array('name' => 'Атмосфера сайта', 'ico' => '<i class="fa fa-magic"></i>'),
 			'site_support' => array('name' => 'Поддержка сайта', 'ico' => '<i class="fa fa-telegram"></i>'),
+			'site_dialogs' => array('name' => 'Диалоги сайта', 'ico' => '<i class="fa fa-window-maximize"></i>'),
 		),
 	),
     

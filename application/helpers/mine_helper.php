@@ -654,6 +654,49 @@ if (!function_exists('user_login')) {
     }
 }
 
+if (!function_exists('client_uses_wholesale_prices')) {
+    /**
+     * Returns whether the authenticated storefront client is shown wholesale
+     * price and stock fields. Creator retail mode only changes the displayed
+     * pricing tier; it does not change the client's separate B2B identity flag.
+     */
+    function client_uses_wholesale_prices()
+    {
+        return !empty($_SESSION['isb2b'])
+            || (!empty($_SESSION['is_creator']) && empty($_SESSION['creator_b2c_mode']));
+    }
+}
+
+if (!function_exists('sync_creator_session_preferences')) {
+    /**
+     * Synchronize creator access and storefront preferences from the client row.
+     */
+    function sync_creator_session_preferences($client)
+    {
+        $_SESSION['is_creator'] = !empty($client->is_creator);
+
+        if (empty($_SESSION['is_creator'])) {
+            unset($_SESSION['creator_widget_enabled'], $_SESSION['creator_b2c_mode']);
+            return;
+        }
+
+        if (!empty($client->creator_preferences_supported)) {
+            $_SESSION['creator_widget_enabled'] = !empty($client->creator_widget_enabled);
+            $_SESSION['creator_b2c_mode'] = !empty($client->creator_b2c_mode);
+            return;
+        }
+
+        // Until the optional preferences columns are added, keep settings in
+        // this authenticated session instead of hiding the creator controls.
+        if (!array_key_exists('creator_widget_enabled', $_SESSION)) {
+            $_SESSION['creator_widget_enabled'] = true;
+        }
+        if (!array_key_exists('creator_b2c_mode', $_SESSION)) {
+            $_SESSION['creator_b2c_mode'] = false;
+        }
+    }
+}
+
 if (!function_exists('user_is_logged_in')) {
     function user_is_logged_in()
     {
@@ -740,7 +783,7 @@ if (!function_exists('sync_cart')) {
                         : (!empty($options['variant_id']) ? (int) $options['variant_id'] : 0))
                     : (!empty($options) ? (int) $options : 0);
 
-                if (!empty($_SESSION['isb2b'])) {
+                if (client_uses_wholesale_prices()) {
                     $cart_product->price = $cart_product->priceWH;
                 } else {
                     if (!empty($cart_product->discount_price) && $cart_product->discount_price > 0) {
@@ -762,7 +805,7 @@ if (!function_exists('sync_cart')) {
                             $CI->cart->remove($cart_items_item['rowid']);
                             continue;
                         }
-                        $cart_product->on_stock = !empty($_SESSION['isb2b'])
+                        $cart_product->on_stock = client_uses_wholesale_prices()
                             ? $variable->qtyWH
                             : $variable->qty;
                         $cart_product->on_stockWH = $variable->qtyWH;
@@ -777,7 +820,7 @@ if (!function_exists('sync_cart')) {
                         $CI->cart->remove($cart_items_item['rowid']);
                         continue;
                     }
-                    if (!empty($_SESSION['isb2b'])) {
+                    if (client_uses_wholesale_prices()) {
                         $cart_product->price = $cart_product->priceWH;
                     } else {
                         if (!empty($variable->discount_price) && $variable->discount_price > 0) {
@@ -786,7 +829,7 @@ if (!function_exists('sync_cart')) {
                             $cart_product->price = $variable->price;
                         }
                     }
-                    if (!empty($_SESSION['isb2b'])) {
+                    if (client_uses_wholesale_prices()) {
                         $cart_product->on_stock = $variable->qtyWH;
                     } else {
                         $cart_product->on_stock = $variable->qty;
@@ -798,7 +841,7 @@ if (!function_exists('sync_cart')) {
                 if ($quantity <= 0) {
                     $CI->cart->remove($row_id);
                 } else {
-                    if (!empty($_SESSION['isb2b'])) {
+                    if (client_uses_wholesale_prices()) {
                         if ($quantity > $cart_product->on_stockWH) $quantity = $cart_product->on_stockWH;
                     } else {
                         if ($quantity > $cart_product->on_stock) $quantity = $cart_product->on_stock;
@@ -2235,5 +2278,26 @@ if (!function_exists('switcher_syntax_en')) {
         ];
 
         return kb_switch($str, $map);
+    }
+}
+
+if (!function_exists('mdl_ceil')) {
+    /** Round a non-negative MDL amount up to the next whole leu. */
+    function mdl_ceil($amount)
+    {
+        return (int) ceil(max(0, (float) $amount));
+    }
+}
+
+if (!function_exists('mdl_format')) {
+    /** Format a monetary MDL amount without fractional units. */
+    function mdl_format($amount, $decimalSeparator = '.', $thousandsSeparator = ' ')
+    {
+        return number_format(
+            mdl_ceil($amount),
+            0,
+            $decimalSeparator,
+            $thousandsSeparator
+        );
     }
 }

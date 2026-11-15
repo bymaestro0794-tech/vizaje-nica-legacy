@@ -15,7 +15,7 @@ $escape = static function ($value) {
 	);
 };
 
-$isB2B = !empty($_SESSION['isb2b']);
+$isB2B = client_uses_wholesale_prices();
 
 /*
 |--------------------------------------------------------------------------
@@ -473,6 +473,11 @@ if (!empty($initialVariation)) {
 if (!empty($productVideoMedia) && !empty($initialVariation['images'])) {
 	$initialImages[] = $productVideoMedia;
 }
+
+$initialPrice = mdl_ceil($initialPrice);
+$initialDiscountPrice = !empty($initialDiscountPrice)
+	? mdl_ceil($initialDiscountPrice)
+	: null;
 
 /*
 |--------------------------------------------------------------------------
@@ -1286,12 +1291,7 @@ $hasBrandDescription = !empty(
 									class="product-summary__price-current"
 									data-price-current
 								>
-									<?= number_format(
-										$initialDiscountPrice,
-										0,
-										'.',
-										' '
-									) ?>
+					<?= mdl_format($initialDiscountPrice) ?>
 									<?= $escape(MDL) ?>
 								</span>
 
@@ -1299,12 +1299,7 @@ $hasBrandDescription = !empty(
 									class="product-summary__price-old"
 									data-price-old
 								>
-									<?= number_format(
-										$initialPrice,
-										0,
-										'.',
-										' '
-									) ?>
+					<?= mdl_format($initialPrice) ?>
 									<?= $escape(MDL) ?>
 								</span>
 
@@ -1314,12 +1309,7 @@ $hasBrandDescription = !empty(
 									class="product-summary__price-current"
 									data-price-current
 								>
-									<?= number_format(
-										$initialPrice,
-										0,
-										'.',
-										' '
-									) ?>
+					<?= mdl_format($initialPrice) ?>
 									<?= $escape(MDL) ?>
 								</span>
 
@@ -2473,15 +2463,10 @@ $hasBrandDescription = !empty(
 				class="product-sticky-bar__price"
 				data-product-sticky-price
 			>
-				<?= number_format(
-					!empty(
-						$initialDiscountPrice
-					)
+				<?= mdl_format(
+					!empty($initialDiscountPrice)
 						? $initialDiscountPrice
-						: $initialPrice,
-					0,
-					'.',
-					' '
+						: $initialPrice
 				) ?>
 				<?= $escape(MDL) ?>
 			</p>

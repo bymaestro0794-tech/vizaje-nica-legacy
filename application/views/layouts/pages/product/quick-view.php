@@ -369,6 +369,11 @@ if (!empty($initialVariation)) {
 			$initialVariation['volume'];
 }
 
+$initialPrice = mdl_ceil($initialPrice);
+$initialDiscountPrice = !empty($initialDiscountPrice)
+	? mdl_ceil($initialDiscountPrice)
+	: null;
+
 /*
 |--------------------------------------------------------------------------
 | Groups
@@ -767,12 +772,7 @@ if (!empty($initialVariation)) {
 					class="quick-view-product__price-current"
 					data-quick-view-price-current
 				>
-					<?= number_format(
-						$initialEffectivePrice,
-						0,
-						'.',
-						' '
-					) ?>
+					<?= mdl_format($initialEffectivePrice) ?>
 					<?= $escape(MDL) ?>
 				</span>
 
@@ -790,12 +790,7 @@ if (!empty($initialVariation)) {
 							$initialDiscountPrice
 						)
 					) : ?>
-						<?= number_format(
-							$initialPrice,
-							0,
-							'.',
-							' '
-						) ?>
+						<?= mdl_format($initialPrice) ?>
 						<?= $escape(MDL) ?>
 					<?php endif; ?>
 				</span>

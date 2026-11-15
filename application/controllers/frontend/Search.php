@@ -105,7 +105,7 @@ class Search extends FrontEndController
 
         $canUseMeilisearch = $search !== ''
             && $this->meilisearch_client->isConfigured()
-            && empty($_SESSION['isb2b']);
+            && !client_uses_wholesale_prices();
 
         if ($isFilterCountRequest) {
             $countResult = $canUseMeilisearch

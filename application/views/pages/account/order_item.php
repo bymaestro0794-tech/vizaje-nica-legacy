@@ -171,10 +171,10 @@
                                                 <span class="price-products-order-page-account__counts"><?= $product->qty ?></span>
                                                 <span>x</span>
                                                 <div class="price-products-order-page-account__column">
-                                                    <span class="price-products-order-page-account__value"><?= $product->price ?> <?= MDL ?></span>
+                                                    <span class="price-products-order-page-account__value"><?= mdl_format($product->price) ?> <?= MDL ?></span>
                                                 </div>
                                             </div>
-                                            <p class="products-order-page-account__total"><?= $product->qty * $product->price ?> <?= MDL ?></p>
+                                            <p class="products-order-page-account__total"><?= mdl_format(!empty($product->total) ? $product->total : $product->qty * $product->price) ?> <?= MDL ?></p>
                                         </div>
                                     </div>
                                 <?php } ?>
@@ -184,11 +184,11 @@
                                 <ul class="info-order-page-account__list">
                                     <li class="info-order-page-account__row">
                                         <span class="info-order-page-account__name"><?= PRODUCTS ?> </span>
-                                        <span class="info-order-page-account__value"><?= $order->total ?> <?= MDL ?></span>
+                                        <span class="info-order-page-account__value"><?= mdl_format($order->total) ?> <?= MDL ?></span>
                                     </li>
                                     <li class="info-order-page-account__row">
                                         <span class="info-order-page-account__name"><?= DELIVERY ?></span>
-                                        <span class="info-order-page-account__value"><?= $order->delivery_price ?></span>
+                                        <span class="info-order-page-account__value"><?= mdl_format($order->delivery_price) ?> <?= MDL ?></span>
                                     </li>
                                     <?php if (!empty($order->bonus_plus)) { ?>
                                         <li class="info-order-page-account__row">
@@ -198,7 +198,7 @@
                                     <?php } ?>
                                     <li class="info-order-page-account__row _total">
                                         <span class="info-order-page-account__name"><?= TOTAL_PRICE ?></span>
-                                        <span class="info-order-page-account__value"><?= $order->total + $order->delivery_price - (!empty($order->bonus_minus)?$order->bonus_minus:0) ?> <?= MDL ?></span>
+                                        <span class="info-order-page-account__value"><?= mdl_format($order->total + $order->delivery_price - (!empty($order->bonus_minus)?$order->bonus_minus:0)) ?> <?= MDL ?></span>
                                     </li>
                                 </ul>
                                 <!--                                <a href="#" class="info-order-page-account__repeat">-->

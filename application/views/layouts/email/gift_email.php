@@ -104,7 +104,7 @@
 						>
 							<?= str_replace(
                                 '{price}',
-                                $giftCardInfoPrice,
+                                mdl_format($giftCardInfoPrice),
                                 GIFT_CARD_EMAIL_TEXT1
                             ) ?>
 						</h1>
@@ -228,7 +228,7 @@
 														color: <?= $giftCardTextColor ?>;
 													"
 												>
-													<?= $giftCardInfoPrice ?> <?= CURRENCY ?>
+													<?= mdl_format($giftCardInfoPrice) ?> <?= CURRENCY ?>
 												</div>
 											</td>
 										</tr>
@@ -267,7 +267,7 @@
 								color: #111111;
 							"
 						>
-							<?= $giftCardInfoPrice ?> <?= CURRENCY ?>
+							<?= mdl_format($giftCardInfoPrice) ?> <?= CURRENCY ?>
 						</div>
 
 					</td>

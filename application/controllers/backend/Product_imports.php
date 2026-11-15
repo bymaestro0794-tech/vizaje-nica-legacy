@@ -112,6 +112,38 @@ class Product_imports extends BackEndController
 		redirect('/' . ADM_CONTROLLER . '/product_imports?' . http_build_query($params));
 	}
 
+	public function clear_current()
+	{
+		check_if_POST();
+		if (!$this->db->table_exists('product_import_changes') || !$this->db->field_exists('status', 'product_import_changes')) {
+			$_SESSION['error'] = array('Журнал импорта не настроен.');
+			redirect('/' . ADM_CONTROLLER . '/product_imports');
+			return;
+		}
+
+		$status = $this->input->post('status', true);
+		$status = in_array($status, array('new', 'edited'), true) ? $status : 'new';
+		$action = $this->input->post('action', true);
+		$action = in_array($action, array('added', 'updated'), true) ? $action : '';
+		$search = trim((string) $this->input->post('q', true));
+		$brandId = max(0, (int) $this->input->post('brand_id', true));
+
+		$this->applyFilters($action, $status, $search, $brandId);
+		$ids = $this->db->select('pic.id')->get()->result_array();
+		$ids = array_map('intval', array_column($ids, 'id'));
+
+		foreach (array_chunk($ids, 500) as $idChunk) {
+			$this->db->where_in('id', $idChunk)->delete('product_import_changes');
+		}
+
+		$_SESSION['success'] = count($ids) . ' записей удалено из журнала импорта. Товары в каталоге не затронуты.';
+		$params = array('status' => $status);
+		if ($action !== '') $params['action'] = $action;
+		if ($brandId > 0) $params['brand_id'] = $brandId;
+		if ($search !== '') $params['q'] = $search;
+		redirect('/' . ADM_CONTROLLER . '/product_imports?' . http_build_query($params));
+	}
+
 	private function applyFilters($action, $status, $search, $brandId)
 	{
 		$this->db

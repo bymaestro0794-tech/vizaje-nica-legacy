@@ -131,6 +131,7 @@
                                 <th> <?=lang('Phone')?></th>
                                 <th width="180"></th>
                                 <th width="180"></th>
+                                <?php if (!empty($creator_flag_supported)) { ?><th width="180">Креатор</th><?php } ?>
                                 <th width="305"> <?=lang('Action')?></th>
                             </tr>
                             </thead>
@@ -160,6 +161,15 @@
                                                 <span></span>
                                             </label>
                                         </td>
+                                    <?php if (!empty($creator_flag_supported)) { ?>
+                                        <td class="align-middle">
+                                            <?php $creatorChecked = (!empty($item->is_creator)) ? 'checked' : '' ?>
+                                            <label class="mt-checkbox mt-checkbox-outline">
+                                                <input type="checkbox" <?= $creatorChecked ?> value="<?= $item->id ?>" data-col="is_creator" data-table="<?= $table ?>" class="mine_change_check">Креатор
+                                                <span></span>
+                                            </label>
+                                        </td>
+                                    <?php } ?>
                                     <td class="align-middle">
                                         <a href="<?= $e_path . $item->id . '/' ?>"
                                            class="btn btn-xs default btn-editable green-stripe">

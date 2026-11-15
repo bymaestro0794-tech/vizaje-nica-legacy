@@ -93,12 +93,7 @@
                                 </span>
 
                                 <span class="order-success__value">
-                                    <?= number_format(
-                                        $productsTotal,
-                                        0,
-                                        '.',
-                                        ' '
-                                    ) ?>
+                                    <?= mdl_format($productsTotal) ?>
                                     <?= MDL ?>
                                 </span>
                             </li>
@@ -118,12 +113,7 @@
                                     </span>
 
                                     <span class="order-success__value">
-                                        −<?= number_format(
-                                            $promoDiscount,
-                                            0,
-                                            '.',
-                                            ' '
-                                        ) ?>
+                                        −<?= mdl_format($promoDiscount) ?>
                                         <?= MDL ?>
                                     </span>
                                 </li>
@@ -136,12 +126,7 @@
 
                                 <span class="order-success__value delivery-info">
                                     <?php if ($deliveryPrice > 0) { ?>
-                                        <?= number_format(
-                                            $deliveryPrice,
-                                            0,
-                                            '.',
-                                            ' '
-                                        ) ?>
+                                        <?= mdl_format($deliveryPrice) ?>
                                         <?= MDL ?>
                                     <?php } else { ?>
                                         <?= PICKUP_FREE ?>
@@ -158,12 +143,7 @@
                                     </span>
 
                                     <span class="order-success__value">
-                                        −<?= number_format(
-                                            $bonusMinus,
-                                            0,
-                                            '.',
-                                            ' '
-                                        ) ?>
+                                        −<?= mdl_format($bonusMinus) ?>
                                         <?= MDL ?>
                                     </span>
                                 </li>
@@ -175,12 +155,7 @@
                                 </span>
 
                                 <span class="order-success__value">
-                                    <?= number_format(
-                                        $orderTotal,
-                                        0,
-                                        '.',
-                                        ' '
-                                    ) ?>
+                                    <?= mdl_format($orderTotal) ?>
                                     <?= MDL ?>
                                 </span>
                             </li>

@@ -481,7 +481,7 @@ class Analytics_model extends BaseModel
         $params = array($fromDateTime, $toDateTime);
         $limit = max(1, min(100, (int) $limit));
 
-        $availableStockCondition = !empty($_SESSION['isb2b'])
+        $availableStockCondition = client_uses_wholesale_prices()
             ? "p.on_stockWH > 0 OR EXISTS (
                 SELECT 1
                 FROM products_variable pv_available

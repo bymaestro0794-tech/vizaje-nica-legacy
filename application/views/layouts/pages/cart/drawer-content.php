@@ -329,12 +329,7 @@ if (
             </span>
 
             <span data-cart-shipping-threshold>
-                <?= number_format(
-                    $freeShippingValue,
-                    0,
-                    '.',
-                    ' '
-                ) ?>
+                <?= mdl_format($freeShippingValue) ?>
                 MDL
             </span>
         </div>
@@ -713,12 +708,7 @@ if (
                                             ? 'Reducere'
                                             : 'Скидка' ?>
 
-                                        <?= number_format(
-                                            $discountAmount,
-                                            0,
-                                            '.',
-                                            ' '
-                                        ) ?>
+                                        <?= mdl_format($discountAmount) ?>
 
                                         <?= MDL ?>
                                     </span>
@@ -727,23 +717,13 @@ if (
                                 <div class="cart-drawer-item__price-row">
                                     <?php if ($oldPrice > 0) : ?>
                                         <span class="cart-drawer-item__old-price">
-                                            <?= number_format(
-                                                $oldPrice * (int) $item['qty'],
-                                                0,
-                                                '.',
-                                                ' '
-                                            ) ?>
+                                            <?= mdl_format($oldPrice * (int) $item['qty']) ?>
                                             <?= MDL ?>
                                         </span>
                                     <?php endif; ?>
 
                                     <strong class="cart-drawer-item__current-price">
-                                        <?= number_format(
-                                            $currentPrice * (int) $item['qty'],
-                                            0,
-                                            '.',
-                                            ' '
-                                        ) ?>
+                                        <?= mdl_format($currentPrice * (int) $item['qty']) ?>
                                         <?= MDL ?>
                                     </strong>
                                 </div>
@@ -782,7 +762,7 @@ if (
                             ? ($isRomanian ? 'Cadou' : 'Подарок')
                             : (!empty($discountOptions['roulette']['free_shipping'])
                                 ? ($isRomanian ? 'Livrare gratuită' : 'Бесплатная доставка')
-                                : '−' . number_format((float) $selectedDiscount['discount'], 0, '.', ' ') . ' ' . MDL) ?>
+                                : '−' . mdl_format($selectedDiscount['discount']) . ' ' . MDL) ?>
                     </span>
                 </div>
             <?php endif; ?>
@@ -793,7 +773,7 @@ if (
                     <?php if ($promoChoiceAvailable) : ?>
                         <button type="button" class="cart-discount-choice__option<?= $discountChoice === 'promo' ? ' is-selected' : '' ?>" data-cart-discount-choice="promo">
                             <span><?= htmlspecialchars((string) $discountOptions['promo']['code'], ENT_QUOTES, 'UTF-8') ?></span>
-                            <strong>−<?= number_format((float) $discountOptions['promo']['discount'], 0, '.', ' ') ?> <?= MDL ?></strong>
+                            <strong>−<?= mdl_format($discountOptions['promo']['discount']) ?> <?= MDL ?></strong>
                         </button>
                     <?php endif; ?>
                     <?php if ($rouletteChoiceAvailable) : ?>
@@ -801,7 +781,7 @@ if (
                             <span><?= htmlspecialchars((string) $discountOptions['roulette']['title'], ENT_QUOTES, 'UTF-8') ?></span>
                             <strong><?= !empty($discountOptions['roulette']['free_shipping'])
                                 ? ($isRomanian ? 'Livrare gratuită' : 'Бесплатная доставка')
-                                : '−' . number_format((float) $discountOptions['roulette']['discount'], 0, '.', ' ') . ' ' . MDL ?></strong>
+                                : '−' . mdl_format($discountOptions['roulette']['discount']) . ' ' . MDL ?></strong>
                         </button>
                     <?php endif; ?>
                     <p class="cart-discount-choice__note"><?= $isRomanian ? 'Reducerile nu se cumulează.' : 'Скидки не суммируются.' ?></p>
@@ -835,12 +815,7 @@ if (
                             class="cart-drawer-promo__discount"
                             data-cart-promo-discount
                         >
-                            −<?= number_format(
-                                $promoDiscountTotal,
-                                0,
-                                '.',
-                                ' '
-                            ) ?>
+                            −<?= mdl_format($promoDiscountTotal) ?>
                             <?= MDL ?>
                         </span>
 
@@ -984,12 +959,7 @@ if (
                     </span>
 
                    <span data-cart-summary-products>
-                    <?= number_format(
-                        $productsTotal,
-                        0,
-                        '.',
-                        ' '
-                    ) ?>
+                    <?= mdl_format($productsTotal) ?>
                     <?= MDL ?>
                 </span>
                 </div>
@@ -1008,12 +978,7 @@ if (
                         </span>
 
                         <span data-cart-summary-discount>
-                            −<?= number_format(
-                                $productDiscountTotal,
-                                0,
-                                '.',
-                                ' '
-                            ) ?>
+                            −<?= mdl_format($productDiscountTotal) ?>
                             <?= MDL ?>
                         </span>
                     </div>
@@ -1042,12 +1007,7 @@ if (
                     </span>
 
                     <span data-cart-summary-promo>
-                        −<?= number_format(
-                            $promoDiscountTotal,
-                            0,
-                            '.',
-                            ' '
-                        ) ?>
+                        −<?= mdl_format($promoDiscountTotal) ?>
                         <?= MDL ?>
                     </span>
                 </div>
@@ -1072,12 +1032,7 @@ if (
                         <?php if (
                             $deliveryPrice > 0
                         ) : ?>
-                            <?= number_format(
-                                $deliveryPrice,
-                                0,
-                                '.',
-                                ' '
-                            ) ?>
+                            <?= mdl_format($deliveryPrice) ?>
                             <?= MDL ?>
                         <?php else : ?>
                             <?= $isRomanian
@@ -1096,12 +1051,7 @@ if (
                 </span>
 
                 <strong data-cart-summary-total>
-                    <?= number_format(
-                        $finalTotal,
-                        0,
-                        '.',
-                        ' '
-                    ) ?>
+                    <?= mdl_format($finalTotal) ?>
                     <?= MDL ?>
                 </strong>
             </div>

@@ -13,16 +13,16 @@ $productTitle = preg_replace(
 
 $productImage = newthumbs($item->img, 'products', 800, 800, 'home-800', 0);
 
-if (!empty($_SESSION['isb2b'])) {
-    $productPrice = $item->priceWH . ' ' . MDL;
+if (client_uses_wholesale_prices()) {
+    $productPrice = mdl_format($item->priceWH) . ' ' . MDL;
 } elseif (!empty($item->discount_price)) {
-    $productPrice = $item->discount_price . ' ' . MDL;
+    $productPrice = mdl_format($item->discount_price) . ' ' . MDL;
 } else {
-    $productPrice = $item->price . ' ' . MDL;
+    $productPrice = mdl_format($item->price) . ' ' . MDL;
 }
 ?>
 
-<?php if (!empty($_SESSION['isb2b'])) { ?>
+<?php if (client_uses_wholesale_prices()) { ?>
 <div
     class="products-colection__product
         <?php if (empty($item->stockWH)) { ?>stock_off<?php } ?>"
@@ -87,7 +87,7 @@ if (!empty($_SESSION['isb2b'])) {
                 <a href="/<?= $lclang ?>/<?= $menu['all'][3]->uri ?>/<?= $item->cat_uri ?>/<?= $item->uri ?>" class="products-colection__name"><?= $item->title ?></a>
 
                 <div class="products-colection__price price-products-colection">
-                    <span class="price-products-colection__value"><?= $item->priceWH ?> <?= MDL ?></span>
+                    <span class="price-products-colection__value"><?= mdl_format($item->priceWH) ?> <?= MDL ?></span>
                 </div>
             </div>
         </div>
@@ -163,12 +163,12 @@ if (!empty($_SESSION['isb2b'])) {
 
             <?php if (!empty($item->discount_price)) { ?>
                 <div class="products-colection__price price-products-colection">
-                    <span class="price-products-colection__value"><?= $item->discount_price ?> <?= MDL ?></span>
-                    <span class="price-products-colection__old"><?= $item->price ?> <?= MDL ?></span>
+                    <span class="price-products-colection__value"><?= mdl_format($item->discount_price) ?> <?= MDL ?></span>
+                    <span class="price-products-colection__old"><?= mdl_format($item->price) ?> <?= MDL ?></span>
                 </div>
             <?php } else { ?>
                 <div class="products-colection__price price-products-colection">
-                    <span class="price-products-colection__value"><?= $item->price ?> <?= MDL ?></span>
+                    <span class="price-products-colection__value"><?= mdl_format($item->price) ?> <?= MDL ?></span>
                 </div>
                 <div class="products-colection__bonus">
                     <?php if (!empty($client_info) && !empty($client_info->discount)) { ?>

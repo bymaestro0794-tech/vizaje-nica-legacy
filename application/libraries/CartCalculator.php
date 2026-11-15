@@ -522,10 +522,8 @@ class CartCalculator
             $this->CI->cart
                 ->contents();
 
-        $isB2B =
-            !empty(
-                $_SESSION['isb2b']
-            );
+        $isB2B = !empty($_SESSION['isb2b']);
+        $useWholesalePrices = client_uses_wholesale_prices();
 
         $client =
             $this->getClient();
@@ -577,7 +575,7 @@ class CartCalculator
                 $this->prepareRow(
                     $cartItem,
                     $clang,
-                    $isB2B
+                    $useWholesalePrices
                 );
 
             if (empty($row)) {
@@ -798,6 +796,10 @@ class CartCalculator
             }
         }
 
+        if ($requestedChoice === 'promo') {
+            $promoDiscountTotal = (float) ceil(max(0, $promoDiscountTotal));
+        }
+
         /*
         |--------------------------------------------------------------------------
         | Bonus write-off
@@ -865,7 +867,7 @@ class CartCalculator
 
         $shippingPrice =
             defined('SHIPPING_PRICE')
-                ? (float) SHIPPING_PRICE
+                ? (float) ceil(max(0, (float) SHIPPING_PRICE))
                 : 0;
 
         $empty =
@@ -1041,7 +1043,7 @@ class CartCalculator
     private function prepareRow(
         array $cartItem,
         $clang,
-        $isB2B
+        $useWholesalePrices
     ) {
         $product =
             $this->CI->products_model
@@ -1083,7 +1085,7 @@ class CartCalculator
         |--------------------------------------------------------------------------
         */
 
-        if ($isB2B) {
+        if ($useWholesalePrices) {
             if (!empty($variable)) {
                 $unitOriginalPrice =
                     (float) $variable->priceWH;
@@ -1132,6 +1134,10 @@ class CartCalculator
                     (int) $product->on_stock;
             }
         }
+
+        /* All customer-facing and charged product prices use whole MDL. */
+        $unitOriginalPrice = (float) ceil(max(0, $unitOriginalPrice));
+        $unitCurrentPrice = (float) ceil(max(0, $unitCurrentPrice));
 
         $originalTotal =
             $unitOriginalPrice
@@ -1391,7 +1397,7 @@ class CartCalculator
         }
 
         $discount = $isDiscountPrize
-            ? round($eligibleSubtotal * ((float) $prize['value'] / 100), 2)
+            ? ceil($eligibleSubtotal * ((float) $prize['value'] / 100))
             : 0;
         if ($isDiscountPrize && ($eligibleSubtotal <= 0 || $discount <= 0)) {
             $option['reason'] = 'no_eligible_products';
@@ -1411,7 +1417,7 @@ class CartCalculator
         $option['free_shipping'] = $isFreeShippingPrize;
 		$option['gift'] = $isGiftPrize ? array('id' => (int) $prize['gift_id']) : null;
         if ($discount > 0) {
-            $option['rows'] = $this->distributePromoDiscount($option['rows'], $discount);
+            $option['rows'] = $this->distributeLegacyDiscount($option['rows'], $discount);
         }
 
         return $option;
@@ -1624,7 +1630,7 @@ class CartCalculator
         |--------------------------------------------------------------------------
         */
 
-        $eligibleSubtotal = 0;
+        $eligibleSubtotalCents = 0;
         
         $excludedCartBrands = array();
 
@@ -1741,10 +1747,13 @@ class CartCalculator
                 $eligible;
 
             if ($eligible) {
-                $eligibleSubtotal +=
-                    $row['current_total'];
+                $eligibleSubtotalCents +=
+                    $this->promoMoneyToCents($row['current_total']);
             }
         }
+
+        $eligibleSubtotal =
+            $this->promoCentsToMoney($eligibleSubtotalCents);
         
         
 
@@ -1762,7 +1771,7 @@ class CartCalculator
         |--------------------------------------------------------------------------
         */
 
-        if ($eligibleSubtotal <= 0) {
+        if ($eligibleSubtotalCents <= 0) {
             $state['reason'] =
                 'PROMO_NOT_APPLICABLE';
 
@@ -1777,22 +1786,23 @@ class CartCalculator
         |--------------------------------------------------------------------------
         */
 
+        $minimumAmountCents = $promo->min_amount !== null
+            ? $this->promoMoneyToCents($promo->min_amount)
+            : 0;
+
         if (
             $promo->min_amount !== null
-            && $eligibleSubtotal
-                < (float) $promo->min_amount
+            && $eligibleSubtotalCents < $minimumAmountCents
         ) {
             $state['reason'] =
                 'PROMO_MINIMUM_AMOUNT';
 
             $state['minimum_amount'] =
-                (float) $promo->min_amount;
+                $this->promoCentsToMoney($minimumAmountCents);
 
             $state['minimum_remaining'] =
-                max(
-                    0,
-                    (float) $promo->min_amount
-                    - $eligibleSubtotal
+                $this->promoCentsToMoney(
+                    max(0, $minimumAmountCents - $eligibleSubtotalCents)
                 );
 
             return $this->removeInternalPromo(
@@ -1810,39 +1820,45 @@ class CartCalculator
             $promo->type
             === 'percentage'
         ) {
-            $discount =
-                $eligibleSubtotal
-                * (
-                    (float) $promo->value
-                    / 100
-                );
+            $percentageBasisPoints = (int) round(
+                (float) $promo->value * 100,
+                0,
+                PHP_ROUND_HALF_UP
+            );
+
+            /* Promo discounts are whole MDL and round upward. */
+            $discountNumerator = max(
+                0,
+                $eligibleSubtotalCents * $percentageBasisPoints
+            );
+            $discountWholeLei = $discountNumerator > 0
+                ? intdiv($discountNumerator + 999999, 1000000)
+                : 0;
+            $discountCents = $discountWholeLei * 100;
 
             if (
                 $promo->max_discount !== null
                 && (float) $promo->max_discount > 0
             ) {
-                $discount =
-                    min(
-                        $discount,
-                        (float) $promo->max_discount
-                    );
+                $discountCents = min(
+                    $discountCents,
+                    $this->promoMoneyToWholeCents($promo->max_discount)
+                );
             }
         } else {
-            $discount =
-                min(
-                    (float) $promo->value,
-                    $eligibleSubtotal
-                );
+            $discountCents = min(
+                $this->promoMoneyToWholeCents($promo->value),
+                $eligibleSubtotalCents
+            );
         }
 
-        $discount =
-            round(
-                max(
-                    0,
-                    $discount
-                ),
-                2
-            );
+        /* Keep the discount below the eligible subtotal to avoid negative lines. */
+        $discountCents = min(
+            $discountCents,
+            intdiv($eligibleSubtotalCents, 100) * 100
+        );
+        $discountCents = max(0, $discountCents);
+        $discount = $this->promoCentsToMoney($discountCents);
 
         if ($discount <= 0) {
             $state['reason'] =
@@ -1903,88 +1919,114 @@ class CartCalculator
         array $rows,
         $discount
     ) {
-        $discount =
-            round(
-                (float) $discount,
-                2
-            );
+        return $this->distributeWholeLeiDiscount(
+            $rows,
+            $discount,
+            'promo_eligible'
+        );
+    }
 
-        if ($discount <= 0) {
-            return $rows;
-        }
+    private function distributeLegacyDiscount(array $rows, $discount)
+    {
+        return $this->distributeWholeLeiDiscount(
+            $rows,
+            $discount,
+            'promo_eligible'
+        );
+    }
 
-        $eligibleSubtotal = 0;
+    private function distributeWholeLeiDiscount(array $rows, $discount, $eligibilityKey)
+    {
         $eligibleKeys = array();
+        $eligibleSubtotal = 0;
 
-        foreach (
-            $rows as $key => $row
-        ) {
-            if (
-                empty(
-                    $row['promo_eligible']
-                )
-            ) {
+        foreach ($rows as $key => $row) {
+            if (empty($row[$eligibilityKey])) {
                 continue;
             }
 
-            $eligibleSubtotal +=
-                $row['current_total'];
+            $rowTotal = (int) ceil(max(0, (float) $row['current_total']));
+            if ($rowTotal <= 0) {
+                continue;
+            }
 
-            $eligibleKeys[] =
-                $key;
+            $eligibleKeys[] = $key;
+            $eligibleSubtotal += $rowTotal;
         }
 
-        if (
-            $eligibleSubtotal <= 0
-            || empty($eligibleKeys)
-        ) {
+        $discount = min(
+            (int) ceil(max(0, (float) $discount)),
+            $eligibleSubtotal
+        );
+
+        if ($discount <= 0 || $eligibleSubtotal <= 0 || empty($eligibleKeys)) {
             return $rows;
         }
 
-        $distributed = 0;
+        $allocations = array();
+        $remainders = array();
+        $allocated = 0;
 
-        $lastKey =
-            end(
-                $eligibleKeys
+        foreach ($eligibleKeys as $position => $key) {
+            $rowTotal = (int) ceil(max(0, (float) $rows[$key]['current_total']));
+            $numerator = $discount * $rowTotal;
+            $rowDiscount = intdiv($numerator, $eligibleSubtotal);
+
+            $allocations[$key] = $rowDiscount;
+            $allocated += $rowDiscount;
+            $remainders[] = array(
+                'key' => $key,
+                'remainder' => $numerator % $eligibleSubtotal,
+                'position' => $position,
+                'row_total' => $rowTotal,
             );
+        }
 
-        foreach (
-            $eligibleKeys as $key
-        ) {
-            if ($key === $lastKey) {
-                $rowDiscount =
-                    $discount
-                    - $distributed;
-            } else {
-                $share =
-                    $rows[$key]['current_total']
-                    / $eligibleSubtotal;
-
-                $rowDiscount =
-                    round(
-                        $discount
-                        * $share,
-                        2
-                    );
-
-                $distributed +=
-                    $rowDiscount;
+        usort($remainders, function ($left, $right) {
+            if ($left['remainder'] === $right['remainder']) {
+                return $left['position'] <=> $right['position'];
             }
 
-            $rowDiscount =
-                min(
-                    $rowDiscount,
-                    $rows[$key]['current_total']
-                );
+            return $left['remainder'] > $right['remainder'] ? -1 : 1;
+        });
 
-            $rows[$key]['promo_discount'] =
-                max(
-                    0,
-                    $rowDiscount
-                );
+        $remaining = $discount - $allocated;
+        foreach ($remainders as $allocation) {
+            if ($remaining <= 0) {
+                break;
+            }
+
+            $key = $allocation['key'];
+            if ($allocations[$key] < $allocation['row_total']) {
+                $allocations[$key]++;
+                $remaining--;
+            }
+        }
+
+        foreach ($eligibleKeys as $key) {
+            $rows[$key]['promo_discount'] = (int) $allocations[$key];
         }
 
         return $rows;
+    }
+
+    private function promoMoneyToCents($amount)
+    {
+        return (int) round(
+            (float) $amount * 100,
+            0,
+            PHP_ROUND_HALF_UP
+        );
+    }
+
+    private function promoMoneyToWholeCents($amount)
+    {
+        return (int) ceil(max(0, (float) $amount)) * 100;
+    }
+
+    private function promoCentsToMoney($cents)
+    {
+        return ((int) $cents) / 100;
     }
 
     /*
