@@ -516,7 +516,10 @@ $response['cart_total'] =
 // Queue analytics only after the cart library confirms a successful save.
 // Delivery is asynchronous; analytics failures never change this AJAX response.
 try {
-    $this->load->model('Partners_referral_analytics_model');
+    $this->load->model(
+        'Partners_referral_analytics_model',
+        'partners_referral_analytics_model'
+    );
     $this->partners_referral_analytics_model->recordAddToCart(
         $productId,
         $acceptedQuantity

@@ -1215,7 +1215,10 @@ public function checkout()
             $partnersAnalyticsConfig = (array) $this->config->item('partners_referral_analytics');
             if (!empty($partnersAnalyticsConfig['enabled'])) {
                 try {
-                    $this->load->model('Partners_referral_analytics_model');
+                    $this->load->model(
+                        'Partners_referral_analytics_model',
+                        'partners_referral_analytics_model'
+                    );
                     $partnersAnalyticsOrderTracked = $this->partners_referral_analytics_model
                         ->addAttributionToOrderData($data);
                 } catch (Throwable $analyticsException) {

@@ -293,10 +293,16 @@ class FrontEndController extends CI_Controller
         $handoffToken = $_GET['vp_attribution'];
         if (is_string($handoffToken)) {
             try {
-                $this->load->model('Partners_referral_analytics_model');
+                $this->load->model(
+                    'Partners_referral_analytics_model',
+                    'partners_referral_analytics_model'
+                );
                 $this->partners_referral_analytics_model->exchangeAttributionHandoff($handoffToken);
             } catch (Throwable $exception) {
                 // A failed or disabled attribution exchange must not affect storefront access.
+                if (function_exists('log_message')) {
+                    log_message('error', 'Partners referral handoff: HANDOFF_UNEXPECTED_FAILURE');
+                }
             }
         }
 

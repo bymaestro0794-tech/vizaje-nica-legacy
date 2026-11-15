@@ -289,7 +289,10 @@ class Paynet extends CI_Controller
 
                 if ($analyticsTrackedOrder && !empty($order)) {
                     try {
-                        $this->load->model('Partners_referral_analytics_model');
+                        $this->load->model(
+                            'Partners_referral_analytics_model',
+                            'partners_referral_analytics_model'
+                        );
                         $this->partners_referral_analytics_model->recordOrderPaid(
                             (int) $order->id,
                             $analyticsPaidAt

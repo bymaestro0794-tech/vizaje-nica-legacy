@@ -146,7 +146,10 @@ class Orders extends BackEndController
 
             if (!empty($item) && (string) $item->status !== $statusBeforeUpdate) {
                 try {
-                    $this->load->model('Partners_referral_analytics_model');
+                    $this->load->model(
+                        'Partners_referral_analytics_model',
+                        'partners_referral_analytics_model'
+                    );
                     $this->partners_referral_analytics_model->recordOrderStatusChange(
                         $id,
                         $statusBeforeUpdate,

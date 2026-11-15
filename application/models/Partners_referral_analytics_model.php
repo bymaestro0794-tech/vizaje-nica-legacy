@@ -30,9 +30,14 @@ class Partners_referral_analytics_model extends CI_Model
     public function storeAttributionContext($context, $expiresAt = null)
     {
         $context = is_string($context) ? trim($context) : '';
-        if (!$this->isEnabled()
-            || !$this->hasConsent('marketing')
-            || !Partners_referral_analytics_protocol::isAttributionContext($context)
+        if (!$this->isEnabled() || !$this->hasConsent('marketing')) {
+            return false;
+        }
+        if (!$this->hasActiveSessionStorage()) {
+            $this->logHandoffDiagnostic('HANDOFF_SESSION_UNAVAILABLE');
+            return false;
+        }
+        if (!Partners_referral_analytics_protocol::isAttributionContext($context)
             || strlen($context) > (int) $this->setting('max_context_bytes', 512)) {
             return false;
         }
@@ -54,18 +59,30 @@ class Partners_referral_analytics_model extends CI_Model
     /** Exchange a one-time Partners token; never persist the handoff token. */
     public function exchangeAttributionHandoff($handoffToken)
     {
-        if (!$this->isEnabled()
-            || !$this->hasConsent('marketing')
-            || !is_string($handoffToken)
-            || !preg_match('/^[A-Za-z0-9_-]{40,}$/', $handoffToken)) {
+        if (!$this->isEnabled() || !$this->hasConsent('marketing')) {
             return false;
         }
 
-        $result = $this->client->postJson(
-            Partners_referral_analytics_protocol::ATTRIBUTION_EXCHANGE_PATH,
-            array('handoffToken' => $handoffToken)
-        );
+        if (!is_string($handoffToken) || !preg_match('/^[A-Za-z0-9_-]{40,}$/', $handoffToken)) {
+            $this->logHandoffDiagnostic('HANDOFF_TOKEN_INVALID');
+            return false;
+        }
+        if (!$this->hasActiveSessionStorage()) {
+            $this->logHandoffDiagnostic('HANDOFF_SESSION_UNAVAILABLE');
+            return false;
+        }
+
+        try {
+            $result = $this->client->postJson(
+                Partners_referral_analytics_protocol::ATTRIBUTION_EXCHANGE_PATH,
+                array('handoffToken' => $handoffToken)
+            );
+        } catch (Throwable $exception) {
+            $this->logHandoffDiagnostic('HANDOFF_PARTNERS_UNAVAILABLE');
+            return false;
+        }
         if (empty($result['ok']) || empty($result['response']) || !is_array($result['response'])) {
+            $this->logHandoffDiagnostic('HANDOFF_PARTNERS_UNAVAILABLE');
             return false;
         }
 
@@ -75,15 +92,22 @@ class Partners_referral_analytics_model extends CI_Model
             || !isset($response['attributionContext'], $response['expiresAt'])
             || !is_string($response['expiresAt'])
             || !Partners_referral_analytics_protocol::isAttributionContext($response['attributionContext'])) {
+            $this->logHandoffDiagnostic('HANDOFF_RESPONSE_INVALID');
             return false;
         }
 
         $expiresTimestamp = Partners_referral_analytics_protocol::isoUtcTimestamp($response['expiresAt']);
         if ($expiresTimestamp === false) {
+            $this->logHandoffDiagnostic('HANDOFF_RESPONSE_INVALID');
             return false;
         }
 
-        return $this->storeAttributionContext($response['attributionContext'], $expiresTimestamp);
+        if (!$this->storeAttributionContext($response['attributionContext'], $expiresTimestamp)) {
+            $this->logHandoffDiagnostic('HANDOFF_CONTEXT_NOT_STORED');
+            return false;
+        }
+
+        return true;
     }
 
     public function currentAttributionContext()
@@ -730,6 +754,29 @@ class Partners_referral_analytics_model extends CI_Model
     private function hasAnalyticsConsent()
     {
         return $this->hasConsent('analytics');
+    }
+
+    private function hasActiveSessionStorage()
+    {
+        return function_exists('session_status')
+            && session_status() === PHP_SESSION_ACTIVE
+            && isset($_SESSION)
+            && is_array($_SESSION);
+    }
+
+    /** Emit only a fixed diagnostic category; never include request or response data. */
+    private function logHandoffDiagnostic($code)
+    {
+        $allowedCodes = array(
+            'HANDOFF_TOKEN_INVALID',
+            'HANDOFF_SESSION_UNAVAILABLE',
+            'HANDOFF_PARTNERS_UNAVAILABLE',
+            'HANDOFF_RESPONSE_INVALID',
+            'HANDOFF_CONTEXT_NOT_STORED',
+        );
+        if (in_array($code, $allowedCodes, true) && function_exists('log_message')) {
+            log_message('error', 'Partners referral handoff: ' . $code);
+        }
     }
 
     private function hasConsent($category)
