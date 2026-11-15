@@ -30,7 +30,12 @@ class Partners_referral_analytics_model extends CI_Model
     public function storeAttributionContext($context, $expiresAt = null)
     {
         $context = is_string($context) ? trim($context) : '';
-        if (!$this->isEnabled() || !$this->hasConsent('marketing')) {
+        if (!$this->isEnabled()) {
+            $this->logHandoffDiagnostic('HANDOFF_DISABLED');
+            return false;
+        }
+        if (!$this->hasConsent('marketing')) {
+            $this->logHandoffDiagnostic('HANDOFF_CONSENT_MISSING');
             return false;
         }
         if (!$this->hasActiveSessionStorage()) {
@@ -59,7 +64,12 @@ class Partners_referral_analytics_model extends CI_Model
     /** Exchange a one-time Partners token; never persist the handoff token. */
     public function exchangeAttributionHandoff($handoffToken)
     {
-        if (!$this->isEnabled() || !$this->hasConsent('marketing')) {
+        if (!$this->isEnabled()) {
+            $this->logHandoffDiagnostic('HANDOFF_DISABLED');
+            return false;
+        }
+        if (!$this->hasConsent('marketing')) {
+            $this->logHandoffDiagnostic('HANDOFF_CONSENT_MISSING');
             return false;
         }
 
@@ -81,8 +91,19 @@ class Partners_referral_analytics_model extends CI_Model
             $this->logHandoffDiagnostic('HANDOFF_PARTNERS_UNAVAILABLE');
             return false;
         }
-        if (empty($result['ok']) || empty($result['response']) || !is_array($result['response'])) {
+        if (!is_array($result)) {
             $this->logHandoffDiagnostic('HANDOFF_PARTNERS_UNAVAILABLE');
+            return false;
+        }
+        if (empty($result['ok'])) {
+            $diagnostic = isset($result['code']) && $result['code'] === 'INVALID_SUCCESS_RESPONSE'
+                ? 'HANDOFF_RESPONSE_INVALID'
+                : 'HANDOFF_PARTNERS_UNAVAILABLE';
+            $this->logHandoffDiagnostic($diagnostic);
+            return false;
+        }
+        if (!isset($result['response']) || !is_array($result['response'])) {
+            $this->logHandoffDiagnostic('HANDOFF_RESPONSE_INVALID');
             return false;
         }
 
@@ -97,7 +118,8 @@ class Partners_referral_analytics_model extends CI_Model
         }
 
         $expiresTimestamp = Partners_referral_analytics_protocol::isoUtcTimestamp($response['expiresAt']);
-        if ($expiresTimestamp === false) {
+        $now = time();
+        if ($expiresTimestamp === false || $expiresTimestamp <= $now || $expiresTimestamp > $now + 604800) {
             $this->logHandoffDiagnostic('HANDOFF_RESPONSE_INVALID');
             return false;
         }
@@ -107,6 +129,7 @@ class Partners_referral_analytics_model extends CI_Model
             return false;
         }
 
+        $this->logHandoffDiagnostic('HANDOFF_SUCCESS');
         return true;
     }
 
@@ -768,11 +791,14 @@ class Partners_referral_analytics_model extends CI_Model
     private function logHandoffDiagnostic($code)
     {
         $allowedCodes = array(
+            'HANDOFF_DISABLED',
+            'HANDOFF_CONSENT_MISSING',
             'HANDOFF_TOKEN_INVALID',
             'HANDOFF_SESSION_UNAVAILABLE',
             'HANDOFF_PARTNERS_UNAVAILABLE',
             'HANDOFF_RESPONSE_INVALID',
             'HANDOFF_CONTEXT_NOT_STORED',
+            'HANDOFF_SUCCESS',
         );
         if (in_array($code, $allowedCodes, true) && function_exists('log_message')) {
             log_message('error', 'Partners referral handoff: ' . $code);

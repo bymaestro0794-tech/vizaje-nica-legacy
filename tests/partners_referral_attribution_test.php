@@ -35,6 +35,7 @@ class ReferralAttributionTestClient
     public $calls = array();
     public $exchangeResponse;
     public $exchangeException;
+    public $exchangeResult;
     public $seenHandoffTokens = array();
 
     public function postJson($path, array $payload)
@@ -42,6 +43,9 @@ class ReferralAttributionTestClient
         $this->calls[] = array($path, $payload);
         if ($this->exchangeException instanceof Throwable) {
             throw $this->exchangeException;
+        }
+        if (is_array($this->exchangeResult)) {
+            return $this->exchangeResult;
         }
         $token = isset($payload['handoffToken']) ? $payload['handoffToken'] : '';
         if (isset($this->seenHandoffTokens[$token])) {
@@ -163,12 +167,12 @@ class ReferralAttributionTestDatabase
     }
 }
 
-function referralAttributionModel($client, $database = null)
+function referralAttributionModel($client, $database = null, $enabled = true)
 {
     $reflection = new ReflectionClass('Partners_referral_analytics_model');
     $model = $reflection->newInstanceWithoutConstructor();
     foreach (array(
-        'settings' => array('enabled' => true, 'max_context_bytes' => 512, 'max_request_bytes' => 65536),
+        'settings' => array('enabled' => (bool) $enabled, 'max_context_bytes' => 512, 'max_request_bytes' => 65536),
         'client' => $client,
         'db' => $database ?: new ReferralAttributionTestDatabase(),
     ) as $propertyName => $value) {
@@ -177,6 +181,16 @@ function referralAttributionModel($client, $database = null)
         $property->setValue($model, $value);
     }
     return $model;
+}
+
+function referralAttributionLastDiagnostic()
+{
+    global $analyticsHandoffLogs;
+    if (empty($analyticsHandoffLogs)) {
+        return null;
+    }
+    $last = end($analyticsHandoffLogs);
+    return isset($last[1]) ? $last[1] : null;
 }
 
 $tempSessionPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'referral-attribution-' . bin2hex(random_bytes(6));
@@ -221,7 +235,14 @@ $client->exchangeResponse = array(
 $database = new ReferralAttributionTestDatabase();
 $model = referralAttributionModel($client, $database);
 referralAttributionAssert($model->exchangeAttributionHandoff($validToken), 'valid handoff is exchanged');
+referralAttributionAssert(referralAttributionLastDiagnostic() === 'Partners referral handoff: HANDOFF_SUCCESS', 'successful exchange has a fixed diagnostic');
 referralAttributionAssert(count($client->calls) === 1, 'valid handoff makes one server exchange');
+$exchangeCall = $client->calls[0];
+referralAttributionAssert(
+    $exchangeCall[0] === Partners_referral_analytics_protocol::ATTRIBUTION_EXCHANGE_PATH
+        && $exchangeCall[1] === array('handoffToken' => $validToken),
+    'exchange request matches the documented endpoint and exact payload'
+);
 referralAttributionAssert($_SESSION[Partners_referral_analytics_model::SESSION_KEY]['context'] === $context, 'opaque context saved to active session');
 referralAttributionAssert(!isset($_SESSION[Partners_referral_analytics_model::SESSION_KEY]['handoffToken']), 'handoff token is not persisted');
 referralAttributionAssert(array_keys($_COOKIE) === array_merge($cookieKeysBefore, array('cookie_consent')), 'handoff does not create another cookie');
@@ -248,24 +269,57 @@ foreach (array(null, false) as $marketingConsent) {
         $_COOKIE['cookie_consent'] = rawurlencode(json_encode(array('marketing' => false, 'analytics' => true)));
     }
     referralAttributionAssert(!$model->exchangeAttributionHandoff($validToken), 'unset or denied marketing consent blocks handoff pending legal review');
+    referralAttributionAssert(referralAttributionLastDiagnostic() === 'Partners referral handoff: HANDOFF_CONSENT_MISSING', 'missing marketing consent has a fixed diagnostic');
     referralAttributionAssert(count($client->calls) === $beforeCalls, 'consent-gated handoff does not spend a one-time token');
 }
+$passed++;
+
+// Consent parser matches the site's JSON cookie: plain and encoded boolean true are accepted, strings are not.
+$_COOKIE['cookie_consent'] = json_encode(array('marketing' => true));
+referralAttributionAssert($model->exchangeAttributionHandoff($validToken . 'plain-cookie'), 'plain JSON consent cookie is accepted');
+$_COOKIE['cookie_consent'] = rawurlencode(json_encode(array('marketing' => 'true')));
+referralAttributionAssert(!$model->exchangeAttributionHandoff($validToken . 'string-cookie'), 'string true is not accepted as consent');
+referralAttributionAssert(referralAttributionLastDiagnostic() === 'Partners referral handoff: HANDOFF_CONSENT_MISSING', 'invalid consent value is diagnosed safely');
+$passed++;
+
+// A disabled feature flag is distinguished from consent and never contacts Partners.
+$_COOKIE['cookie_consent'] = rawurlencode(json_encode(array('marketing' => true)));
+$disabledClient = new ReferralAttributionTestClient();
+$disabledModel = referralAttributionModel($disabledClient, null, false);
+referralAttributionAssert(!$disabledModel->exchangeAttributionHandoff($validToken . 'disabled'), 'disabled analytics blocks exchange');
+referralAttributionAssert(referralAttributionLastDiagnostic() === 'Partners referral handoff: HANDOFF_DISABLED', 'disabled analytics has a fixed diagnostic');
+referralAttributionAssert(count($disabledClient->calls) === 0, 'disabled analytics does not contact Partners');
 $passed++;
 
 // Invalid token, invalid/expired Partner response, replay and API outage are handled without sensitive logs.
 $beforeLogs = count($analyticsHandoffLogs);
 $_COOKIE['cookie_consent'] = rawurlencode(json_encode(array('marketing' => true, 'analytics' => false)));
 referralAttributionAssert(!$model->exchangeAttributionHandoff('short'), 'invalid handoff token rejected');
+referralAttributionAssert(referralAttributionLastDiagnostic() === 'Partners referral handoff: HANDOFF_TOKEN_INVALID', 'invalid token uses a fixed diagnostic');
 $client->exchangeResponse = array('attributionContext' => $context, 'expiresAt' => Partners_referral_analytics_protocol::isoUtc(time() - 10));
 referralAttributionAssert(!$model->exchangeAttributionHandoff($validToken . 'expired'), 'expired exchange context rejected');
+referralAttributionAssert(referralAttributionLastDiagnostic() === 'Partners referral handoff: HANDOFF_RESPONSE_INVALID', 'expired response context is diagnosed as invalid');
 $client->exchangeResponse = array('attributionContext' => 'invalid', 'expiresAt' => Partners_referral_analytics_protocol::isoUtc(time() + 3600));
 referralAttributionAssert(!$model->exchangeAttributionHandoff($validToken . 'invalid'), 'invalid Partner response rejected');
+referralAttributionAssert(referralAttributionLastDiagnostic() === 'Partners referral handoff: HANDOFF_RESPONSE_INVALID', 'invalid response shape has a fixed diagnostic');
+$client->exchangeResponse = array(
+    'attributionContext' => $context,
+    'expiresAt' => Partners_referral_analytics_protocol::isoUtc(time() + 3600),
+    'unexpected' => true,
+);
+referralAttributionAssert(!$model->exchangeAttributionHandoff($validToken . 'extra-field'), 'unexpected response fields are rejected');
+referralAttributionAssert(referralAttributionLastDiagnostic() === 'Partners referral handoff: HANDOFF_RESPONSE_INVALID', 'response schema remains exact');
+$client->exchangeResult = array('ok' => false, 'code' => 'INVALID_SUCCESS_RESPONSE', 'http_status' => 200, 'response' => null);
+referralAttributionAssert(!$model->exchangeAttributionHandoff($validToken . 'bad-json'), 'malformed successful API response is rejected');
+referralAttributionAssert(referralAttributionLastDiagnostic() === 'Partners referral handoff: HANDOFF_RESPONSE_INVALID', 'client invalid-success response maps to invalid response diagnostic');
+$client->exchangeResult = null;
 $client->exchangeResponse = array('attributionContext' => $context, 'expiresAt' => Partners_referral_analytics_protocol::isoUtc(time() + 3600));
 $replayToken = $validToken . 'replay';
 referralAttributionAssert($model->exchangeAttributionHandoff($replayToken), 'first use of one-time token accepted');
 referralAttributionAssert(!$model->exchangeAttributionHandoff($replayToken), 'replayed token rejected by Partner response');
 $client->exchangeException = new RuntimeException('SECRET_TOKEN_AND_PII_MUST_NOT_BE_LOGGED');
 referralAttributionAssert(!$model->exchangeAttributionHandoff($validToken . 'offline'), 'Partners API failure is best-effort');
+referralAttributionAssert(referralAttributionLastDiagnostic() === 'Partners referral handoff: HANDOFF_PARTNERS_UNAVAILABLE', 'Partners failure uses fixed unavailable diagnostic');
 $newLogs = array_slice($analyticsHandoffLogs, $beforeLogs);
 $logText = json_encode($newLogs);
 referralAttributionAssert(strpos($logText, 'SECRET_TOKEN_AND_PII_MUST_NOT_BE_LOGGED') === false, 'diagnostics exclude exception contents');
@@ -277,6 +331,7 @@ $client->exchangeException = null;
 $callsBeforeNoSession = count($client->calls);
 session_write_close();
 referralAttributionAssert(!$model->exchangeAttributionHandoff($validToken . 'nosession'), 'handoff without active session is declined');
+referralAttributionAssert(referralAttributionLastDiagnostic() === 'Partners referral handoff: HANDOFF_SESSION_UNAVAILABLE', 'session failure has a fixed diagnostic');
 referralAttributionAssert(count($client->calls) === $callsBeforeNoSession, 'no-session path does not call Partners');
 session_id('referral-attribution-regression');
 session_start();

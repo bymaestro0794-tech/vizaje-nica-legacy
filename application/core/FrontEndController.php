@@ -304,6 +304,9 @@ class FrontEndController extends CI_Controller
                     log_message('error', 'Partners referral handoff: HANDOFF_UNEXPECTED_FAILURE');
                 }
             }
+        } elseif (function_exists('log_message')) {
+            // A query array is malformed input; log only a fixed category, never its value.
+            log_message('error', 'Partners referral handoff: HANDOFF_TOKEN_INVALID');
         }
 
         header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
