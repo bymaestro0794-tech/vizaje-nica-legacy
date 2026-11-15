@@ -59,7 +59,15 @@ $autoload['packages'] = array(APPPATH.'third_party/codeigniter-forensics');
 |
 |	$autoload['libraries'] = array('user_agent' => 'ua');
 */
-$autoload['libraries'] = array('database');
+$isPartnersReferralAnalyticsWorker = PHP_SAPI === 'cli'
+    && isset($_SERVER['argv'][1], $_SERVER['argv'][2])
+    && strtolower(basename((string) $_SERVER['argv'][1])) === 'partners_referral_analytics_worker'
+    && strtolower((string) $_SERVER['argv'][2]) === 'run';
+
+// The analytics worker checks its feature flag before opening the database.
+// Keep the normal site and every other CLI command on the existing autoload.
+$autoload['libraries'] = $isPartnersReferralAnalyticsWorker ? array() : array('database');
+unset($isPartnersReferralAnalyticsWorker);
 
 /*
 | -------------------------------------------------------------------

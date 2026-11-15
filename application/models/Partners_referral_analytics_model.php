@@ -227,8 +227,17 @@ class Partners_referral_analytics_model extends CI_Model
     /** Rebuild any missing order events from saved Legacy snapshots. */
     public function reconcileOrderEvents($limit = 100)
     {
-        $result = array('scanned' => 0, 'reconciled' => 0);
-        if (!$this->isEnabled() || !$this->tableExists() || !$this->orderAnalyticsColumnsExist()) {
+        $result = array('scanned' => 0, 'reconciled' => 0, 'error' => null);
+        if (!$this->isEnabled()) {
+            return $result;
+        }
+
+        if (!$this->tableExists()) {
+            $result['error'] = 'OUTBOX_TABLE_UNAVAILABLE';
+            return $result;
+        }
+        if (!$this->orderAnalyticsColumnsExist()) {
+            $result['error'] = 'ORDER_ANALYTICS_SCHEMA_MISSING';
             return $result;
         }
 
@@ -266,7 +275,8 @@ class Partners_referral_analytics_model extends CI_Model
                 }
             }
         } catch (Throwable $exception) {
-            // The optional integration must fail closed and leave checkout alone.
+            // Keep exception details private; the CLI worker receives a safe code.
+            $result['error'] = 'DATABASE_OPERATION_FAILED';
         } finally {
             $this->db->db_debug = $previousDbDebug;
         }
@@ -582,8 +592,16 @@ class Partners_referral_analytics_model extends CI_Model
 
     public function deliverPending($limit = 25)
     {
-        $result = array('delivered' => 0, 'retry' => 0, 'failed' => 0, 'skipped' => 0);
-        if (!$this->isEnabled() || !$this->client->isReady() || !$this->tableExists()) {
+        $result = array('delivered' => 0, 'retry' => 0, 'failed' => 0, 'skipped' => 0, 'error' => null);
+        if (!$this->isEnabled()) {
+            return $result;
+        }
+        if (!$this->client->isReady()) {
+            $result['error'] = 'ANALYTICS_CLIENT_NOT_CONFIGURED';
+            return $result;
+        }
+        if (!$this->tableExists()) {
+            $result['error'] = 'OUTBOX_TABLE_UNAVAILABLE';
             return $result;
         }
 
@@ -627,8 +645,8 @@ class Partners_referral_analytics_model extends CI_Model
                 }
             }
         } catch (Throwable $exception) {
-            // Keep optional queue failures out of CLI output and order flows.
-            $result['skipped']++;
+            // Keep exception details private; report a stable code to CLI only.
+            $result['error'] = 'DATABASE_OPERATION_FAILED';
         } finally {
             $this->db->db_debug = $previousDbDebug;
         }
