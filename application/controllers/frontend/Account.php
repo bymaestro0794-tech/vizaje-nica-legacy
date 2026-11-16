@@ -179,6 +179,7 @@ class Account extends FrontEndController
 
                     $this->data['client_info'] = $this->clients_model->get_client($this->data['client_info']->id);
 
+                    $this->clearReferralAttributionOnAccountChange($this->data['client_info']->id);
                     $_SESSION['user_id'] = $this->data['client_info']->id;
                     $_SESSION['user_login'] = $this->data['client_info']->email;
                     $_SESSION['usr_key'] = hash('sha512', $this->data['client_info']->email . $this->data['client_info']->password);
@@ -356,6 +357,7 @@ class Account extends FrontEndController
                         if (!$this->clients_model->update(array('password' => $post['password_new']), $post['id'])) {
                             $return['info'] = ERROR_EDIT_CONTACT_INFO;
                         } else {
+                            $this->clearReferralAttributionOnAccountChange($user->id);
                             $_SESSION['user_id'] = $user->id;
                             $_SESSION['user_login'] = $user->email;
                             $_SESSION['usr_key'] = hash('sha512', $user->email . $post['password_new']);
@@ -430,6 +432,7 @@ class Account extends FrontEndController
                 $user = $this->clients_model->login($post['email'], $post["password"]);
                 if (!empty($user)) {
                     if ($user->active == 1) {
+                        $this->clearReferralAttributionOnAccountChange($user->id);
                         $_SESSION['user_id'] = $user->id;
                         $_SESSION['user_login'] = $user->email;
                         $_SESSION['usr_key'] = hash('sha512', $user->email . $user->password);
@@ -486,6 +489,7 @@ class Account extends FrontEndController
 
                 if (!empty($user)) {
                     if ($user->active == 1) {
+                        $this->clearReferralAttributionOnAccountChange($user->id);
                         $_SESSION['user_id'] = $user->id;
                         $_SESSION['user_login'] = $user->email;
                         $_SESSION['usr_key'] = hash('sha512', $user->email . $user->password);
@@ -743,6 +747,7 @@ class Account extends FrontEndController
 
                     unset($_SESSION['pending_welcome_registration_id']);
 
+                    $this->clearReferralAttributionOnAccountChange($user->id);
                     $_SESSION['user_id'] = $user->id;
                     $_SESSION['user_login'] = $user->email;
                     $_SESSION['usr_key'] = hash('sha512', $user->email . $user->password);
@@ -1116,8 +1121,22 @@ class Account extends FrontEndController
 	return true;
 }
 
+    private function clearReferralAttributionOnAccountChange($newUserId = null)
+    {
+        if ($newUserId === null) {
+            unset($_SESSION['partners_referral_analytics_attribution']);
+            return;
+        }
+
+        $currentUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : 0;
+        if ($currentUserId > 0 && $currentUserId !== (int) $newUserId) {
+            unset($_SESSION['partners_referral_analytics_attribution']);
+        }
+    }
+
     public function logout()
     {
+        $this->clearReferralAttributionOnAccountChange();
         unset($_SESSION['user_id']);
         unset($_SESSION['user_login']);
         unset($_SESSION['usr_key']);

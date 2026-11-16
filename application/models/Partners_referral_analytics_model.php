@@ -9,6 +9,7 @@ class Partners_referral_analytics_model extends CI_Model
     private $client;
     private $protocol;
     private $settings = array();
+    private $clock;
 
     public function __construct()
     {
@@ -26,8 +27,17 @@ class Partners_referral_analytics_model extends CI_Model
         return !empty($this->settings['enabled']);
     }
 
+    private function nowMilliseconds()
+    {
+        if (isset($this->clock) && is_callable($this->clock)) {
+            return (int) call_user_func($this->clock);
+        }
+
+        return (int) floor(microtime(true) * 1000);
+    }
+
     /** Save only a validated opaque context returned by the authenticated exchange. */
-    public function storeAttributionContext($context, $expiresAt = null)
+    public function storeAttributionContext($context, $expiresAt = null, $expiresAtMilliseconds = null)
     {
         $context = is_string($context) ? trim($context) : '';
         if (!$this->isEnabled()) {
@@ -47,15 +57,21 @@ class Partners_referral_analytics_model extends CI_Model
             return false;
         }
 
-        $now = time();
-        $expires = $expiresAt === null ? $now + 604800 : (int) $expiresAt;
-        if ($expires <= $now || $expires > $now + 604800) {
+        $nowMilliseconds = $this->nowMilliseconds();
+        $expiresMilliseconds = $expiresAtMilliseconds === null
+            ? ($expiresAt === null
+                ? $nowMilliseconds + 604800000
+                : (int) $expiresAt * 1000)
+            : (int) $expiresAtMilliseconds;
+        if ($expiresMilliseconds <= $nowMilliseconds
+            || $expiresMilliseconds > $nowMilliseconds + 604800000) {
             return false;
         }
 
         $_SESSION[self::SESSION_KEY] = array(
             'context' => $context,
-            'expires_at' => $expires,
+            'expires_at' => (int) floor($expiresMilliseconds / 1000),
+            'expires_at_ms' => $expiresMilliseconds,
         );
 
         return true;
@@ -117,14 +133,20 @@ class Partners_referral_analytics_model extends CI_Model
             return false;
         }
 
-        $expiresTimestamp = Partners_referral_analytics_protocol::isoUtcTimestamp($response['expiresAt']);
-        $now = time();
-        if ($expiresTimestamp === false || $expiresTimestamp <= $now || $expiresTimestamp > $now + 604800) {
+        $expiresTimestampMilliseconds = Partners_referral_analytics_protocol::isoUtcTimestampMilliseconds($response['expiresAt']);
+        $nowMilliseconds = $this->nowMilliseconds();
+        if ($expiresTimestampMilliseconds === false
+            || $expiresTimestampMilliseconds <= $nowMilliseconds
+            || $expiresTimestampMilliseconds > $nowMilliseconds + 604800000) {
             $this->logHandoffDiagnostic('HANDOFF_RESPONSE_INVALID');
             return false;
         }
 
-        if (!$this->storeAttributionContext($response['attributionContext'], $expiresTimestamp)) {
+        if (!$this->storeAttributionContext(
+            $response['attributionContext'],
+            (int) floor($expiresTimestampMilliseconds / 1000),
+            $expiresTimestampMilliseconds
+        )) {
             $this->logHandoffDiagnostic('HANDOFF_CONTEXT_NOT_STORED');
             return false;
         }
@@ -145,7 +167,10 @@ class Partners_referral_analytics_model extends CI_Model
         }
 
         $stored = $_SESSION[self::SESSION_KEY];
-        if (empty($stored['context']) || empty($stored['expires_at']) || (int) $stored['expires_at'] <= time()) {
+        $expiresAtMilliseconds = isset($stored['expires_at_ms'])
+            ? (int) $stored['expires_at_ms']
+            : ((int) (isset($stored['expires_at']) ? $stored['expires_at'] : 0) * 1000);
+        if (empty($stored['context']) || $expiresAtMilliseconds <= $this->nowMilliseconds()) {
             unset($_SESSION[self::SESSION_KEY]);
             return null;
         }
@@ -171,9 +196,63 @@ class Partners_referral_analytics_model extends CI_Model
             return false;
         }
 
+        $stored = $_SESSION[self::SESSION_KEY];
+        $expiresAtMilliseconds = isset($stored['expires_at_ms'])
+            ? (int) $stored['expires_at_ms']
+            : ((int) (isset($stored['expires_at']) ? $stored['expires_at'] : 0) * 1000);
+        if ($expiresAtMilliseconds <= $this->nowMilliseconds()) {
+            unset($_SESSION[self::SESSION_KEY]);
+            return false;
+        }
+
         $orderData['partners_referral_context'] = $context;
+        $orderData['partners_referral_context_expires_at'] = $this->databaseDateFromMilliseconds($expiresAtMilliseconds);
+        $orderData['partners_referral_order_created_at'] = $this->databaseDateFromMilliseconds($this->nowMilliseconds());
         $orderData['partners_referral_items_complete'] = 0;
         return true;
+    }
+
+    /** Refresh the eligibility timestamp at the final pre-insert checkout point. */
+    public function refreshOrderCreationTimestamp(array &$orderData)
+    {
+        if (empty($orderData['partners_referral_context'])
+            || empty($orderData['partners_referral_context_expires_at'])) {
+            return false;
+        }
+
+        $nowMilliseconds = $this->nowMilliseconds();
+        $expiresAtMilliseconds = Partners_referral_analytics_protocol::databaseDateTimestampMilliseconds(
+            (string) $orderData['partners_referral_context_expires_at']
+        );
+        if ($expiresAtMilliseconds === false || $expiresAtMilliseconds <= $nowMilliseconds) {
+            return false;
+        }
+
+        $orderData['partners_referral_order_created_at'] = $this->databaseDateFromMilliseconds($nowMilliseconds);
+        return true;
+    }
+
+    /** Remove optional referral fields when a last-moment eligibility check fails. */
+    public function clearOrderAttributionData(array &$orderData)
+    {
+        foreach (array(
+            'partners_referral_context',
+            'partners_referral_context_expires_at',
+            'partners_referral_order_created_at',
+            'partners_referral_items_complete',
+        ) as $column) {
+            unset($orderData[$column]);
+        }
+    }
+
+    private function databaseDateFromMilliseconds($timestampMilliseconds)
+    {
+        $seconds = (int) floor((int) $timestampMilliseconds / 1000);
+        $milliseconds = (int) $timestampMilliseconds % 1000;
+        $date = (new DateTimeImmutable('@' . $seconds))
+            ->setTimezone(new DateTimeZone('Europe/Chisinau'));
+
+        return $date->format('Y-m-d H:i:s') . '.' . str_pad((string) $milliseconds, 3, '0', STR_PAD_LEFT);
     }
 
     /** Mark the order snapshot complete only after every item insert succeeded. */
@@ -370,6 +449,21 @@ class Partners_referral_analytics_model extends CI_Model
             return false;
         }
 
+        $orderCreatedAtMilliseconds = Partners_referral_analytics_protocol::databaseDateTimestampMilliseconds(
+            isset($order->partners_referral_order_created_at)
+                ? (string) $order->partners_referral_order_created_at
+                : ''
+        );
+        $contextExpiresAt = Partners_referral_analytics_protocol::databaseDateTimestampMilliseconds(
+            isset($order->partners_referral_context_expires_at)
+                ? (string) $order->partners_referral_context_expires_at
+                : ''
+        );
+        if ($orderCreatedAtMilliseconds === false || $contextExpiresAt === false
+            || $contextExpiresAt <= $orderCreatedAtMilliseconds) {
+            return false;
+        }
+
         $items = array();
         foreach ($bundle['items'] as $item) {
             $productId = (int) $item->product_id;
@@ -451,7 +545,8 @@ class Partners_referral_analytics_model extends CI_Model
             $this->db->db_debug = false;
             $order = $this->db->select(
                 'id,status,total,delivery_price,bonus_minus,added,updated,pay_success,'
-                . 'partners_referral_context,partners_referral_items_complete,partners_referral_paid_at'
+                . 'partners_referral_context,partners_referral_context_expires_at,'
+                . 'partners_referral_order_created_at,partners_referral_items_complete,partners_referral_paid_at'
             )->where('id', (int) $orderId)->get('orders')->row();
             if (empty($order) || empty($order->partners_referral_context)
                 || (int) $order->partners_referral_items_complete !== 1) {
@@ -522,6 +617,8 @@ class Partners_referral_analytics_model extends CI_Model
         try {
             foreach (array(
                 'partners_referral_context',
+                'partners_referral_context_expires_at',
+                'partners_referral_order_created_at',
                 'partners_referral_items_complete',
                 'partners_referral_paid_at',
                 'partners_referral_reconciled_at',

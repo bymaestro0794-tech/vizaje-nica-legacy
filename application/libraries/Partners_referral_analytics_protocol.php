@@ -179,6 +179,28 @@ class Partners_referral_analytics_protocol
         return $date->getTimestamp();
     }
 
+    public static function isoUtcTimestampMilliseconds($value)
+    {
+        if (!is_string($value)
+            || !preg_match('/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$/', $value)) {
+            return false;
+        }
+
+        $date = DateTimeImmutable::createFromFormat(
+            '!Y-m-d\\TH:i:s.v\\Z',
+            $value,
+            new DateTimeZone('UTC')
+        );
+        $errors = DateTimeImmutable::getLastErrors();
+        if (!$date
+            || (is_array($errors) && ($errors['warning_count'] > 0 || $errors['error_count'] > 0))
+            || $date->format('Y-m-d\\TH:i:s.v\\Z') !== $value) {
+            return false;
+        }
+
+        return ((int) $date->format('U') * 1000) + (int) $date->format('v');
+    }
+
     public static function databaseDateToIsoUtc($value)
     {
         $timestamp = self::databaseDateTimestamp($value);
@@ -210,6 +232,22 @@ class Partners_referral_analytics_protocol
         }
 
         return $date->getTimestamp();
+    }
+
+    public static function databaseDateTimestampMilliseconds($value)
+    {
+        if (!is_string($value)
+            || !preg_match('/^(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})(?:\\.(\\d{1,3}))?$/', $value, $matches)) {
+            return false;
+        }
+
+        $seconds = self::databaseDateTimestamp($matches[1]);
+        if ($seconds === false) {
+            return false;
+        }
+
+        $fraction = isset($matches[2]) ? str_pad($matches[2], 3, '0', STR_PAD_RIGHT) : '000';
+        return ((int) $seconds * 1000) + (int) $fraction;
     }
 
     public static function orderEventTypeForStatus($status)

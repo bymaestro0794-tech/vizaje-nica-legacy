@@ -1230,6 +1230,24 @@ public function checkout()
                 $this->db->trans_begin();
             }
 
+            if ($partnersAnalyticsOrderTracked) {
+                try {
+                    if (!$this->partners_referral_analytics_model->refreshOrderCreationTimestamp($data)) {
+                        $this->partners_referral_analytics_model->clearOrderAttributionData($data);
+                        $partnersAnalyticsOrderTracked = false;
+                    }
+                } catch (Throwable $analyticsException) {
+                    unset(
+                        $data['partners_referral_context'],
+                        $data['partners_referral_context_expires_at'],
+                        $data['partners_referral_order_created_at'],
+                        $data['partners_referral_items_complete']
+                    );
+                    $partnersAnalyticsOrderTracked = false;
+                    // A referral timestamp failure must never block checkout or attribute an ineligible order.
+                }
+            }
+
             $this->db->insert('orders', $data);
             $order_id = $this->db->insert_id();
 
