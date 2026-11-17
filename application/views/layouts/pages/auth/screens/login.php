@@ -189,8 +189,8 @@ defined('BASEPATH') or exit('No direct script access allowed');
 				rel="noopener noreferrer"
 			>
 				<?= $isRomanian
-					? 'Intră prin Vizaje Partners'
-					: 'Войти через Vizaje Partners' ?>
+					? 'Deschide cabinetul Vizaje Partners'
+					: 'Открыть кабинет Vizaje Partners' ?>
 			</a>
 		</form>
 	</div>

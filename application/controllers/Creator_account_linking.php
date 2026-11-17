@@ -7,7 +7,7 @@ require_once APPPATH . 'libraries/Partners_creator_client.php';
 require_once APPPATH . 'libraries/Partners_creator_dashboard_presenter.php';
 require_once APPPATH . 'libraries/Partners_creator_security.php';
 
-/** Same-origin bridge between the authenticated Legacy creator and Partners. */
+/** Same-origin bridge between an authenticated Legacy customer and Partners. */
 class Creator_account_linking extends CI_Controller
 {
     private $creatorConfig = array();
@@ -34,8 +34,8 @@ class Creator_account_linking extends CI_Controller
     public function start()
     {
         if (!$this->requireMethod('POST')) return;
-        $client = $this->authenticatedCreator();
-        if (!$client) return $this->jsonError(403, 'CREATOR_ACCESS_REQUIRED');
+        $client = $this->authenticatedClient();
+        if (!$client) return $this->jsonError(403, 'ACCOUNT_ACCESS_REQUIRED');
         if (!$this->validCsrf()) return $this->jsonError(403, 'CSRF_INVALID');
         if (!$this->clientApi->enabled()) return $this->jsonError(503, 'INTEGRATION_UNAVAILABLE');
         if (!$this->partners_creator_model->isAvailable()) return $this->jsonError(503, 'LINK_STORAGE_UNAVAILABLE');
@@ -76,11 +76,11 @@ class Creator_account_linking extends CI_Controller
     public function callback()
     {
         if (!$this->requireMethod('GET')) return;
-        $client = $this->authenticatedCreator();
+        $client = $this->authenticatedClient();
         $flow = $_SESSION['creator_partner_link_flow'] ?? null;
         $code = $this->input->get('code', false);
         $state = $this->input->get('state', false);
-        $valid = $client && Partners_creator_security::isAuthenticatedCreatorSession($_SESSION, $client)
+        $valid = $client && Partners_creator_security::isAuthenticatedLegacySession($_SESSION, $client)
             && Partners_creator_security::isValidCallback($flow, $client->id, session_id(), $state, $code);
         if (!$valid) {
             // A stray callback must not cancel a different in-progress link attempt.
@@ -99,7 +99,7 @@ class Creator_account_linking extends CI_Controller
         $result = $this->clientApi->exchange($code, $client->id, (string) $flow['verifier']);
         $body = $result['body'] ?? array();
         if (empty($result['ok']) || !Partners_creator_security::isValidExchangeResponse($body)) return $this->redirectAccount('exchange', $locale);
-        if ($body['status'] !== 'active') return $this->redirectAccount('inactive', $locale);
+        if (!Partners_creator_security::isEligibleExchangeResponse($body)) return $this->redirectAccount('inactive', $locale);
         if (!$this->partners_creator_model->saveLink(
             $client->id, $body['partnerId'], $body['creatorId'], $body['status'], $body['scopes'],
             $body['grantToken'], $this->creatorConfig['grant_encryption_keys'] ?? array()
@@ -112,8 +112,8 @@ class Creator_account_linking extends CI_Controller
     public function dashboard()
     {
         if (!$this->requireMethod('GET')) return;
-        $client = $this->authenticatedCreator();
-        if (!$client) return $this->jsonError(403, 'CREATOR_ACCESS_REQUIRED');
+        $client = $this->authenticatedClient();
+        if (!$client) return $this->jsonError(403, 'ACCOUNT_ACCESS_REQUIRED');
         if (!$this->clientApi->enabled() || !$this->partners_creator_model->isAvailable()) {
             return $this->json(array('ok' => true, 'state' => 'not_connected', 'configured' => $this->clientApi->enabled(), 'canConnect' => false, 'canCreateLinks' => false, 'canUnlink' => false, 'linksAvailable' => false, 'analyticsAvailable' => false));
         }
@@ -159,8 +159,8 @@ class Creator_account_linking extends CI_Controller
     public function create_link()
     {
         if (!$this->requireMethod('POST')) return;
-        $client = $this->authenticatedCreator();
-        if (!$client) return $this->jsonError(403, 'CREATOR_ACCESS_REQUIRED');
+        $client = $this->authenticatedClient();
+        if (!$client) return $this->jsonError(403, 'ACCOUNT_ACCESS_REQUIRED');
         if (!$this->validCsrf()) return $this->jsonError(403, 'CSRF_INVALID');
         $context = $this->linkedGrant($client->id, 'links:write');
         if (!$context) return $this->jsonError(409, 'ACCOUNT_NOT_CONNECTED');
@@ -188,8 +188,8 @@ class Creator_account_linking extends CI_Controller
     public function revoke_link($linkId = '')
     {
         if (!$this->requireMethod('POST')) return;
-        $client = $this->authenticatedCreator();
-        if (!$client) return $this->jsonError(403, 'CREATOR_ACCESS_REQUIRED');
+        $client = $this->authenticatedClient();
+        if (!$client) return $this->jsonError(403, 'ACCOUNT_ACCESS_REQUIRED');
         if (!$this->validCsrf()) return $this->jsonError(403, 'CSRF_INVALID');
         $context = $this->linkedGrant($client->id, 'links:write');
         if (!$context) return $this->jsonError(409, 'ACCOUNT_NOT_CONNECTED');
@@ -201,8 +201,8 @@ class Creator_account_linking extends CI_Controller
     public function unlink()
     {
         if (!$this->requireMethod('POST')) return;
-        $client = $this->authenticatedCreator();
-        if (!$client) return $this->jsonError(403, 'CREATOR_ACCESS_REQUIRED');
+        $client = $this->authenticatedClient();
+        if (!$client) return $this->jsonError(403, 'ACCOUNT_ACCESS_REQUIRED');
         if (!$this->validCsrf()) return $this->jsonError(403, 'CSRF_INVALID');
         // A suspended creator must still be able to revoke their account link.
         $context = $this->linkedGrant($client->id, 'account:unlink', true);
@@ -233,24 +233,27 @@ class Creator_account_linking extends CI_Controller
         $status = $statusResult['body'] ?? array();
         if (!Partners_creator_security::isValidStatusResponse($status, $row)) return false;
         $this->partners_creator_model->updateStatus($clientId, $status['status'], $status['creatorId']);
-        if (!$allowInactive && $status['status'] !== 'active') return false;
+        if (!$allowInactive && !Partners_creator_security::isActiveStatusResponse($status, $row)) return false;
         return array('grant' => $grant, 'row' => $row);
     }
 
-    private function authenticatedCreator()
+    private function authenticatedClient()
     {
         if (empty($_SESSION['user_id'])) return false;
         $client = $this->clients_model->get_client((int) $_SESSION['user_id']);
-        return Partners_creator_security::isAuthenticatedCreatorSession($_SESSION, $client) ? $client : false;
+        return Partners_creator_security::isAuthenticatedLegacySession($_SESSION, $client) ? $client : false;
     }
 
     private function validCsrf()
     {
         $expected = $_SESSION['creator_partner_csrf'] ?? '';
         $actual = (string) $this->input->post('csrfToken', false);
-        return is_string($expected) && preg_match('/^[a-f0-9]{64}$/', $expected) === 1
-            && (string) ($_SESSION['creator_partner_csrf_client_id'] ?? '') === (string) (int) $_SESSION['user_id']
-            && $actual !== '' && hash_equals($expected, $actual);
+        return Partners_creator_security::isValidCsrfToken(
+            $expected,
+            $actual,
+            $_SESSION['creator_partner_csrf_client_id'] ?? '',
+            $_SESSION['user_id'] ?? 0
+        );
     }
 
     private function apiError($result)

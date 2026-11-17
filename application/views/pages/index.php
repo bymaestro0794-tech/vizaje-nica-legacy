@@ -424,7 +424,7 @@ $deferredCss = [
     'app/css/style/36-site-dialogs.css',
     'app/css/style/site-feedback.css',
 ];
-if (!empty($client_info->is_creator)) {
+if (!empty($client_info->id)) {
     $deferredCss[] = 'app/css/style/38-creator-widget.css';
 }
 
@@ -969,7 +969,7 @@ if (!empty($is_privacy_policy_page)) {
     <script src="<?= asset_url('app/js/components/header-promo-slider.js') ?>" defer></script>
     <script src="<?= asset_url('app/js/components/black-friday-timer.js') ?>" defer></script>
     <?php if ($rouletteShouldRender) { ?><script src="<?= asset_url('app/js/components/roulette-wheel.js') ?>" defer></script><?php } ?>
-    <?php if (!empty($client_info->is_creator)) { ?><script src="<?= asset_url('app/js/components/creator-link-widget.js') ?>" defer></script><?php } ?>
+    <?php if (!empty($client_info->id)) { ?><script src="<?= asset_url('app/js/components/creator-link-widget.js') ?>" defer></script><?php } ?>
     <!-- APP JS START HERE -->
      <?php if ($currentView === 'pages/main/index') { ?>
          <script type="module" src="/app/js/pages/home/home.js?v=20261112-static-home-products"></script>

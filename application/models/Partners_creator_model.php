@@ -23,7 +23,9 @@ class Partners_creator_model extends CI_Model
     {
         if ((int) $clientId <= 0 || !self::isUuid($partnerId) || !preg_match('/^CRE-[0-9]{6}$/', (string) $creatorId)
             || !in_array($status, array('active', 'suspended', 'banned'), true) || !is_array($scopes) || !is_array($encryptionKeys)) return false;
+        $previousDbDebug = isset($this->db->db_debug) ? $this->db->db_debug : null;
         try {
+            $this->db->db_debug = false;
             $encrypted = Partners_creator_grant_crypto::encrypt($grant, $encryptionKeys);
             $parts = explode('.', $encrypted);
             $now = date('Y-m-d H:i:s');
@@ -40,10 +42,32 @@ class Partners_creator_model extends CI_Model
                 'created_at' => $now,
                 'updated_at' => $now,
             );
-            // Do not replace an existing identity mapping on a race or a different Partner.
-            if (!$this->db->insert($this->table, $row)) return false;
+            // Atomically persist the verified mapping and sync the legacy UI flag.
+            // The unique indexes still reject a racing duplicate client or Partner identity.
+            $this->db->trans_begin();
+            if (!$this->db->insert($this->table, $row)) {
+                $this->db->trans_rollback();
+                return false;
+            }
+            if ($this->db->field_exists('is_creator', 'clients')) {
+                $this->db->where('id', (int) $clientId)->update('clients', array('is_creator' => 1));
+                if ($this->db->trans_status() === false) {
+                    $this->db->trans_rollback();
+                    return false;
+                }
+            }
+            if ($this->db->trans_status() === false) {
+                $this->db->trans_rollback();
+                return false;
+            }
+            if ($this->db->trans_commit() === false) return false;
             return true;
-        } catch (Throwable $error) { return false; }
+        } catch (Throwable $error) {
+            try { $this->db->trans_rollback(); } catch (Throwable $ignored) {}
+            return false;
+        } finally {
+            if ($previousDbDebug !== null) $this->db->db_debug = $previousDbDebug;
+        }
     }
 
     public function updateStatus($clientId, $status, $creatorId = null)

@@ -529,7 +529,7 @@ class FrontEndController extends CI_Controller
     private function _prepareCreatorCsrfToken()
     {
         $client = $this->data['client_info'] ?? null;
-        if (!is_object($client) || empty($client->id) || empty($client->is_creator)
+        if (!is_object($client) || empty($client->id)
             || session_status() !== PHP_SESSION_ACTIVE) {
             unset($_SESSION['creator_partner_csrf'], $_SESSION['creator_partner_csrf_client_id']);
             return;

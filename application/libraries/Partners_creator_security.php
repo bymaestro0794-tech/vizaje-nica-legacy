@@ -4,9 +4,9 @@ defined('BASEPATH') or exit('No direct script access allowed');
 /** Pure validation shared by the Legacy callback and its regression tests. */
 class Partners_creator_security
 {
-    public static function isAuthenticatedCreatorSession($session, $client)
+    public static function isAuthenticatedLegacySession($session, $client)
     {
-        if (!is_array($session) || !is_object($client) || empty($client->id) || empty($client->is_creator)
+        if (!is_array($session) || !is_object($client) || empty($client->id)
             || empty($client->email) || !isset($client->password)
             || empty($session['user_id']) || (int) $session['user_id'] !== (int) $client->id
             || empty($session['user_login']) || !is_string($session['user_login'])
@@ -14,6 +14,20 @@ class Partners_creator_security
             || empty($session['usr_key']) || !is_string($session['usr_key'])) return false;
 
         return hash_equals(hash('sha512', (string) $client->email . (string) $client->password), $session['usr_key']);
+    }
+
+    /** Retained for callers that specifically need the legacy creator entitlement. */
+    public static function isAuthenticatedCreatorSession($session, $client)
+    {
+        return is_object($client) && !empty($client->is_creator)
+            && self::isAuthenticatedLegacySession($session, $client);
+    }
+
+    public static function isValidCsrfToken($expected, $actual, $sessionClientId, $clientId)
+    {
+        return is_string($expected) && preg_match('/^[a-f0-9]{64}$/', $expected) === 1
+            && is_string($actual) && $actual !== '' && hash_equals($expected, $actual)
+            && (string) (int) $sessionClientId === (string) (int) $clientId;
     }
 
     public static function isValidCallback($flow, $clientId, $sessionId, $state, $code, $now = null)
@@ -43,6 +57,11 @@ class Partners_creator_security
         return in_array('account:status', $body['scopes'], true);
     }
 
+    public static function isEligibleExchangeResponse($body)
+    {
+        return self::isValidExchangeResponse($body) && $body['status'] === 'active';
+    }
+
     public static function isValidStatusResponse($body, $row)
     {
         return is_array($body) && is_array($row) && isset($body['partnerId'], $body['creatorId'], $body['type'], $body['status'])
@@ -51,6 +70,11 @@ class Partners_creator_security
             && hash_equals((string) ($row['creator_id'] ?? ''), (string) $body['creatorId'])
             && $body['type'] === 'creator'
             && in_array($body['status'], array('active', 'suspended', 'banned'), true);
+    }
+
+    public static function isActiveStatusResponse($body, $row)
+    {
+        return self::isValidStatusResponse($body, $row) && $body['status'] === 'active';
     }
 
     public static function isAllowedTarget($url)

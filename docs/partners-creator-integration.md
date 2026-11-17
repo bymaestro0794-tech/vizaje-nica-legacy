@@ -47,22 +47,29 @@ keys locally.
 
 ## Flow and boundaries
 
-1. An authenticated `is_creator` Legacy user starts linking with CSRF. Legacy
-   stores PKCE verifier and state in the PHP session and sends a signed initiate
+1. Any authenticated Legacy customer can open the creator cabinet and start
+   linking with CSRF; `is_creator` is not required to begin. Legacy stores the
+   PKCE verifier and state in the PHP session and sends a signed initiate
    request.
 2. The browser visits only the validated Partners authorize URL.
 3. The callback checks the current Legacy session, client ID, session ID, state,
    age, and PKCE verifier before exchanging the one-time code server-to-server.
-4. Legacy validates the exchange response and stores the encrypted grant and
-   identity mapping. A clean account URL is loaded after the callback.
+4. Legacy validates that the returned account is an active creator, then stores
+   the encrypted grant and identity mapping and synchronizes `clients.is_creator`
+   in the same local transaction when that column exists. A clean account URL is
+   loaded after the callback.
 5. Dashboard, links, revoke, and unlink requests are made server-to-server with
    the grant and current `clients.id`; the browser receives only allowlisted
    presentation data.
 
-Creator status is checked against Partners before dashboard access and each
-mutating link operation. An unavailable Partners API leaves the storefront
-usable and displays unavailable states. This work does not change checkout,
-prices, referral attribution, commissions, or payouts.
+Creator status is checked against Partners before dashboard data and each
+mutating link operation. `is_creator` alone does not grant access to Partner
+analytics or links. Unlink removes only the active identity mapping; it does not
+delete orders or analytics history. The Legacy flag is left intact because it
+also participates in existing Legacy creator/wholesale entitlements. An
+unavailable Partners API leaves the storefront usable and displays unavailable
+states. This work does not change checkout, referral attribution, commissions,
+or payouts.
 
 ## Verification boundary
 

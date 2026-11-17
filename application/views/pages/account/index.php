@@ -1,6 +1,5 @@
 <?php
-$isCreator = !empty($client_info->is_creator);
-$isCreatorSection = $isCreator && (isset($_GET['creator']) || !empty($creator_partner_notice));
+$isCreatorSection = isset($_GET['creator']) || !empty($creator_partner_notice);
 $isAccountDashboard = !isset($_GET['bonus'])
     && !isset($_GET['orders'])
     && !isset($_GET['favorite'])
@@ -125,15 +124,13 @@ if (!empty($menu['top'])) {
                             </span>
                             <img src="/app/img/icons/arrow-more.svg" alt="" aria-hidden="true">
                         </a>
-                        <?php if ($isCreator) { ?>
-                            <a class="account-dashboard__link" href="<?= htmlspecialchars($accountUri, ENT_QUOTES, 'UTF-8') ?>?creator">
+                        <a class="account-dashboard__link" href="<?= htmlspecialchars($accountUri, ENT_QUOTES, 'UTF-8') ?>?creator">
                                 <span class="account-dashboard__link-main">
                                     <span class="account-dashboard__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 2 1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2Z"/><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9L19 16Z"/></svg></span>
                                     <span><?= $lclang === 'ro' ? 'Panoul creatorului' : 'Кабинет креатора' ?></span>
                                 </span>
                                 <img src="/app/img/icons/arrow-more.svg" alt="" aria-hidden="true">
-                            </a>
-                        <?php } ?>
+                        </a>
                         <?php if (!empty($telegram_support['enabled'])) : ?>
                             <a
                                 class="account-dashboard__link account-dashboard__link--telegram"
@@ -235,14 +232,12 @@ if (!empty($menu['top'])) {
                             </div>
                             <p class="list-sidebar-account__name"><?= $menu['all'][30]->title ?></p>
                         </li>
-                        <?php if ($isCreator) { ?>
-                            <li class="list-sidebar-account__item _tabs-item <?= $isCreatorSection ? '_active' : '' ?>" data-url="creator">
+                        <li class="list-sidebar-account__item _tabs-item <?= $isCreatorSection ? '_active' : '' ?>" data-url="creator">
                                 <div class="list-sidebar-account__icon" aria-hidden="true">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="m12 2 1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2Z" stroke="#000" stroke-width="1.5" stroke-linejoin="round"/><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9L19 16Z" stroke="#000" stroke-width="1.5" stroke-linejoin="round"/></svg>
                                 </div>
                                 <p class="list-sidebar-account__name"><?= $lclang === 'ro' ? 'Panoul creatorului' : 'Кабинет креатора' ?></p>
-                            </li>
-                        <?php } ?>
+                        </li>
                     </ul>
                     <a href="/<?= $lclang ?>/logout" class="sidebar-account__logout logout-sidebar-account">
                         <div class="logout-sidebar-account__icon">
@@ -564,11 +559,9 @@ if (!empty($menu['top'])) {
                             </div>
                         </div>
                     </div>
-                    <?php if ($isCreator) { ?>
-                        <section class="main-account__block _tabs-block creator-account <?= $isCreatorSection ? '_active' : '' ?>" aria-label="<?= $lclang === 'ro' ? 'Panoul creatorului' : 'Кабинет креатора' ?>">
-                            <?php $this->load->view('partials/creator-dashboard'); ?>
-                        </section>
-                    <?php } ?>
+                    <section class="main-account__block _tabs-block creator-account <?= $isCreatorSection ? '_active' : '' ?>" aria-label="<?= $lclang === 'ro' ? 'Panoul creatorului' : 'Кабинет креатора' ?>">
+                        <?php $this->load->view('partials/creator-dashboard'); ?>
+                    </section>
                 </div>
             </div>
         </div>

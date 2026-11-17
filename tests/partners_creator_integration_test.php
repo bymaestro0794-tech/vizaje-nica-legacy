@@ -26,6 +26,94 @@ function creatorExpectInvalid(callable $callback, $message)
     throw new RuntimeException($message);
 }
 
+class CreatorLinkTestResult
+{
+    private $row;
+    public function __construct($row) { $this->row = $row; }
+    public function row_array() { return $this->row; }
+}
+
+class CreatorLinkTestDatabase
+{
+    public $db_debug = true;
+    public $links = array();
+    public $clientFlags = array(42 => 0, 43 => 0);
+    public $history = array(array('order_id' => 7001), array('event_id' => 'historic-event'));
+    private $where = array();
+    private $snapshot = null;
+    private $failed = false;
+
+    public function table_exists($table) { return $table === 'creator_partner_links'; }
+    public function field_exists($field, $table) { return $field === 'is_creator' && $table === 'clients'; }
+    public function where($field, $value) { $this->where[$field] = $value; return $this; }
+    public function limit($limit) { return $this; }
+    public function get($table)
+    {
+        $row = null;
+        if ($table === 'creator_partner_links') {
+            foreach ($this->links as $link) {
+                $matches = true;
+                foreach ($this->where as $field => $value) if (($link[$field] ?? null) != $value) $matches = false;
+                if ($matches) { $row = $link; break; }
+            }
+        }
+        $this->where = array();
+        return new CreatorLinkTestResult($row);
+    }
+    public function insert($table, $row)
+    {
+        if ($table !== 'creator_partner_links') return false;
+        foreach ($this->links as $existing) {
+            if ((int) $existing['client_id'] === (int) $row['client_id']
+                || strtolower($existing['partner_id']) === strtolower($row['partner_id'])) {
+                $this->failed = true;
+                return false;
+            }
+        }
+        $this->links[] = $row;
+        return true;
+    }
+    public function update($table, $data)
+    {
+        if ($table !== 'clients') return false;
+        $id = (int) ($this->where['id'] ?? 0);
+        $this->where = array();
+        if (!array_key_exists($id, $this->clientFlags)) { $this->failed = true; return false; }
+        $this->clientFlags[$id] = (int) $data['is_creator'];
+        return true;
+    }
+    public function delete($table)
+    {
+        $id = (int) ($this->where['client_id'] ?? 0);
+        $this->where = array();
+        if ($table !== 'creator_partner_links') return false;
+        $this->links = array_values(array_filter($this->links, function ($row) use ($id) {
+            return (int) $row['client_id'] !== $id;
+        }));
+        return true;
+    }
+    public function trans_begin()
+    {
+        $this->snapshot = array($this->links, $this->clientFlags);
+        $this->failed = false;
+        return true;
+    }
+    public function trans_status() { return !$this->failed; }
+    public function trans_commit()
+    {
+        if ($this->failed) { $this->trans_rollback(); return false; }
+        $this->snapshot = null;
+        return true;
+    }
+    public function trans_rollback()
+    {
+        if ($this->snapshot !== null) list($this->links, $this->clientFlags) = $this->snapshot;
+        $this->snapshot = null;
+        $this->failed = false;
+        return true;
+    }
+}
+
 function creatorTestEnv($overrides = array())
 {
     return array_merge(array(
@@ -80,11 +168,18 @@ try {
     $client = (object) array('id' => 42, 'is_creator' => 1, 'email' => 'creator@example.test', 'password' => 'hashed-password');
     $session = array('user_id' => 42, 'user_login' => 'creator@example.test', 'usr_key' => hash('sha512', $client->email . $client->password));
     creatorAssert(Partners_creator_security::isAuthenticatedCreatorSession($session, $client), 'Authenticated creator Legacy session must pass.'); $passed++;
+    $ordinary = clone $client; $ordinary->is_creator = 0; $ordinary->email = 'buyer@example.test';
+    $ordinarySession = array('user_id' => 42, 'user_login' => $ordinary->email, 'usr_key' => hash('sha512', $ordinary->email . $ordinary->password));
+    creatorAssert(Partners_creator_security::isAuthenticatedLegacySession($ordinarySession, $ordinary), 'Ordinary authenticated Legacy customer may start account linking without is_creator.'); $passed++;
     $session['user_id'] = 43;
     creatorAssert(!Partners_creator_security::isAuthenticatedCreatorSession($session, $client), 'A different Legacy client ID must fail.'); $passed++;
     $session['user_id'] = 42;
-    $ordinary = clone $client; $ordinary->is_creator = 0;
     creatorAssert(!Partners_creator_security::isAuthenticatedCreatorSession($session, $ordinary), 'Ordinary Legacy users must fail creator authorization.'); $passed++;
+    creatorAssert(!Partners_creator_security::isAuthenticatedLegacySession($ordinarySession, $client), 'Session email/client mismatch must fail account linking.'); $passed++;
+    $csrf = str_repeat('a', 64);
+    creatorAssert(Partners_creator_security::isValidCsrfToken($csrf, $csrf, 42, 42), 'Matching session-bound CSRF token passes.'); $passed++;
+    creatorAssert(!Partners_creator_security::isValidCsrfToken($csrf, $csrf, 43, 42), 'CSRF token bound to another Legacy client fails.'); $passed++;
+    creatorAssert(!Partners_creator_security::isValidCsrfToken($csrf, str_repeat('b', 64), 42, 42), 'Mismatched CSRF token fails.'); $passed++;
 
     $flow = array('client_id' => 42, 'session_id' => 'test-session-id', 'state' => $state, 'verifier' => $verifier, 'started_at' => 1000);
     creatorAssert(Partners_creator_security::isValidCallback($flow, 42, 'test-session-id', $state, Partners_creator_protocol::randomToken(32), 1100), 'Valid one-time callback context must pass.'); $passed++;
@@ -95,15 +190,34 @@ try {
 
     $exchange = array('partnerId' => '47de7761-3730-43d2-ac10-de533fbf7786', 'creatorId' => 'CRE-000001', 'type' => 'creator', 'status' => 'active', 'grantToken' => Partners_creator_protocol::randomToken(32), 'scopes' => array('account:status', 'analytics:read', 'links:read', 'links:write', 'account:unlink'));
     creatorAssert(Partners_creator_security::isValidExchangeResponse($exchange), 'Contract-shaped active creator exchange must pass.'); $passed++;
+    creatorAssert(Partners_creator_security::isEligibleExchangeResponse($exchange), 'Only an active approved creator exchange is eligible to link.'); $passed++;
     $badExchange = $exchange; $badExchange['scopes'] = array('analytics:read');
     creatorAssert(!Partners_creator_security::isValidExchangeResponse($badExchange), 'Exchange without account:status must fail closed.'); $passed++;
     $badExchange = $exchange; $badExchange['type'] = 'buyer';
     creatorAssert(!Partners_creator_security::isValidExchangeResponse($badExchange), 'Non-creator Partner account must not be linked.'); $passed++;
     $badExchange = $exchange; $badExchange['status'] = 'suspended';
     creatorAssert(Partners_creator_security::isValidExchangeResponse($badExchange) && $badExchange['status'] !== 'active', 'Suspended exchange response is structurally valid but cannot be persisted by the callback.'); $passed++;
+    creatorAssert(!Partners_creator_security::isEligibleExchangeResponse($badExchange), 'Suspended Partner account is denied linking.'); $passed++;
+    $badExchange['status'] = 'banned';
+    creatorAssert(!Partners_creator_security::isEligibleExchangeResponse($badExchange), 'Banned Partner account is denied linking.'); $passed++;
     $row = array('partner_id' => $exchange['partnerId'], 'creator_id' => $exchange['creatorId']);
     creatorAssert(Partners_creator_security::isValidStatusResponse(array('partnerId' => $exchange['partnerId'], 'creatorId' => 'CRE-000001', 'type' => 'creator', 'status' => 'active'), $row), 'Status response for the stored identity must pass.'); $passed++;
     creatorAssert(!Partners_creator_security::isValidStatusResponse(array('partnerId' => '47de7761-3730-43d2-ac10-de533fbf7777', 'creatorId' => 'CRE-000001', 'type' => 'creator', 'status' => 'active'), $row), 'Status response for another Partner identity must fail.'); $passed++;
+    creatorAssert(!Partners_creator_security::isActiveStatusResponse(array('partnerId' => $exchange['partnerId'], 'creatorId' => 'CRE-000001', 'type' => 'creator', 'status' => 'suspended'), $row), 'Suspended or revoked Partner status cannot read protected dashboard data.'); $passed++;
+
+    $linkDb = new CreatorLinkTestDatabase();
+    $linkModel = new Partners_creator_model();
+    $linkModel->db = $linkDb;
+    $testGrant = Partners_creator_protocol::randomToken(32);
+    creatorAssert($linkModel->saveLink(42, $exchange['partnerId'], 'CRE-000001', 'active', $exchange['scopes'], $testGrant, $encryptionKeys), 'Ordinary Legacy customer can persist a verified active Partners creator link.'); $passed++;
+    creatorAssert($linkDb->clientFlags[42] === 1, 'Successful linking synchronizes the Legacy creator UI flag.'); $passed++;
+    creatorAssert(!$linkModel->saveLink(42, '47de7761-3730-43d2-ac10-de533fbf7777', 'CRE-000002', 'active', $exchange['scopes'], $testGrant, $encryptionKeys), 'Repeated or competing link cannot replace the existing client mapping.'); $passed++;
+    creatorAssert(!$linkModel->saveLink(43, $exchange['partnerId'], 'CRE-000001', 'active', $exchange['scopes'], $testGrant, $encryptionKeys), 'One Partners identity cannot be linked to a second Legacy client.'); $passed++;
+    $linkedRow = $linkModel->getForClient(42);
+    $linkedRow['grant_encrypted'] = 'tampered.grant.value';
+    creatorAssert($linkModel->grantToken($linkedRow, $encryptionKeys) === false, 'Revoked/tampered grant cannot authorize dashboard access.'); $passed++;
+    creatorAssert($linkModel->deleteForClient(42) && $linkModel->getForClient(42) === null, 'Successful unlink removes the active mapping so protected dashboard data is no longer available.'); $passed++;
+    creatorAssert(count($linkDb->history) === 2, 'Unlink preserves order and analytics history.'); $passed++;
 
     creatorAssert(Partners_creator_security::isAllowedTarget('https://vizaje-nica.com/ru/katalog/teni/111157'), 'RU product destination must be allowed.'); $passed++;
     creatorAssert(Partners_creator_security::isAllowedTarget('https://vizaje-nica.com/ro/catalog/anastasia-beverly-hills'), 'RO brand destination must be allowed.'); $passed++;
