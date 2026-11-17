@@ -1,5 +1,6 @@
 <?php
-$isCreatorSection = isset($_GET['creator']) || !empty($creator_partner_notice);
+$isCreatorClient = !empty($client_info->is_creator);
+$isCreatorSection = $isCreatorClient && (isset($_GET['creator']) || !empty($creator_partner_notice));
 $isAccountDashboard = !isset($_GET['bonus'])
     && !isset($_GET['orders'])
     && !isset($_GET['favorite'])
@@ -124,6 +125,7 @@ if (!empty($menu['top'])) {
                             </span>
                             <img src="/app/img/icons/arrow-more.svg" alt="" aria-hidden="true">
                         </a>
+                        <?php if ($isCreatorClient) { ?>
                         <a class="account-dashboard__link" href="<?= htmlspecialchars($accountUri, ENT_QUOTES, 'UTF-8') ?>?creator">
                                 <span class="account-dashboard__link-main">
                                     <span class="account-dashboard__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 2 1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2Z"/><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9L19 16Z"/></svg></span>
@@ -131,6 +133,18 @@ if (!empty($menu['top'])) {
                                 </span>
                                 <img src="/app/img/icons/arrow-more.svg" alt="" aria-hidden="true">
                         </a>
+                        <?php } else { ?>
+                        <div class="creator-connect-prompt" data-creator-dashboard-root
+                            data-dashboard-url="/account/creator-link/dashboard"
+                            data-start-url="/account/creator-link/start"
+                            data-csrf-token="<?= htmlspecialchars((string) ($creator_csrf_token ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                            data-locale="<?= htmlspecialchars($lclang === 'ro' ? 'ro' : 'ru', ENT_QUOTES, 'UTF-8') ?>">
+                            <p><?= $lclang === 'ro' ? 'Conectează Vizaje Partners pentru a activa accesul de creator.' : 'Свяжите Vizaje Partners, чтобы получить доступ к кабинету креатора.' ?></p>
+                            <p class="creator-account__partner-state" data-creator-partner-state role="status" aria-live="polite"><span class="creator-account__state-dot" aria-hidden="true"></span><span data-creator-partner-state-text><?= $lclang === 'ro' ? 'Se verifică legătura…' : 'Проверяем подключение…' ?></span></p>
+                            <button type="button" class="creator-account__button" data-creator-link-start data-start-url="/account/creator-link/start" hidden disabled><?= $lclang === 'ro' ? 'Conectează Partners' : 'Связать Partners' ?></button>
+                            <span class="creator-account__state creator-account__state--error" data-creator-action-message role="status" aria-live="polite"></span>
+                        </div>
+                        <?php } ?>
                         <?php if (!empty($telegram_support['enabled'])) : ?>
                             <a
                                 class="account-dashboard__link account-dashboard__link--telegram"
@@ -232,12 +246,14 @@ if (!empty($menu['top'])) {
                             </div>
                             <p class="list-sidebar-account__name"><?= $menu['all'][30]->title ?></p>
                         </li>
+                        <?php if ($isCreatorClient) { ?>
                         <li class="list-sidebar-account__item _tabs-item <?= $isCreatorSection ? '_active' : '' ?>" data-url="creator">
                                 <div class="list-sidebar-account__icon" aria-hidden="true">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="m12 2 1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2Z" stroke="#000" stroke-width="1.5" stroke-linejoin="round"/><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9L19 16Z" stroke="#000" stroke-width="1.5" stroke-linejoin="round"/></svg>
                                 </div>
                                 <p class="list-sidebar-account__name"><?= $lclang === 'ro' ? 'Panoul creatorului' : 'Кабинет креатора' ?></p>
                         </li>
+                        <?php } ?>
                     </ul>
                     <a href="/<?= $lclang ?>/logout" class="sidebar-account__logout logout-sidebar-account">
                         <div class="logout-sidebar-account__icon">
@@ -559,11 +575,14 @@ if (!empty($menu['top'])) {
                             </div>
                         </div>
                     </div>
-                    <section class="main-account__block _tabs-block creator-account <?= $isCreatorSection ? '_active' : '' ?>" aria-label="<?= $lclang === 'ro' ? 'Panoul creatorului' : 'Кабинет креатора' ?>">
-                        <?php $this->load->view('partials/creator-dashboard'); ?>
-                    </section>
+                    <?php if ($isCreatorClient) { ?>
+                        <section class="main-account__block _tabs-block creator-account <?= $isCreatorSection ? '_active' : '' ?>" aria-label="<?= $lclang === 'ro' ? 'Panoul creatorului' : 'Кабинет креатора' ?>">
+                            <?php $this->load->view('partials/creator-dashboard'); ?>
+                        </section>
+                    <?php } ?>
                 </div>
             </div>
         </div>
     </section>
 </main>
+<?php if (!empty($client_info->id)) { ?><script src="<?= asset_url('app/js/components/creator-link-widget.js') ?>" defer></script><?php } ?>

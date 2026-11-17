@@ -119,6 +119,7 @@ class Creator_account_linking extends CI_Controller
         }
         $row = $this->partners_creator_model->getForClient($client->id);
         if (!$row) return $this->json(array('ok' => true, 'state' => 'not_connected', 'configured' => true, 'canConnect' => true, 'canCreateLinks' => false, 'canUnlink' => false, 'linksAvailable' => false, 'analyticsAvailable' => false));
+        if (empty($client->is_creator)) return $this->json(array('ok' => true, 'state' => 'creator_required', 'configured' => true, 'canConnect' => false, 'canCreateLinks' => false, 'canUnlink' => false, 'linksAvailable' => false, 'analyticsAvailable' => false));
         $grant = $this->partners_creator_model->grantToken($row, $this->creatorConfig['grant_encryption_keys'] ?? array());
         if (!is_string($grant)) return $this->json(array('ok' => true, 'state' => 'error', 'configured' => true, 'canConnect' => false, 'canCreateLinks' => false, 'canUnlink' => false, 'creatorId' => (string) $row['creator_id'], 'linksAvailable' => false, 'analyticsAvailable' => false));
 
@@ -158,6 +159,7 @@ class Creator_account_linking extends CI_Controller
         if (!$this->requireMethod('POST')) return;
         $client = $this->authenticatedClient();
         if (!$client) return $this->jsonError(403, 'ACCOUNT_ACCESS_REQUIRED');
+        if (empty($client->is_creator)) return $this->jsonError(403, 'CREATOR_ACCESS_REQUIRED');
         if (!$this->validCsrf()) return $this->jsonError(403, 'CSRF_INVALID');
         $context = $this->linkedGrant($client->id, 'links:write');
         if (!$context) return $this->jsonError(409, 'ACCOUNT_NOT_CONNECTED');
@@ -187,6 +189,7 @@ class Creator_account_linking extends CI_Controller
         if (!$this->requireMethod('POST')) return;
         $client = $this->authenticatedClient();
         if (!$client) return $this->jsonError(403, 'ACCOUNT_ACCESS_REQUIRED');
+        if (empty($client->is_creator)) return $this->jsonError(403, 'CREATOR_ACCESS_REQUIRED');
         if (!$this->validCsrf()) return $this->jsonError(403, 'CSRF_INVALID');
         $context = $this->linkedGrant($client->id, 'links:write');
         if (!$context) return $this->jsonError(409, 'ACCOUNT_NOT_CONNECTED');
@@ -200,6 +203,7 @@ class Creator_account_linking extends CI_Controller
         if (!$this->requireMethod('POST')) return;
         $client = $this->authenticatedClient();
         if (!$client) return $this->jsonError(403, 'ACCOUNT_ACCESS_REQUIRED');
+        if (empty($client->is_creator)) return $this->jsonError(403, 'CREATOR_ACCESS_REQUIRED');
         if (!$this->validCsrf()) return $this->jsonError(403, 'CSRF_INVALID');
         // A suspended creator must still be able to revoke their account link.
         $context = $this->linkedGrant($client->id, 'account:unlink', true);
