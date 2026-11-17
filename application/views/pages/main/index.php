@@ -6,6 +6,7 @@ $this->load->view(
 		'banners' => $banners ?? [],
 		'lclang' => $lclang,
 		'menu' => $menu,
+		'site_theme_key' => $site_theme_key ?? 'default',
 		'home_categories' => $home_categories ?? [],
 		'brand_sections_after_new' => $brand_sections_after_new ?? [],
 		'brand_sections_after_sale' => $brand_sections_after_sale ?? [],

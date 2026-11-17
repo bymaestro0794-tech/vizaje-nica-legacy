@@ -2574,6 +2574,11 @@ public function cart_drawer()
         'menu_model'
     );
 
+    $this->load->model('site_themes_model');
+    $siteThemeSettings = $this->site_themes_model->getThemeSettings();
+    $siteThemeKey = $this->site_themes_model->getActiveThemeKey($siteThemeSettings);
+    $blackFridayCampaign = $this->site_themes_model->getActiveBlackFridayCampaign($siteThemeSettings);
+
     /*
     |--------------------------------------------------------------------------
     | Language
@@ -2875,6 +2880,12 @@ public function cart_drawer()
 
                 'welcome_offer_timer' =>
                     $welcomeOfferTimer,
+
+                'site_theme_key' =>
+                    $siteThemeKey,
+
+                'black_friday_campaign' =>
+                    $blackFridayCampaign,
 
                 'is_b2b' =>
                     $isB2B,

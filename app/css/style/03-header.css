@@ -1797,10 +1797,6 @@ body:has(.search-actions-main-header.is-open) .header[data-site-header] .header-
 		--site-header-offset: calc(var(--header-mobile-height) + var(--header-announcement-height));
 	}
 
-	body._webp.home_page .wrapper:has(> .header[data-site-header].is-scrolling-down) {
-		padding-top: 0;
-	}
-
 	/* Keep fixed mobile actions anchored to the viewport while the header scrolls. */
 	.header._scroll {
 		background: transparent;
@@ -1825,6 +1821,9 @@ body:has(.search-actions-main-header.is-open) .header[data-site-header] .header-
 
 	.header__announcement {
 		display: flex;
+		transition:
+			height 360ms cubic-bezier(.22, 1, .36, 1),
+			opacity 280ms ease-out;
 	}
 
 	.header__mobile {
@@ -1842,9 +1841,9 @@ body:has(.search-actions-main-header.is-open) .header[data-site-header] .header-
 		background: rgba(255, 255, 255, 0.96);
 		backdrop-filter: blur(14px);
 		transition:
-			transform 220ms ease,
-			opacity 180ms ease,
-			visibility 180ms ease;
+			transform 360ms cubic-bezier(.22, 1, .36, 1),
+			opacity 280ms ease-out,
+			visibility 0s linear 360ms;
 	}
 
 	.header.is-scrolling-down > .header__mobile {
@@ -1859,6 +1858,7 @@ body:has(.search-actions-main-header.is-open) .header[data-site-header] .header-
 		opacity: 1;
 		visibility: visible;
 		pointer-events: auto;
+		transition-delay: 0s, 0s, 0s;
 	}
 
 	.mobile-navigation {

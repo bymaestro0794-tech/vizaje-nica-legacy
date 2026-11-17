@@ -14,6 +14,10 @@ old_vendor/
 dist/
 
 # Credentials & secrets — никогда не пушить в git
+.env
+.env.*
+!.env.example
+!.env.*.example
 application/config/database.php
 application/libraries/secret/
 .htpasswd
@@ -47,3 +51,10 @@ mobile-backend/
 
 # Local temporary settings file; never commit runtime state.
 /inst_user_settings.tmp
+
+# Local Docker database exports may contain customer or order data.
+/docker/local-*.sql
+
+# Local Docker runtime configuration is not part of the Legacy source commit.
+/docker/
+/docker-compose.yml

@@ -30,7 +30,12 @@ $brandFilterCategoryIds = array_map(
     (array) $categoryes_filter
 );
 ?>
-<main class="page catalog-category-page catalog-brand-page">
+<main class="page catalog-category-page catalog-brand-page bf-sticker-surface bf-sticker-surface--brand">
+	<?php $this->load->view('layouts/pages/black-friday-stickers', array(
+		'site_theme_key' => $site_theme_key ?? 'default',
+		'black_friday_sticker_area' => 'brand',
+		'black_friday_stickers' => array('shopping-bag', 'sparkle'),
+	)); ?>
     <section class="breacrums">
         <div class="breacrums__container _container">
             <ul class="breacrums__list">

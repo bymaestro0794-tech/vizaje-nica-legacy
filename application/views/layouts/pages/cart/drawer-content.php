@@ -354,6 +354,14 @@ if (
     </div>
 </section>
 
+        <?php if (!empty($black_friday_campaign)) : ?>
+            <?php
+            $black_friday_timer_variant = 'cart';
+            $this->load->view('layouts/pages/black-friday-timer');
+            unset($black_friday_timer_variant);
+            ?>
+        <?php endif; ?>
+
         <?php if (!empty($welcome_offer_timer)) : ?>
             <div class="cart-drawer-welcome-offer">
                 <?php $this->load->view('layouts/pages/welcome-offer-countdown'); ?>

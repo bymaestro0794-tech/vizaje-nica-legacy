@@ -43,7 +43,8 @@ class Welcome_offers extends BackEndController
 				throw new Exception('Сначала примените SQL-патчи приветственной скидки и убедитесь, что существует WELCOME18.');
 			}
 
-			if (!$this->welcome_offers_model->setCampaignVisible($this->input->post('show_on_site'))) {
+			$visible = $this->input->post('show_on_site') === '1';
+			if (!$this->welcome_offers_model->setCampaignVisible($visible)) {
 				throw new Exception('Не удалось изменить видимость скидки WELCOME18.');
 			}
 			$this->load->driver('cache', array(
@@ -52,7 +53,9 @@ class Welcome_offers extends BackEndController
 				'key_prefix' => 'vn_frontend_',
 			));
 			$this->cache->delete('welcome_promo_18');
-			$_SESSION['success'] = 'Настройка показа скидки после регистрации сохранена.';
+			$_SESSION['success'] = $visible
+				? 'Окно и промокод WELCOME18 включены.'
+				: 'Окно и промокод WELCOME18 выключены. Остальные скидки не затронуты.';
 		} catch (Exception $e) {
 			log_message('error', $e->getMessage());
 			$_SESSION['error'] = array($e->getMessage());

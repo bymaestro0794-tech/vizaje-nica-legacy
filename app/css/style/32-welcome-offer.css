@@ -1,5 +1,12 @@
-html.welcome-offer-lock,
+html.welcome-offer-lock {
+	overflow: hidden;
+}
+
 html.welcome-offer-lock body {
+	position: fixed;
+	top: var(--welcome-offer-lock-top, 0px);
+	left: 0;
+	right: 0;
 	overflow: hidden;
 }
 

@@ -3,6 +3,17 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Site_feedback_model extends CI_Model
 {
+    public function count_new_feedback()
+    {
+        if (!$this->db->table_exists('site_feedback')) {
+            return 0;
+        }
+
+        return (int) $this->db
+            ->where('status', 'new')
+            ->count_all_results('site_feedback');
+    }
+
     public function insert_feedback(array $feedback)
     {
         return $this->db->insert('site_feedback', $feedback);

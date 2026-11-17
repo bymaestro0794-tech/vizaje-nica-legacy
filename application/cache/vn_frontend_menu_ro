@@ -1,4 +1,86 @@
-a:3:{s:4:"time";i:1793021352;s:3:"ttl";i:300;s:4:"data";a:3:{s:3:"top";a:5:{i:26;O:8:"stdClass":9:{s:2:"id";s:2:"26";s:5:"title";s:6:"Brands";s:15:"breadcrumbTitle";N;s:3:"uri";s:6:"brands";s:4:"desc";s:0:"";s:3:"img";s:36:"73b1902b2bd2edef601a04a8044d786a.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}i:37;O:8:"stdClass":9:{s:2:"id";s:2:"37";s:5:"title";s:9:"Noutăți";s:15:"breadcrumbTitle";N;s:3:"uri";s:7:"noutati";s:4:"desc";s:0:"";s:3:"img";s:36:"59a683ffceefe21b31252092b3ffb00c.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}i:7;O:8:"stdClass":9:{s:2:"id";s:1:"7";s:5:"title";s:10:"Magazinele";s:15:"breadcrumbTitle";N;s:3:"uri";s:10:"magazinele";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}i:9;O:8:"stdClass":9:{s:2:"id";s:1:"9";s:5:"title";s:9:"Promoții";s:15:"breadcrumbTitle";N;s:3:"uri";s:8:"promotii";s:4:"desc";s:0:"";s:3:"img";s:36:"151c4eb4ce8318854354776af0a42cad.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}i:35;O:8:"stdClass":9:{s:2:"id";s:2:"35";s:5:"title";s:8:"Reduceri";s:15:"breadcrumbTitle";N;s:3:"uri";s:8:"reduceri";s:4:"desc";s:0:"";s:3:"img";s:36:"68b075a0f0097c2d76b85f4c61e32017.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}}s:6:"bottom";a:12:{i:39;O:8:"stdClass":9:{s:2:"id";s:2:"39";s:5:"title";s:16:"Express delivery";s:15:"breadcrumbTitle";N;s:3:"uri";s:16:"express-delivery";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:26;r:6;i:37;r:16;i:7;r:26;i:9;r:36;i:11;O:8:"stdClass":9:{s:2:"id";s:2:"11";s:5:"title";s:8:"Contacte";s:15:"breadcrumbTitle";N;s:3:"uri";s:8:"contacte";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:32;O:8:"stdClass":9:{s:2:"id";s:2:"32";s:5:"title";s:11:"Certificate";s:15:"breadcrumbTitle";N;s:3:"uri";s:11:"certificate";s:4:"desc";s:650:"<p>Certificatul Vizaje-Nica poate fi achiziționat în oricare dintre magazinele Vizaje-Nica, precum și online pe site. <br>
+a:3:{s:4:"time";i:1794916469;s:3:"ttl";i:300;s:4:"data";a:3:{s:3:"top";a:6:{i:26;O:8:"stdClass":9:{s:2:"id";s:2:"26";s:5:"title";s:6:"Brands";s:15:"breadcrumbTitle";N;s:3:"uri";s:6:"brands";s:4:"desc";s:0:"";s:3:"img";s:36:"73b1902b2bd2edef601a04a8044d786a.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}i:37;O:8:"stdClass":9:{s:2:"id";s:2:"37";s:5:"title";s:9:"Noutăți";s:15:"breadcrumbTitle";N;s:3:"uri";s:7:"noutati";s:4:"desc";s:0:"";s:3:"img";s:36:"59a683ffceefe21b31252092b3ffb00c.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}i:7;O:8:"stdClass":9:{s:2:"id";s:1:"7";s:5:"title";s:10:"Magazinele";s:15:"breadcrumbTitle";N;s:3:"uri";s:10:"magazinele";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}i:9;O:8:"stdClass":9:{s:2:"id";s:1:"9";s:5:"title";s:9:"Promoții";s:15:"breadcrumbTitle";N;s:3:"uri";s:8:"promotii";s:4:"desc";s:0:"";s:3:"img";s:36:"151c4eb4ce8318854354776af0a42cad.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}i:31;O:8:"stdClass":9:{s:2:"id";s:2:"31";s:5:"title";s:16:"Certificat cadou";s:15:"breadcrumbTitle";N;s:3:"uri";s:16:"certificat-cadou";s:4:"desc";s:2687:"<h1><strong>Cadoul perfect fără riscul de a greși - card cadou Vizaje-Nica</strong></h1>
+
+<p><img alt="" src="/kcfinder/upload/images/photo_2026-01-21_14-32-48.jpg" xss="removed"></p>
+
+<p>Doar parfumuri și cosmetice originale de la cele mai importante branduri mondiale – fără contrafăcute, doar 100% autenticitate garantată.</p>
+
+<p>Dăruiește:</p>
+
+<p>Libertatea alegerii – lasă persoana dragă să-și creeze propriul parfum sau ritual de îngrijire ideal</p>
+
+<p>Emoțiile shopping-ului de lux într-un butic frumos</p>
+
+<p>Siguranța că cadoul va plăcea cu siguranță</p>
+
+<p>Este deosebit de potrivit înainte de 14 februarie, 8 martie, 23 februarie, Anul Nou, ziua de naștere, aniversare sau pur și simplu „pentru că meriți asta”.</p>
+
+<p>Valori de la 200 la 1000 de lei (sau orice altă sumă la alegerea ta în aplicație). Varianta electronică – ajunge pe e-mail sau în aplicație în 1 minut. Card elegant în ambalaj cadou – disponibil în orice magazin din rețea.</p>
+
+<p>De ce cardul nostru se vinde cel mai bine:</p>
+
+<p>Selecție uriașă de parfumuri nișate și selective</p>
+
+<p>Noutăți în cosmetice care încă nu sunt peste tot</p>
+
+<p>Bonusuri plăcute și serviciu excelent</p>
+
+<p>Dăruiește nu doar un obiect, ci posibilitatea de a se simți specială. Vino după card sau comandă online în aplicație chiar azi!</p>
+
+<h1><strong>Carduri cadou corporative Vizaje-Nica</strong></h1>
+
+<p></p>
+
+<p>Cardurile Vizaje-Nica sunt cadouri universale, potrivite pentru toată lumea</p>
+
+<p>1.Angajaților</p>
+
+<blockquote>
+<p>Pentru motivare</p>
+
+<p>Cadouri de sărbători</p>
+
+<p>Pentru îndeplinirea KPI-urilor</p>
+</blockquote>
+
+<p>2. Partenerilor</p>
+
+<blockquote>
+<p>Pentru mulțumire</p>
+
+<p>Felicitări la evenimente importante</p>
+
+<p>Pentru a arăta atenție</p>
+</blockquote>
+
+<p>3.Clienților</p>
+
+<blockquote>
+<p>Programe de loialitate</p>
+
+<p>Recompense</p>
+
+<p>Promovarea serviciilor noi</p>
+</blockquote>
+
+<h1><strong>Oferim bonusuri partenerilor</strong></h1>
+
+<p><br>
+Comandă carduri cadou pentru parteneri și colegi și primești bonusuri pe numărul tău de telefon!</p>
+
+<p>Cu cât suma comenzii este mai mare, cu atât mai multe bonusuri: de la 10 000 lei → 300 bonusuri de la 15 000 lei → 600 bonusuri de la 20 000 lei → 1000 bonusuri</p>
+
+<p>Dăruiește colegilor și partenerilor card cadou Vizaje-Nica!</p>
+
+<p>Poți plasa comanda pentru carduri cadou la:</p>
+
+<p><strong>Nikita Tilik,</strong></p>
+
+<p>Manager vânzări carduri cadou corporative</p>
+
+<p><em>Depozit@vizaje-nica.com</em></p>
+
+<p><em>079980225</em></p>
+";s:3:"img";s:36:"23cf93981cdfed858253e8c0d65f5380.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}i:35;O:8:"stdClass":9:{s:2:"id";s:2:"35";s:5:"title";s:8:"Reduceri";s:15:"breadcrumbTitle";N;s:3:"uri";s:8:"reduceri";s:4:"desc";s:0:"";s:3:"img";s:36:"68b075a0f0097c2d76b85f4c61e32017.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}}s:6:"bottom";a:13:{i:39;O:8:"stdClass":9:{s:2:"id";s:2:"39";s:5:"title";s:16:"Express delivery";s:15:"breadcrumbTitle";N;s:3:"uri";s:16:"express-delivery";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:26;r:6;i:37;r:16;i:7;r:26;i:9;r:36;i:11;O:8:"stdClass":9:{s:2:"id";s:2:"11";s:5:"title";s:8:"Contacte";s:15:"breadcrumbTitle";N;s:3:"uri";s:8:"contacte";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:32;O:8:"stdClass":9:{s:2:"id";s:2:"32";s:5:"title";s:11:"Certificate";s:15:"breadcrumbTitle";N;s:3:"uri";s:11:"certificate";s:4:"desc";s:650:"<p>Certificatul Vizaje-Nica poate fi achiziționat în oricare dintre magazinele Vizaje-Nica, precum și online pe site. <br>
 Certificatul este acceptat în toate magazinele rețelei Vizaje-Nica, precum și online pe site și la contactarea rețelelor noastre sociale.</p>
 
 <p>La achiziționarea unui certificat este valabilă reducerea sau Cash-Back-ul din aplicație . <br>
@@ -7,7 +89,7 @@ La achitarea cu certificat, reducerile și promoțiile nu sunt valabile.</p>
 <p>Certificatul nu poate fi returnat sau schimbat cu un alt certificat( art. 954-956 RM)</p>
 
 <p>Perioada de valabilitate: Certificatul este valabil 6 luni de la data cumpărării.</p>
-";s:3:"img";s:36:"845a8a4a62f6552af111ef2f5196c1a9.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:29;O:8:"stdClass":9:{s:2:"id";s:2:"29";s:5:"title";s:25:"Informatie despre produse";s:15:"breadcrumbTitle";N;s:3:"uri";s:25:"informatie-despre-produse";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:10;O:8:"stdClass":9:{s:2:"id";s:2:"10";s:5:"title";s:30:"Informaţie pentru Consumatori";s:15:"breadcrumbTitle";N;s:3:"uri";s:29:"informatie-pentru-consumatori";s:4:"desc";s:502:"<p>Autoritatea abilitată cu funcţii de protecţie a consumatorilor:</p>
+";s:3:"img";s:36:"845a8a4a62f6552af111ef2f5196c1a9.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:31;r:46;i:29;O:8:"stdClass":9:{s:2:"id";s:2:"29";s:5:"title";s:25:"Informatie despre produse";s:15:"breadcrumbTitle";N;s:3:"uri";s:25:"informatie-despre-produse";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:10;O:8:"stdClass":9:{s:2:"id";s:2:"10";s:5:"title";s:30:"Informaţie pentru Consumatori";s:15:"breadcrumbTitle";N;s:3:"uri";s:29:"informatie-pentru-consumatori";s:4:"desc";s:502:"<p>Autoritatea abilitată cu funcţii de protecţie a consumatorilor:</p>
 
 <p>Agenţia pentru Protecția Consumatorilor și Supravegherea Pieței</p>
 
@@ -17,7 +99,7 @@ Email: consumator@apc.gov.md<br>
 Web: consumator.gov.md</p>
 
 <p>Examinarea reclamației se efectuează la prezentarea bonului de casă, sau a unui alt document care confirmă faptul cumpărării produsului sau prestării serviciului.</p>
-";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:35;r:46;i:23;O:8:"stdClass":9:{s:2:"id";s:2:"23";s:5:"title";s:45:"Politica de confidențialitate și cookie-uri";s:15:"breadcrumbTitle";N;s:3:"uri";s:43:"politica-de-confidentialitate-si-cookie-uri";s:4:"desc";s:23433:"<p></p>
+";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:35;r:56;i:23;O:8:"stdClass":9:{s:2:"id";s:2:"23";s:5:"title";s:45:"Politica de confidențialitate și cookie-uri";s:15:"breadcrumbTitle";N;s:3:"uri";s:43:"politica-de-confidentialitate-si-cookie-uri";s:4:"desc";s:23433:"<p></p>
 
 <h1>POLITICA DE CONFIDENȚIALITATE ȘI COOKIE</h1>
 
@@ -1194,87 +1276,5 @@ Plata curierului la livrare în numerar sau Online Comenzile plasate Sâmbătă
 Prețurile și soldurile de pe site sunt aproximative și se confirmă numai după un apel de la operator și un cec de la casa de marcat</p>
 
 <p>Iți multumim!</p>
-";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}}s:3:"all";a:33:{i:1;O:8:"stdClass":9:{s:2:"id";s:1:"1";s:5:"title";s:63:"Cosmetică și parfumerie în Moldova – magazin | Vizaje-Nica";s:15:"breadcrumbTitle";s:10:"Principala";s:3:"uri";s:0:"";s:4:"desc";s:0:"";s:3:"img";s:36:"cb05e27b1e0ab1ceb6fd5bb7eeae514f.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:42;O:8:"stdClass":9:{s:2:"id";s:2:"42";s:5:"title";s:33:"Reguli de aplicare a promocodului";s:15:"breadcrumbTitle";s:33:"Reguli de aplicare a promocodului";s:3:"uri";s:24:"reguli-aplicare-promocod";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:39;r:57;i:25;O:8:"stdClass":9:{s:2:"id";s:2:"25";s:5:"title";s:9:"Text Page";s:15:"breadcrumbTitle";N;s:3:"uri";s:9:"text-page";s:4:"desc";s:21:"<p>asdasdqdwqdq</p>
-";s:3:"img";N;s:7:"isShown";s:1:"0";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:26;r:6;i:37;r:16;i:6;O:8:"stdClass":9:{s:2:"id";s:1:"6";s:5:"title";s:13:"Producătorii";s:15:"breadcrumbTitle";N;s:3:"uri";s:12:"producatorii";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"0";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:7;r:26;i:38;O:8:"stdClass":9:{s:2:"id";s:2:"38";s:5:"title";s:10:"Certificat";s:15:"breadcrumbTitle";N;s:3:"uri";s:10:"certificat";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:9;r:36;i:11;r:71;i:32;r:81;i:31;O:8:"stdClass":9:{s:2:"id";s:2:"31";s:5:"title";s:16:"Certificat cadou";s:15:"breadcrumbTitle";N;s:3:"uri";s:16:"certificat-cadou";s:4:"desc";s:2687:"<h1><strong>Cadoul perfect fără riscul de a greși - card cadou Vizaje-Nica</strong></h1>
-
-<p><img alt="" src="/kcfinder/upload/images/photo_2026-01-21_14-32-48.jpg" xss="removed"></p>
-
-<p>Doar parfumuri și cosmetice originale de la cele mai importante branduri mondiale – fără contrafăcute, doar 100% autenticitate garantată.</p>
-
-<p>Dăruiește:</p>
-
-<p>Libertatea alegerii – lasă persoana dragă să-și creeze propriul parfum sau ritual de îngrijire ideal</p>
-
-<p>Emoțiile shopping-ului de lux într-un butic frumos</p>
-
-<p>Siguranța că cadoul va plăcea cu siguranță</p>
-
-<p>Este deosebit de potrivit înainte de 14 februarie, 8 martie, 23 februarie, Anul Nou, ziua de naștere, aniversare sau pur și simplu „pentru că meriți asta”.</p>
-
-<p>Valori de la 200 la 1000 de lei (sau orice altă sumă la alegerea ta în aplicație). Varianta electronică – ajunge pe e-mail sau în aplicație în 1 minut. Card elegant în ambalaj cadou – disponibil în orice magazin din rețea.</p>
-
-<p>De ce cardul nostru se vinde cel mai bine:</p>
-
-<p>Selecție uriașă de parfumuri nișate și selective</p>
-
-<p>Noutăți în cosmetice care încă nu sunt peste tot</p>
-
-<p>Bonusuri plăcute și serviciu excelent</p>
-
-<p>Dăruiește nu doar un obiect, ci posibilitatea de a se simți specială. Vino după card sau comandă online în aplicație chiar azi!</p>
-
-<h1><strong>Carduri cadou corporative Vizaje-Nica</strong></h1>
-
-<p></p>
-
-<p>Cardurile Vizaje-Nica sunt cadouri universale, potrivite pentru toată lumea</p>
-
-<p>1.Angajaților</p>
-
-<blockquote>
-<p>Pentru motivare</p>
-
-<p>Cadouri de sărbători</p>
-
-<p>Pentru îndeplinirea KPI-urilor</p>
-</blockquote>
-
-<p>2. Partenerilor</p>
-
-<blockquote>
-<p>Pentru mulțumire</p>
-
-<p>Felicitări la evenimente importante</p>
-
-<p>Pentru a arăta atenție</p>
-</blockquote>
-
-<p>3.Clienților</p>
-
-<blockquote>
-<p>Programe de loialitate</p>
-
-<p>Recompense</p>
-
-<p>Promovarea serviciilor noi</p>
-</blockquote>
-
-<h1><strong>Oferim bonusuri partenerilor</strong></h1>
-
-<p><br>
-Comandă carduri cadou pentru parteneri și colegi și primești bonusuri pe numărul tău de telefon!</p>
-
-<p>Cu cât suma comenzii este mai mare, cu atât mai multe bonusuri: de la 10 000 lei → 300 bonusuri de la 15 000 lei → 600 bonusuri de la 20 000 lei → 1000 bonusuri</p>
-
-<p>Dăruiește colegilor și partenerilor card cadou Vizaje-Nica!</p>
-
-<p>Poți plasa comanda pentru carduri cadou la:</p>
-
-<p><strong>Nikita Tilik,</strong></p>
-
-<p>Manager vânzări carduri cadou corporative</p>
-
-<p><em>Depozit@vizaje-nica.com</em></p>
-
-<p><em>079980225</em></p>
-";s:3:"img";s:36:"23cf93981cdfed858253e8c0d65f5380.jpg";s:7:"isShown";s:1:"0";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:21;O:8:"stdClass":9:{s:2:"id";s:2:"21";s:5:"title";s:7:"Cautare";s:15:"breadcrumbTitle";N;s:3:"uri";s:7:"cautare";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:3;O:8:"stdClass":9:{s:2:"id";s:1:"3";s:5:"title";s:7:"Catalog";s:15:"breadcrumbTitle";N;s:3:"uri";s:7:"catalog";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:17;O:8:"stdClass":9:{s:2:"id";s:2:"17";s:5:"title";s:8:"Favorite";s:15:"breadcrumbTitle";N;s:3:"uri";s:8:"favorite";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:30;O:8:"stdClass":9:{s:2:"id";s:2:"30";s:5:"title";s:13:"Program bonus";s:15:"breadcrumbTitle";N;s:3:"uri";s:13:"program-bonus";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"0";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:29;r:91;i:10;r:101;i:20;O:8:"stdClass":9:{s:2:"id";s:2:"20";s:5:"title";s:13:"Order Success";s:15:"breadcrumbTitle";N;s:3:"uri";s:13:"order-success";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:19;O:8:"stdClass":9:{s:2:"id";s:2:"19";s:5:"title";s:8:"Checkout";s:15:"breadcrumbTitle";N;s:3:"uri";s:8:"checkout";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:18;O:8:"stdClass":9:{s:2:"id";s:2:"18";s:5:"title";s:4:"Coş";s:15:"breadcrumbTitle";N;s:3:"uri";s:3:"cos";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:27;O:8:"stdClass":9:{s:2:"id";s:2:"27";s:5:"title";s:13:"Înregistrare";s:15:"breadcrumbTitle";N;s:3:"uri";s:12:"inregistrare";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:16;O:8:"stdClass":9:{s:2:"id";s:2:"16";s:5:"title";s:14:"Comenzile mele";s:15:"breadcrumbTitle";N;s:3:"uri";s:14:"comenzile-mele";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:15;O:8:"stdClass":9:{s:2:"id";s:2:"15";s:5:"title";s:10:"Contul meu";s:15:"breadcrumbTitle";N;s:3:"uri";s:10:"contul-meu";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:14;O:8:"stdClass":9:{s:2:"id";s:2:"14";s:5:"title";s:16:"Resetați parola";s:15:"breadcrumbTitle";N;s:3:"uri";s:15:"resetati-parola";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:12;O:8:"stdClass":9:{s:2:"id";s:2:"12";s:5:"title";s:6:"Logare";s:15:"breadcrumbTitle";N;s:3:"uri";s:6:"logare";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:36;O:8:"stdClass":9:{s:2:"id";s:2:"36";s:5:"title";s:14:"Cel mai vandut";s:15:"breadcrumbTitle";N;s:3:"uri";s:14:"cel-mai-vandut";s:4:"desc";s:0:"";s:3:"img";s:36:"2f43aa3b8ab74138a3e98e77bc2ed933.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:35;r:46;i:34;O:8:"stdClass":9:{s:2:"id";s:2:"34";s:5:"title";s:3:"Nou";s:15:"breadcrumbTitle";N;s:3:"uri";s:3:"nou";s:4:"desc";s:0:"";s:3:"img";s:36:"7ccdb1aecefee28bf830f18aad7d4cf5.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:24;O:8:"stdClass":9:{s:2:"id";s:2:"24";s:5:"title";s:3:"404";s:15:"breadcrumbTitle";N;s:3:"uri";s:3:"404";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:23;r:112;i:22;r:122;}}}
+";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}}s:3:"all";a:33:{i:1;O:8:"stdClass":9:{s:2:"id";s:1:"1";s:5:"title";s:63:"Cosmetică și parfumerie în Moldova – magazin | Vizaje-Nica";s:15:"breadcrumbTitle";s:10:"Principala";s:3:"uri";s:0:"";s:4:"desc";s:0:"";s:3:"img";s:36:"cb05e27b1e0ab1ceb6fd5bb7eeae514f.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:42;O:8:"stdClass":9:{s:2:"id";s:2:"42";s:5:"title";s:33:"Reguli de aplicare a promocodului";s:15:"breadcrumbTitle";s:33:"Reguli de aplicare a promocodului";s:3:"uri";s:24:"reguli-aplicare-promocod";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:39;r:67;i:25;O:8:"stdClass":9:{s:2:"id";s:2:"25";s:5:"title";s:9:"Text Page";s:15:"breadcrumbTitle";N;s:3:"uri";s:9:"text-page";s:4:"desc";s:21:"<p>asdasdqdwqdq</p>
+";s:3:"img";N;s:7:"isShown";s:1:"0";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:26;r:6;i:37;r:16;i:6;O:8:"stdClass":9:{s:2:"id";s:1:"6";s:5:"title";s:13:"Producătorii";s:15:"breadcrumbTitle";N;s:3:"uri";s:12:"producatorii";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"0";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:7;r:26;i:38;O:8:"stdClass":9:{s:2:"id";s:2:"38";s:5:"title";s:10:"Certificat";s:15:"breadcrumbTitle";N;s:3:"uri";s:10:"certificat";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:9;r:36;i:11;r:81;i:32;r:91;i:31;r:46;i:21;O:8:"stdClass":9:{s:2:"id";s:2:"21";s:5:"title";s:7:"Cautare";s:15:"breadcrumbTitle";N;s:3:"uri";s:7:"cautare";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:3;O:8:"stdClass":9:{s:2:"id";s:1:"3";s:5:"title";s:7:"Catalog";s:15:"breadcrumbTitle";N;s:3:"uri";s:7:"catalog";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:17;O:8:"stdClass":9:{s:2:"id";s:2:"17";s:5:"title";s:8:"Favorite";s:15:"breadcrumbTitle";N;s:3:"uri";s:8:"favorite";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:30;O:8:"stdClass":9:{s:2:"id";s:2:"30";s:5:"title";s:13:"Program bonus";s:15:"breadcrumbTitle";N;s:3:"uri";s:13:"program-bonus";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"0";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:29;r:102;i:10;r:112;i:20;O:8:"stdClass":9:{s:2:"id";s:2:"20";s:5:"title";s:13:"Order Success";s:15:"breadcrumbTitle";N;s:3:"uri";s:13:"order-success";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:19;O:8:"stdClass":9:{s:2:"id";s:2:"19";s:5:"title";s:8:"Checkout";s:15:"breadcrumbTitle";N;s:3:"uri";s:8:"checkout";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:18;O:8:"stdClass":9:{s:2:"id";s:2:"18";s:5:"title";s:4:"Coş";s:15:"breadcrumbTitle";N;s:3:"uri";s:3:"cos";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:27;O:8:"stdClass":9:{s:2:"id";s:2:"27";s:5:"title";s:13:"Înregistrare";s:15:"breadcrumbTitle";N;s:3:"uri";s:12:"inregistrare";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:16;O:8:"stdClass":9:{s:2:"id";s:2:"16";s:5:"title";s:14:"Comenzile mele";s:15:"breadcrumbTitle";N;s:3:"uri";s:14:"comenzile-mele";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:15;O:8:"stdClass":9:{s:2:"id";s:2:"15";s:5:"title";s:10:"Contul meu";s:15:"breadcrumbTitle";N;s:3:"uri";s:10:"contul-meu";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:14;O:8:"stdClass":9:{s:2:"id";s:2:"14";s:5:"title";s:16:"Resetați parola";s:15:"breadcrumbTitle";N;s:3:"uri";s:15:"resetati-parola";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:12;O:8:"stdClass":9:{s:2:"id";s:2:"12";s:5:"title";s:6:"Logare";s:15:"breadcrumbTitle";N;s:3:"uri";s:6:"logare";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:36;O:8:"stdClass":9:{s:2:"id";s:2:"36";s:5:"title";s:14:"Cel mai vandut";s:15:"breadcrumbTitle";N;s:3:"uri";s:14:"cel-mai-vandut";s:4:"desc";s:0:"";s:3:"img";s:36:"2f43aa3b8ab74138a3e98e77bc2ed933.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:35;r:56;i:34;O:8:"stdClass":9:{s:2:"id";s:2:"34";s:5:"title";s:3:"Nou";s:15:"breadcrumbTitle";N;s:3:"uri";s:3:"nou";s:4:"desc";s:0:"";s:3:"img";s:36:"7ccdb1aecefee28bf830f18aad7d4cf5.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:24;O:8:"stdClass":9:{s:2:"id";s:2:"24";s:5:"title";s:3:"404";s:15:"breadcrumbTitle";N;s:3:"uri";s:3:"404";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:23;r:123;i:22;r:133;}}}

@@ -101,7 +101,12 @@ if ($checkoutErrorMessage === '' && $promoCheckoutError) {
 
 
 <main class="page">
-    <section class="order">
+    <section class="order bf-sticker-surface bf-sticker-surface--checkout">
+        <?php $this->load->view('layouts/pages/black-friday-stickers', array(
+            'site_theme_key' => $site_theme_key ?? 'default',
+            'black_friday_sticker_area' => 'checkout',
+            'black_friday_stickers' => array('lightning', 'bow'),
+        )); ?>
         <?php if (($site_theme_key ?? 'default') === 'halloween') : ?>
             <span
                 class="order__halloween-decoration order__halloween-web order__halloween-web--top"

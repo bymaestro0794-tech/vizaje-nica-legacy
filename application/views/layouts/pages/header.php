@@ -3,6 +3,11 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 $isProductDetailPage = trim((string) ($inner_view ?? ''), '/') === 'pages/catalog/item';
 $isHalloweenTheme = ($site_theme_key ?? 'default') === 'halloween';
+$isBlackFridayTheme = ($site_theme_key ?? 'default') === 'black_friday';
+$blackFridayCampaign = !empty($black_friday_campaign) && is_array($black_friday_campaign)
+	? $black_friday_campaign
+	: null;
+$blackFridayCampaignActive = $isBlackFridayTheme && !empty($blackFridayCampaign);
 $headerLogoImage = $isHalloweenTheme
 	? '/app/img/hellowen-logo.png'
 	: '/app/img/logo_v.png';
@@ -351,7 +356,13 @@ $headerRouletteStateUrl = $headerWheelEligible
         data-roulette-state-url="<?= htmlspecialchars($headerRouletteStateUrl, ENT_QUOTES, 'UTF-8') ?>"
     >
         <div class="header__announcement-container _container">
-            <?php if (!empty($headerDiscountSlides)) : ?>
+            <?php if ($blackFridayCampaignActive) : ?>
+                <?php
+                $black_friday_timer_variant = 'header';
+                $this->load->view('layouts/pages/black-friday-timer');
+                unset($black_friday_timer_variant);
+                ?>
+            <?php elseif (!empty($headerDiscountSlides)) : ?>
                 <div class="header__promo-products" data-header-promo-products>
                     <?php foreach ($headerDiscountSlides as $slideIndex => $promoProduct) : ?>
                         <?php
@@ -404,7 +415,7 @@ $headerRouletteStateUrl = $headerWheelEligible
                 </div>
             <?php endif; ?>
 
-            <?php if ($headerWheelEligible) : ?>
+            <?php if ($headerWheelEligible && !$blackFridayCampaignActive) : ?>
                 <div class="header__wheel-invite" data-header-wheel-invite hidden>
                     <p class="header__announcement-text header__wheel-message" data-header-wheel-message></p>
                     <button

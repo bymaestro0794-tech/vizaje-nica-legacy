@@ -813,7 +813,8 @@ if (!empty($is_privacy_policy_page)) {
 
     <?php
     $this->load->view(
-        '/layouts/pages/cart/drawer'
+        '/layouts/pages/cart/drawer',
+        array('site_theme_key' => $site_theme_key ?? 'default')
     );
     ?>
 
@@ -963,9 +964,10 @@ if (!empty($is_privacy_policy_page)) {
     ></script> -->
     <script src="/app/js/components/auth-drawer.js?v=20261019-bonus-register" defer></script>
     <script src="<?= asset_url('app/js/components/site-dialog-manager.js?v=20261113-1') ?>" defer></script>
-    <script src="/app/js/components/welcome-offer.js" defer></script>
+    <script src="<?= asset_url('app/js/components/welcome-offer.js') ?>" defer></script>
     <?php if (!empty($site_dialogs)) { ?><script src="<?= asset_url('app/js/components/site-dialogs.js?v=20261113-1') ?>" defer></script><?php } ?>
     <script src="<?= asset_url('app/js/components/header-promo-slider.js') ?>" defer></script>
+    <script src="<?= asset_url('app/js/components/black-friday-timer.js') ?>" defer></script>
     <?php if ($rouletteShouldRender) { ?><script src="<?= asset_url('app/js/components/roulette-wheel.js') ?>" defer></script><?php } ?>
     <?php if (!empty($client_info->is_creator)) { ?><script src="<?= asset_url('app/js/components/creator-link-widget.js') ?>" defer></script><?php } ?>
     <!-- APP JS START HERE -->
@@ -1047,7 +1049,7 @@ if (!empty($is_privacy_policy_page)) {
         defer
     ></script> 
     <script src="/app/js/main/05-checkout.js" defer></script>
-    <script src="/app/js/main/06-auth.js" defer></script>
+    <script src="/app/js/main/06-auth.js?v=20261116-single-submit" defer></script>
     
     <script src="<?= asset_url('app/js/main/07-cookies.js?v=3') ?>" defer></script>
     <script

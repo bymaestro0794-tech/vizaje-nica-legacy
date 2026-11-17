@@ -33,7 +33,12 @@ $catalogBackUrl = $catalogBackCategory
     ? '/' . $lclang . '/' . $menu['all'][3]->uri . '/' . $catalogBackCategory->uri
     : '/' . $lclang . '/' . $menu['all'][3]->uri;
 ?>
-<main class="page catalog-category-page">
+<main class="page catalog-category-page bf-sticker-surface bf-sticker-surface--category">
+	<?php $this->load->view('layouts/pages/black-friday-stickers', array(
+		'site_theme_key' => $site_theme_key ?? 'default',
+		'black_friday_sticker_area' => 'category',
+		'black_friday_stickers' => array('burst', 'lightning'),
+	)); ?>
     <section class="breacrums">
         <div class="breacrums__container _container">
             <ul class="breacrums__list">

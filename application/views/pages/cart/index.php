@@ -17,7 +17,12 @@ $cartProductPrice = !empty($item['subtotal'])
 ?>
 
 <main class="page">
-    <section class="cart">
+    <section class="cart bf-sticker-surface bf-sticker-surface--cart">
+        <?php $this->load->view('layouts/pages/black-friday-stickers', array(
+            'site_theme_key' => $site_theme_key ?? 'default',
+            'black_friday_sticker_area' => 'cart',
+            'black_friday_stickers' => array('gift-box', 'burst'),
+        )); ?>
         <div class="cart__container _container">
             <div class="cart__head head-cart">
                 <div class="head-cart__main">
@@ -26,6 +31,13 @@ $cartProductPrice = !empty($item['subtotal'])
                 </div>
                 <a href="/<?= $lclang ?>/delete_all" class="head-cart__clear"><?= CLEAR ?></a>
             </div>
+            <?php if (!empty($black_friday_campaign)) : ?>
+                <?php
+                $black_friday_timer_variant = 'cart';
+                $this->load->view('layouts/pages/black-friday-timer');
+                unset($black_friday_timer_variant);
+                ?>
+            <?php endif; ?>
             <?php if (!empty($welcome_offer_timer)) { ?>
                 <div class="cart__welcome-offer-countdown">
                     <?php $this->load->view('layouts/pages/welcome-offer-countdown'); ?>

@@ -57,6 +57,7 @@
             linear-gradient(116deg, #e0f6ff 0%, #a6d9f3 32%, #8daee8 66%, #84d9f2 100%);
     }
     .site-theme-swatch--halloween { background: linear-gradient(90deg, #f97316 0 50%, #21130d 50%); }
+    .site-theme-swatch--black_friday { background: linear-gradient(90deg, #000 0 50%, #FFE600 50%); }
     .site-theme-swatch--easter { background: linear-gradient(90deg, #a78bfa 0 50%, #78a878 50%); }
     .site-theme-swatch--valentine { background: linear-gradient(90deg, #e85d75 0 50%, #8e2338 50%); }
     .site-theme-swatch--new_year {
@@ -107,6 +108,18 @@
         color: #536170;
         line-height: 1.55;
     }
+
+    .black-friday-settings[hidden] { display: none !important; }
+    .black-friday-settings {
+        margin: 4px 0 24px;
+        padding: 18px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: #fffdf0;
+    }
+    .black-friday-settings h3 { margin: 0 0 14px; color: #202020; font-size: 16px; font-weight: 600; }
+    .black-friday-settings .form-group { margin-bottom: 14px; }
+    .black-friday-settings .help-block { margin: 8px 0 0; }
 </style>
 
 <div class="page-bar">
@@ -150,7 +163,7 @@
     <div class="portlet-body">
         <div class="site-theme-note">
             Здесь выбирается только визуальная атмосфера. Структура страниц, каталог, цены и контент не меняются:
-            тема влияет на ограниченный набор цветов, акцентов, логотип и декоративную деталь.
+            тема влияет на цвета и оформление. Для Black Friday можно отдельно задать период и текст объявления с таймером.
         </div>
 
         <?php if (!empty($migration_required)) : ?>
@@ -160,7 +173,15 @@
             </div>
         <?php endif; ?>
 
-        <form method="post" action="/<?= ADM_CONTROLLER ?>/site_themes/save">
+        <?php
+        $themeSettings = isset($theme_settings) && is_array($theme_settings) ? $theme_settings : array();
+        $formatThemeDateTime = static function ($value) {
+            $value = trim((string) $value);
+            return $value === '' ? '' : str_replace(' ', 'T', substr($value, 0, 16));
+        };
+        $blackFridaySettingsInstalled = !empty($black_friday_settings_installed);
+        ?>
+        <form method="post" action="/<?= ADM_CONTROLLER ?>/site_themes/save" data-site-themes-form data-black-friday-settings-installed="<?= $blackFridaySettingsInstalled ? '1' : '0' ?>">
             <div class="row site-theme-grid">
                 <?php foreach ($theme_presets as $themeKey => $themePreset) : ?>
                     <div class="col-lg-4 col-md-6">
@@ -169,6 +190,7 @@
                                 type="radio"
                                 name="theme_key"
                                 value="<?= htmlspecialchars($themeKey, ENT_QUOTES, 'UTF-8') ?>"
+                                data-site-theme-choice
                                 <?= $active_theme_key === $themeKey ? 'checked' : '' ?>
                             >
                             <span class="site-theme-card">
@@ -189,9 +211,107 @@
                 <?php endforeach; ?>
             </div>
 
+            <section
+                class="black-friday-settings"
+                data-black-friday-settings
+                <?= $active_theme_key === 'black_friday' ? '' : 'hidden' ?>
+            >
+                <h3>Объявление и таймер Black Friday</h3>
+                <?php if (!$blackFridaySettingsInstalled) : ?>
+                    <div class="alert alert-warning">
+                        Для сохранения этих настроек сначала примените SQL-патч
+                        <code>database/patches/2026-11-16-black-friday-theme-settings.sql</code>.
+                    </div>
+                <?php endif; ?>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="black-friday-start">Начало акции</label>
+                            <input
+                                id="black-friday-start"
+                                class="form-control"
+                                type="datetime-local"
+                                name="black_friday_starts_at"
+                                value="<?= htmlspecialchars($formatThemeDateTime($themeSettings['black_friday_starts_at'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                                data-black-friday-required
+                            >
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="black-friday-end">Окончание акции</label>
+                            <input
+                                id="black-friday-end"
+                                class="form-control"
+                                type="datetime-local"
+                                name="black_friday_ends_at"
+                                value="<?= htmlspecialchars($formatThemeDateTime($themeSettings['black_friday_ends_at'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                                data-black-friday-required
+                            >
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="black-friday-text-ru">Текст RU</label>
+                            <input
+                                id="black-friday-text-ru"
+                                class="form-control"
+                                type="text"
+                                name="black_friday_text_ru"
+                                maxlength="255"
+                                value="<?= htmlspecialchars((string) ($themeSettings['black_friday_text_ru'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                                data-black-friday-required
+                            >
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="black-friday-text-ro">Текст RO</label>
+                            <input
+                                id="black-friday-text-ro"
+                                class="form-control"
+                                type="text"
+                                name="black_friday_text_ro"
+                                maxlength="255"
+                                value="<?= htmlspecialchars((string) ($themeSettings['black_friday_text_ro'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                                data-black-friday-required
+                            >
+                        </div>
+                    </div>
+                </div>
+                <p class="help-block">
+                    Таймер показывается в верхней плашке и в корзине только в заданный период. Время указывается по часовому поясу Europe/Bucharest.
+                    Эта тема меняет оформление, но сама по себе не создаёт скидки и не меняет цены.
+                </p>
+            </section>
+
             <button type="submit" class="btn green">
                 <i class="fa fa-check"></i> Сохранить тему
             </button>
         </form>
     </div>
 </div>
+
+<script>
+(() => {
+    const form = document.querySelector('[data-site-themes-form]')
+    if (!form) return
+
+    const settings = form.querySelector('[data-black-friday-settings]')
+    const choices = Array.from(form.querySelectorAll('[data-site-theme-choice]'))
+    const fields = Array.from(form.querySelectorAll('[data-black-friday-required]'))
+    const hasBlackFridaySettings = form.dataset.blackFridaySettingsInstalled === '1'
+
+    const updateBlackFridayFields = () => {
+        const selected = choices.find(choice => choice.checked)
+        const isBlackFriday = selected?.value === 'black_friday'
+        settings.hidden = !isBlackFriday
+        fields.forEach(field => {
+            field.required = Boolean(isBlackFriday && hasBlackFridaySettings)
+        })
+    }
+
+    choices.forEach(choice => choice.addEventListener('change', updateBlackFridayFields))
+    updateBlackFridayFields()
+})()
+</script>

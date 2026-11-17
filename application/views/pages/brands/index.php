@@ -17,7 +17,12 @@
         </div>
     </section>
 
-    <section class="brands">
+    <section class="brands bf-sticker-surface bf-sticker-surface--brand-directory">
+        <?php $this->load->view('layouts/pages/black-friday-stickers', array(
+            'site_theme_key' => $site_theme_key ?? 'default',
+            'black_friday_sticker_area' => 'brand-directory',
+            'black_friday_stickers' => array('bow', 'sale-ticket'),
+        )); ?>
         <div class="brands__container _container">
             <h1 class="head-brands__title _visually-hidden">
                 <?= $page_name ?>

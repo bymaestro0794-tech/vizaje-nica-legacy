@@ -150,7 +150,9 @@ class FrontEndController extends CI_Controller
         // Seasonal atmosphere is a predefined, optional layer. Missing SQL
         // patch intentionally falls back to the unchanged default theme.
         $this->load->model('site_themes_model');
-        $this->data['site_theme_key'] = $this->site_themes_model->getActiveThemeKey();
+        $siteThemeSettings = $this->site_themes_model->getThemeSettings();
+        $this->data['site_theme_key'] = $this->site_themes_model->getActiveThemeKey($siteThemeSettings);
+        $this->data['black_friday_campaign'] = $this->site_themes_model->getActiveBlackFridayCampaign($siteThemeSettings);
         $this->load->model('site_support_model');
         $this->data['telegram_support'] = $this->site_support_model->getSettings();
 
@@ -519,6 +521,7 @@ class FrontEndController extends CI_Controller
             && empty($_SESSION['welcome_offer_removed'])
         ) {
             $_SESSION['cart_promo'] = array('code' => 'WELCOME18');
+            $_SESSION['cart_discount_choice'] = 'promo';
         }
     }
 

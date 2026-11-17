@@ -70,6 +70,7 @@
 	const MOBILE_BREAKPOINT = 991
 	const SCROLL_THRESHOLD = 20
 	const SCROLL_DIRECTION_THRESHOLD = 6
+	const MOBILE_SCROLL_DIRECTION_THRESHOLD = 10
 
 	const MEGA_OPEN_DELAY = 80
 	const MEGA_CLOSE_DELAY = 180
@@ -2118,7 +2119,11 @@
 				return
 			}
 
-			if (Math.abs(difference) < SCROLL_DIRECTION_THRESHOLD) {
+			const directionThreshold = isDesktop()
+				? SCROLL_DIRECTION_THRESHOLD
+				: MOBILE_SCROLL_DIRECTION_THRESHOLD
+
+			if (Math.abs(difference) < directionThreshold) {
 				scrollTicking = false
 				return
 			}

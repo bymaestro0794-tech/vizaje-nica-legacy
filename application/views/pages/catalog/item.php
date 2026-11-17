@@ -872,11 +872,16 @@ $hasBrandDescription = !empty(
 	     ================================================================ -->
 
 	<section
-		class="product-page"
+		class="product-page bf-sticker-surface bf-sticker-surface--product"
 		data-product-page
 		data-product-id="<?= (int) $product->id ?>"
 		data-selected-variation="<?= (int) $initialVariationId ?>"
 	>
+		<?php $this->load->view('layouts/pages/black-friday-stickers', array(
+			'site_theme_key' => $site_theme_key ?? 'default',
+			'black_friday_sticker_area' => 'product',
+			'black_friday_stickers' => array('percent-tag', 'gift-box'),
+		)); ?>
 		<?php if (($site_theme_key ?? 'default') === 'halloween') : ?>
 			<span
 				class="product-page__halloween-decoration product-page__halloween-web product-page__halloween-web--left"

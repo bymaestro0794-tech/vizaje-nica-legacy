@@ -1,4 +1,9 @@
-<main class="page home-page">
+<main class="page home-page bf-sticker-surface bf-sticker-surface--home">
+	<?php $this->load->view('layouts/pages/black-friday-stickers', array(
+		'site_theme_key' => $site_theme_key ?? 'default',
+		'black_friday_sticker_area' => 'home',
+		'black_friday_stickers' => array('sale-ticket', 'sparkle'),
+	)); ?>
     <?php
     /*
     |--------------------------------------------------------------------------

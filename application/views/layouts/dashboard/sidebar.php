@@ -4,6 +4,11 @@ if (isset($count_order))
 else
     $order_count = '';
 
+$new_feedback_count = isset($new_feedback_count) ? (int) $new_feedback_count : 0;
+$feedback_count = $new_feedback_count > 0
+    ? ' <span class="label label-sm label-danger">' . $new_feedback_count . '</span>'
+    : '';
+
 $sidebar_menu = array(
     'menu' => array('name' => lang("Menu"), 'ico' => '<i class="fa fa-bars"></i>'),
     'orders' => array('name' =>lang("Order").' '.$order_count, 'ico' => '<i class="fa fa-shopping-cart"></i>'),
@@ -33,7 +38,7 @@ $sidebar_menu = array(
         ],
     ),
     'analytics' => array('name' => "Аналитика", 'ico' => '<i class="fa fa-bar-chart"></i>'),
-    'feedback' => array('name' => 'Обратная связь', 'ico' => '<i class="fa fa-commenting-o"></i>'),
+    'feedback' => array('name' => 'Обратная связь' . $feedback_count, 'ico' => '<i class="fa fa-commenting-o"></i>'),
     /*
      * Управление новой главной страницей.
      */

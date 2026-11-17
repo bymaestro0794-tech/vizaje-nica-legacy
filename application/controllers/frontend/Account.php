@@ -739,6 +739,7 @@ class Account extends FrontEndController
 
                             if ($this->db->affected_rows() > 0) {
                                 $_SESSION['cart_promo'] = array('code' => 'WELCOME18');
+                                $_SESSION['cart_discount_choice'] = 'promo';
                                 unset($_SESSION['welcome_offer_removed']);
                                 $response['welcome_offer_expires_at'] = strtotime($offerExpiresAt);
                             }

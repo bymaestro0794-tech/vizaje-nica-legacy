@@ -1,4 +1,9 @@
-<main class="page catalog-index-page">
+<main class="page catalog-index-page bf-sticker-surface bf-sticker-surface--catalog">
+	<?php $this->load->view('layouts/pages/black-friday-stickers', array(
+		'site_theme_key' => $site_theme_key ?? 'default',
+		'black_friday_sticker_area' => 'catalog',
+		'black_friday_stickers' => array('percent-star', 'promo-tag'),
+	)); ?>
     <?php
     $mobileCatalogIcon = static function ($title, $uri = '') {
         $label = mb_strtolower(trim($uri . ' ' . $title), 'UTF-8');

@@ -32,10 +32,13 @@ foreach ($objects as $row) {
 		<label>
 			<input type="hidden" name="show_on_site" value="0">
 			<input type="checkbox" name="show_on_site" value="1" <?= ($welcome_promo->status ?? '') === 'active' ? 'checked' : '' ?>>
-			Показывать скидку 18% после первой регистрации на сайте
+			Включить окно и промокод WELCOME18 после регистрации
 		</label>
 		<button type="submit" class="btn blue btn-sm">Сохранить</button>
-		<p class="help-block">Флажок управляет статусом WELCOME18. Уже выданные скидки не удаляются, но новые выдачи и применение выключаются.</p>
+		<p class="help-block">
+			При отключении окно скрывается, новые промокоды WELCOME18 не выдаются, а уже выданные не применяются, пока настройка выключена.
+			Обычные скидки на товары и другие акции, включая Black Friday, не затрагиваются. Срок действия уже выданных WELCOME18 продолжает идти.
+		</p>
 	</form>
 <?php endif; ?>
 

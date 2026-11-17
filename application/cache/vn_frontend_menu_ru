@@ -1,4 +1,93 @@
-a:3:{s:4:"time";i:1793021340;s:3:"ttl";i:300;s:4:"data";a:3:{s:3:"top";a:5:{i:26;O:8:"stdClass":9:{s:2:"id";s:2:"26";s:5:"title";s:12:"Бренды";s:15:"breadcrumbTitle";N;s:3:"uri";s:7:"brendyi";s:4:"desc";s:0:"";s:3:"img";s:36:"73b1902b2bd2edef601a04a8044d786a.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}i:37;O:8:"stdClass":9:{s:2:"id";s:2:"37";s:5:"title";s:14:"Новости";s:15:"breadcrumbTitle";N;s:3:"uri";s:7:"novosti";s:4:"desc";s:0:"";s:3:"img";s:36:"59a683ffceefe21b31252092b3ffb00c.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}i:7;O:8:"stdClass":9:{s:2:"id";s:1:"7";s:5:"title";s:16:"Магазины";s:15:"breadcrumbTitle";N;s:3:"uri";s:9:"magazinyi";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}i:9;O:8:"stdClass":9:{s:2:"id";s:1:"9";s:5:"title";s:10:"Акции";s:15:"breadcrumbTitle";N;s:3:"uri";s:6:"aktsii";s:4:"desc";s:0:"";s:3:"img";s:36:"151c4eb4ce8318854354776af0a42cad.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}i:35;O:8:"stdClass":9:{s:2:"id";s:2:"35";s:5:"title";s:12:"Скидки";s:15:"breadcrumbTitle";N;s:3:"uri";s:6:"skidki";s:4:"desc";s:0:"";s:3:"img";s:36:"68b075a0f0097c2d76b85f4c61e32017.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}}s:6:"bottom";a:12:{i:39;O:8:"stdClass":9:{s:2:"id";s:2:"39";s:5:"title";s:16:"Express delivery";s:15:"breadcrumbTitle";N;s:3:"uri";s:16:"express-delivery";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:26;r:6;i:37;r:16;i:7;r:26;i:9;r:36;i:11;O:8:"stdClass":9:{s:2:"id";s:2:"11";s:5:"title";s:16:"Контакты";s:15:"breadcrumbTitle";N;s:3:"uri";s:9:"kontaktyi";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:32;O:8:"stdClass":9:{s:2:"id";s:2:"32";s:5:"title";s:22:"Сертификаты";s:15:"breadcrumbTitle";N;s:3:"uri";s:12:"sertifikatyi";s:4:"desc";s:934:"<p>Сертификат Vizaje-Nica может быть куплен в любом из магазинов сети Vizaje-Nica а так же онлайн на сайте. <br>
+a:3:{s:4:"time";i:1794908057;s:3:"ttl";i:300;s:4:"data";a:3:{s:3:"top";a:6:{i:26;O:8:"stdClass":9:{s:2:"id";s:2:"26";s:5:"title";s:12:"Бренды";s:15:"breadcrumbTitle";N;s:3:"uri";s:7:"brendyi";s:4:"desc";s:0:"";s:3:"img";s:36:"73b1902b2bd2edef601a04a8044d786a.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}i:37;O:8:"stdClass":9:{s:2:"id";s:2:"37";s:5:"title";s:14:"Новости";s:15:"breadcrumbTitle";N;s:3:"uri";s:7:"novosti";s:4:"desc";s:0:"";s:3:"img";s:36:"59a683ffceefe21b31252092b3ffb00c.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}i:7;O:8:"stdClass":9:{s:2:"id";s:1:"7";s:5:"title";s:16:"Магазины";s:15:"breadcrumbTitle";N;s:3:"uri";s:9:"magazinyi";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}i:9;O:8:"stdClass":9:{s:2:"id";s:1:"9";s:5:"title";s:10:"Акции";s:15:"breadcrumbTitle";N;s:3:"uri";s:6:"aktsii";s:4:"desc";s:0:"";s:3:"img";s:36:"151c4eb4ce8318854354776af0a42cad.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}i:31;O:8:"stdClass":9:{s:2:"id";s:2:"31";s:5:"title";s:43:"Подарочные Сертификаты";s:15:"breadcrumbTitle";N;s:3:"uri";s:25:"podarochnyie-sertifikatyi";s:4:"desc";s:3991:"<h1><strong>Идеальный подарок без риска ошибиться - подарочный сертификат Vizaje-Nica</strong></h1>
+
+<p><img alt="" src="/kcfinder/upload/images/photo_2026-01-21_14-32-48.jpg" xss="removed"></p>
+
+<p>Только оригинальная парфюмерия и косметика от ведущих мировых брендов - никаких подделок, только 100% подлинность.</p>
+
+<p>Подарите:</p>
+
+<p>Свободу выбора — пусть близкий человек сам создаст свой идеальный аромат или уход</p>
+
+<p>Эмоции от люксового шопинга в красивом бутике</p>
+
+<p>Уверенность, что подарок точно понравится</p>
+
+<p>Особенно актуально перед 14 февраля, 8 марта, 23 февраля, Новым годом, днем рождения, юбилеем или просто «потому что ты этого достойна».</p>
+
+<p>Номиналы от 200 до 1000 лей (или любой другой на ваш выбор в приложении). Электронный вариант — придёт на почту или в приложение за 1 минуту.  Стильный сертификат в подарочной упаковке — в любом магазине сети.</p>
+
+<p>Почему сертификат продаётся лучше всего именно у нас:</p>
+
+<p>Огромный выбор нишевой и селективной парфюмерии и косметики.</p>
+
+<p>Новинки косметики, которые ещё не везде появились</p>
+
+<p>Приятные бонусы и отличный сервис.</p>
+
+<p>Подарите не просто вещь, а возможность почувствовать себя особенной. Приходите за сертификатом или оформляйте онлайн в приложение уже сегодня!</p>
+
+<h1 xss="removed"><br>
+<br>
+<strong>Корпоративные подарочные сертификаты</strong></h1>
+
+<div xss="removed"><br>
+Сертификаты Vizaje-Nica это универсальный подарок, который подойдет всем</div>
+
+<p><br>
+1. Сотрудникам</p>
+
+<blockquote>
+<p>Для мотивации<br>
+Подарки на праздники<br>
+За выполнение KPI</p>
+</blockquote>
+
+<p>2. Партнерам</p>
+
+<blockquote>
+<p>Поблагодарить<br>
+Поздравить с важным событием<br>
+Оказать внимание</p>
+</blockquote>
+
+<p>3. Клиентам</p>
+
+<blockquote>
+<p>Программы лояльности<br>
+Вознаграждение<br>
+Продвижение новых услуг</p>
+</blockquote>
+
+<p></p>
+
+<h2></h2>
+
+<h2><br>
+<strong>Дарим бонусы партнерам</strong></h2>
+
+<h2>Заказывай подарочные сертификаты для партнеров и коллег и получай бонусы на свой номер телефона!<br>
+<br>
+Больше сумма покупки – больше бонусов:</h2>
+
+<p>от 10000 лей.<br>
+✦ 300 бонусов</p>
+
+<p>от 15000 лей.<br>
+✦ 600 бонусов</p>
+
+<p>от 20000 лей.<br>
+✦ 1000 бонусов</p>
+
+<p>Подарите коллегам и партнерам подарочный сертификат Vizaje-Nica</p>
+
+<p>Вы можете оформить заказ подарочных карт:</p>
+
+<p><strong>Тылик Никита,</strong><br>
+менеджер по продажам корпоративных подарочных карт</p>
+
+<p><em>Depozit@vizaje-nica.com<br>
+079980225</em></p>
+";s:3:"img";s:36:"23cf93981cdfed858253e8c0d65f5380.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}i:35;O:8:"stdClass":9:{s:2:"id";s:2:"35";s:5:"title";s:12:"Скидки";s:15:"breadcrumbTitle";N;s:3:"uri";s:6:"skidki";s:4:"desc";s:0:"";s:3:"img";s:36:"68b075a0f0097c2d76b85f4c61e32017.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"1";s:8:"onBottom";s:1:"1";}}s:6:"bottom";a:13:{i:39;O:8:"stdClass":9:{s:2:"id";s:2:"39";s:5:"title";s:16:"Express delivery";s:15:"breadcrumbTitle";N;s:3:"uri";s:16:"express-delivery";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:26;r:6;i:37;r:16;i:7;r:26;i:9;r:36;i:11;O:8:"stdClass":9:{s:2:"id";s:2:"11";s:5:"title";s:16:"Контакты";s:15:"breadcrumbTitle";N;s:3:"uri";s:9:"kontaktyi";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:32;O:8:"stdClass":9:{s:2:"id";s:2:"32";s:5:"title";s:22:"Сертификаты";s:15:"breadcrumbTitle";N;s:3:"uri";s:12:"sertifikatyi";s:4:"desc";s:934:"<p>Сертификат Vizaje-Nica может быть куплен в любом из магазинов сети Vizaje-Nica а так же онлайн на сайте. <br>
 Сертификат принимается во всех магазинах сети Vizaje-Nica а так же онлайн на сайте и при обращении в наши социальные сети.</p>
 
 <p>При покупки сертификата действует кэш-бэк или скидка по приложению. При отоваривании сертификата не действуют скидки или акции.</p>
@@ -6,7 +95,7 @@ a:3:{s:4:"time";i:1793021340;s:3:"ttl";i:300;s:4:"data";a:3:{s:3:"top";a:5:{i:26
 <p>Сертификат не может быть возвращен или обменен на другой сертификат( ст.954-956 ГК РМ)</p>
 
 <p>Срок действия: Сертификат действителен 6 месяцев с даты покупки.</p>
-";s:3:"img";s:36:"845a8a4a62f6552af111ef2f5196c1a9.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:29;O:8:"stdClass":9:{s:2:"id";s:2:"29";s:5:"title";s:36:"Информация о товаре";s:15:"breadcrumbTitle";N;s:3:"uri";s:21:"informatsiya-o-tovare";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:10;O:8:"stdClass":9:{s:2:"id";s:2:"10";s:5:"title";s:52:"Информация для потребителей";s:15:"breadcrumbTitle";N;s:3:"uri";s:30:"informatsiya-dlya-potrebiteley";s:4:"desc";s:780:"<p>Уполномоченным органом, наделенным функциями по защите прав потребителей является:</p>
+";s:3:"img";s:36:"845a8a4a62f6552af111ef2f5196c1a9.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:31;r:46;i:29;O:8:"stdClass":9:{s:2:"id";s:2:"29";s:5:"title";s:36:"Информация о товаре";s:15:"breadcrumbTitle";N;s:3:"uri";s:21:"informatsiya-o-tovare";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:10;O:8:"stdClass":9:{s:2:"id";s:2:"10";s:5:"title";s:52:"Информация для потребителей";s:15:"breadcrumbTitle";N;s:3:"uri";s:30:"informatsiya-dlya-potrebiteley";s:4:"desc";s:780:"<p>Уполномоченным органом, наделенным функциями по защите прав потребителей является:</p>
 
 <p>Агентство по защите прав потребителей и надзору за рынком</p>
 
@@ -16,7 +105,7 @@ Email: consumator@apc.gov.md<br>
 Сайт: consumator.gov.md</p>
 
 <p>Рассмотрение рекламации осуществляется при предоставлении кассового чека или другого документа, который подтверждает факт покупки продукта или услуги.</p>
-";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:35;r:46;i:23;O:8:"stdClass":9:{s:2:"id";s:2:"23";s:5:"title";s:64:"Политика конфиденциальности и cookies";s:15:"breadcrumbTitle";N;s:3:"uri";s:37:"politika-konfidentsialnosti-i-cookies";s:4:"desc";s:31103:"<p><h1>ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ И COOKIE</h1></p>
+";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:35;r:56;i:23;O:8:"stdClass":9:{s:2:"id";s:2:"23";s:5:"title";s:64:"Политика конфиденциальности и cookies";s:15:"breadcrumbTitle";N;s:3:"uri";s:37:"politika-konfidentsialnosti-i-cookies";s:4:"desc";s:31103:"<p><h1>ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ И COOKIE</h1></p>
 
 <p><p><br>
     Последнее обновление: 04.09.2026<br>
@@ -651,94 +740,5 @@ Email: consumator@apc.gov.md<br>
 Цены и остатки на сайте ориентировочные и подтверждаются только после звонка оператара и чека кассового аппарата</p>
 
 <p>Мы благодарим Вас!</p>
-";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}}s:3:"all";a:33:{i:1;O:8:"stdClass":9:{s:2:"id";s:1:"1";s:5:"title";s:93:"Косметика и парфюмерия в Молдове – магазин | Vizaje-Nica";s:15:"breadcrumbTitle";s:14:"Главная";s:3:"uri";s:0:"";s:4:"desc";s:0:"";s:3:"img";s:36:"cb05e27b1e0ab1ceb6fd5bb7eeae514f.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:42;O:8:"stdClass":9:{s:2:"id";s:2:"42";s:5:"title";s:54:"Правила применения промокода";s:15:"breadcrumbTitle";s:54:"Правила применения промокода";s:3:"uri";s:29:"pravila-primeneniya-promokoda";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:39;r:57;i:25;O:8:"stdClass":9:{s:2:"id";s:2:"25";s:5:"title";s:35:"Текстовая страница";s:15:"breadcrumbTitle";N;s:3:"uri";s:20:"tekstovaya-stranitsa";s:4:"desc";s:14:"<p>dqdwq</p>
-";s:3:"img";N;s:7:"isShown";s:1:"0";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:26;r:6;i:37;r:16;i:6;O:8:"stdClass":9:{s:2:"id";s:1:"6";s:5:"title";s:26:"Производители";s:15:"breadcrumbTitle";N;s:3:"uri";s:13:"proizvoditeli";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"0";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:7;r:26;i:38;O:8:"stdClass":9:{s:2:"id";s:2:"38";s:5:"title";s:20:"Сертификат";s:15:"breadcrumbTitle";N;s:3:"uri";s:10:"sertifikat";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:9;r:36;i:11;r:71;i:32;r:81;i:31;O:8:"stdClass":9:{s:2:"id";s:2:"31";s:5:"title";s:43:"Подарочные Сертификаты";s:15:"breadcrumbTitle";N;s:3:"uri";s:25:"podarochnyie-sertifikatyi";s:4:"desc";s:3991:"<h1><strong>Идеальный подарок без риска ошибиться - подарочный сертификат Vizaje-Nica</strong></h1>
-
-<p><img alt="" src="/kcfinder/upload/images/photo_2026-01-21_14-32-48.jpg" xss="removed"></p>
-
-<p>Только оригинальная парфюмерия и косметика от ведущих мировых брендов - никаких подделок, только 100% подлинность.</p>
-
-<p>Подарите:</p>
-
-<p>Свободу выбора — пусть близкий человек сам создаст свой идеальный аромат или уход</p>
-
-<p>Эмоции от люксового шопинга в красивом бутике</p>
-
-<p>Уверенность, что подарок точно понравится</p>
-
-<p>Особенно актуально перед 14 февраля, 8 марта, 23 февраля, Новым годом, днем рождения, юбилеем или просто «потому что ты этого достойна».</p>
-
-<p>Номиналы от 200 до 1000 лей (или любой другой на ваш выбор в приложении). Электронный вариант — придёт на почту или в приложение за 1 минуту.  Стильный сертификат в подарочной упаковке — в любом магазине сети.</p>
-
-<p>Почему сертификат продаётся лучше всего именно у нас:</p>
-
-<p>Огромный выбор нишевой и селективной парфюмерии и косметики.</p>
-
-<p>Новинки косметики, которые ещё не везде появились</p>
-
-<p>Приятные бонусы и отличный сервис.</p>
-
-<p>Подарите не просто вещь, а возможность почувствовать себя особенной. Приходите за сертификатом или оформляйте онлайн в приложение уже сегодня!</p>
-
-<h1 xss="removed"><br>
-<br>
-<strong>Корпоративные подарочные сертификаты</strong></h1>
-
-<div xss="removed"><br>
-Сертификаты Vizaje-Nica это универсальный подарок, который подойдет всем</div>
-
-<p><br>
-1. Сотрудникам</p>
-
-<blockquote>
-<p>Для мотивации<br>
-Подарки на праздники<br>
-За выполнение KPI</p>
-</blockquote>
-
-<p>2. Партнерам</p>
-
-<blockquote>
-<p>Поблагодарить<br>
-Поздравить с важным событием<br>
-Оказать внимание</p>
-</blockquote>
-
-<p>3. Клиентам</p>
-
-<blockquote>
-<p>Программы лояльности<br>
-Вознаграждение<br>
-Продвижение новых услуг</p>
-</blockquote>
-
-<p></p>
-
-<h2></h2>
-
-<h2><br>
-<strong>Дарим бонусы партнерам</strong></h2>
-
-<h2>Заказывай подарочные сертификаты для партнеров и коллег и получай бонусы на свой номер телефона!<br>
-<br>
-Больше сумма покупки – больше бонусов:</h2>
-
-<p>от 10000 лей.<br>
-✦ 300 бонусов</p>
-
-<p>от 15000 лей.<br>
-✦ 600 бонусов</p>
-
-<p>от 20000 лей.<br>
-✦ 1000 бонусов</p>
-
-<p>Подарите коллегам и партнерам подарочный сертификат Vizaje-Nica</p>
-
-<p>Вы можете оформить заказ подарочных карт:</p>
-
-<p><strong>Тылик Никита,</strong><br>
-менеджер по продажам корпоративных подарочных карт</p>
-
-<p><em>Depozit@vizaje-nica.com<br>
-079980225</em></p>
-";s:3:"img";s:36:"23cf93981cdfed858253e8c0d65f5380.jpg";s:7:"isShown";s:1:"0";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}i:21;O:8:"stdClass":9:{s:2:"id";s:2:"21";s:5:"title";s:10:"Поиск";s:15:"breadcrumbTitle";N;s:3:"uri";s:5:"poisk";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:3;O:8:"stdClass":9:{s:2:"id";s:1:"3";s:5:"title";s:14:"Каталог";s:15:"breadcrumbTitle";N;s:3:"uri";s:7:"katalog";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:17;O:8:"stdClass":9:{s:2:"id";s:2:"17";s:5:"title";s:18:"Избранные";s:15:"breadcrumbTitle";N;s:3:"uri";s:10:"izbrannyie";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:30;O:8:"stdClass":9:{s:2:"id";s:2:"30";s:5:"title";s:35:"Бонусная программа";s:15:"breadcrumbTitle";N;s:3:"uri";s:19:"bonusnaya-programma";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"0";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:29;r:91;i:10;r:101;i:20;O:8:"stdClass":9:{s:2:"id";s:2:"20";s:5:"title";s:27:"Успешный заказ";s:15:"breadcrumbTitle";N;s:3:"uri";s:16:"uspeshnyiy-zakaz";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:19;O:8:"stdClass":9:{s:2:"id";s:2:"19";s:5:"title";s:33:"Оформление заказа";s:15:"breadcrumbTitle";N;s:3:"uri";s:17:"oformlenie-zakaza";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:18;O:8:"stdClass":9:{s:2:"id";s:2:"18";s:5:"title";s:14:"Корзина";s:15:"breadcrumbTitle";N;s:3:"uri";s:7:"korzina";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:27;O:8:"stdClass":9:{s:2:"id";s:2:"27";s:5:"title";s:22:"Регистрация";s:15:"breadcrumbTitle";N;s:3:"uri";s:13:"registratsiya";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:16;O:8:"stdClass":9:{s:2:"id";s:2:"16";s:5:"title";s:12:"Заказы";s:15:"breadcrumbTitle";N;s:3:"uri";s:7:"zakazyi";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:15;O:8:"stdClass":9:{s:2:"id";s:2:"15";s:5:"title";s:27:"Личный кабинет";s:15:"breadcrumbTitle";N;s:3:"uri";s:16:"lichnyiy-kabinet";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:14;O:8:"stdClass":9:{s:2:"id";s:2:"14";s:5:"title";s:41:"Восстановление пароля";s:15:"breadcrumbTitle";N;s:3:"uri";s:22:"vosstanovlenie-parolya";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:12;O:8:"stdClass":9:{s:2:"id";s:2:"12";s:5:"title";s:8:"Вход";s:15:"breadcrumbTitle";N;s:3:"uri";s:4:"vhod";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:36;O:8:"stdClass":9:{s:2:"id";s:2:"36";s:5:"title";s:19:"Топ продаж";s:15:"breadcrumbTitle";N;s:3:"uri";s:10:"top-prodaj";s:4:"desc";s:0:"";s:3:"img";s:36:"2f43aa3b8ab74138a3e98e77bc2ed933.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:35;r:46;i:34;O:8:"stdClass":9:{s:2:"id";s:2:"34";s:5:"title";s:14:"Новинки";s:15:"breadcrumbTitle";N;s:3:"uri";s:7:"novinki";s:4:"desc";s:0:"";s:3:"img";s:36:"7ccdb1aecefee28bf830f18aad7d4cf5.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:24;O:8:"stdClass":9:{s:2:"id";s:2:"24";s:5:"title";s:3:"404";s:15:"breadcrumbTitle";N;s:3:"uri";s:3:"404";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:23;r:112;i:22;r:122;}}}
+";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"1";}}s:3:"all";a:33:{i:1;O:8:"stdClass":9:{s:2:"id";s:1:"1";s:5:"title";s:93:"Косметика и парфюмерия в Молдове – магазин | Vizaje-Nica";s:15:"breadcrumbTitle";s:14:"Главная";s:3:"uri";s:0:"";s:4:"desc";s:0:"";s:3:"img";s:36:"cb05e27b1e0ab1ceb6fd5bb7eeae514f.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:42;O:8:"stdClass":9:{s:2:"id";s:2:"42";s:5:"title";s:54:"Правила применения промокода";s:15:"breadcrumbTitle";s:54:"Правила применения промокода";s:3:"uri";s:29:"pravila-primeneniya-promokoda";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:39;r:67;i:25;O:8:"stdClass":9:{s:2:"id";s:2:"25";s:5:"title";s:35:"Текстовая страница";s:15:"breadcrumbTitle";N;s:3:"uri";s:20:"tekstovaya-stranitsa";s:4:"desc";s:14:"<p>dqdwq</p>
+";s:3:"img";N;s:7:"isShown";s:1:"0";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:26;r:6;i:37;r:16;i:6;O:8:"stdClass":9:{s:2:"id";s:1:"6";s:5:"title";s:26:"Производители";s:15:"breadcrumbTitle";N;s:3:"uri";s:13:"proizvoditeli";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"0";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:7;r:26;i:38;O:8:"stdClass":9:{s:2:"id";s:2:"38";s:5:"title";s:20:"Сертификат";s:15:"breadcrumbTitle";N;s:3:"uri";s:10:"sertifikat";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:9;r:36;i:11;r:81;i:32;r:91;i:31;r:46;i:21;O:8:"stdClass":9:{s:2:"id";s:2:"21";s:5:"title";s:10:"Поиск";s:15:"breadcrumbTitle";N;s:3:"uri";s:5:"poisk";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:3;O:8:"stdClass":9:{s:2:"id";s:1:"3";s:5:"title";s:14:"Каталог";s:15:"breadcrumbTitle";N;s:3:"uri";s:7:"katalog";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:17;O:8:"stdClass":9:{s:2:"id";s:2:"17";s:5:"title";s:18:"Избранные";s:15:"breadcrumbTitle";N;s:3:"uri";s:10:"izbrannyie";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:30;O:8:"stdClass":9:{s:2:"id";s:2:"30";s:5:"title";s:35:"Бонусная программа";s:15:"breadcrumbTitle";N;s:3:"uri";s:19:"bonusnaya-programma";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"0";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:29;r:102;i:10;r:112;i:20;O:8:"stdClass":9:{s:2:"id";s:2:"20";s:5:"title";s:27:"Успешный заказ";s:15:"breadcrumbTitle";N;s:3:"uri";s:16:"uspeshnyiy-zakaz";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:19;O:8:"stdClass":9:{s:2:"id";s:2:"19";s:5:"title";s:33:"Оформление заказа";s:15:"breadcrumbTitle";N;s:3:"uri";s:17:"oformlenie-zakaza";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:18;O:8:"stdClass":9:{s:2:"id";s:2:"18";s:5:"title";s:14:"Корзина";s:15:"breadcrumbTitle";N;s:3:"uri";s:7:"korzina";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:27;O:8:"stdClass":9:{s:2:"id";s:2:"27";s:5:"title";s:22:"Регистрация";s:15:"breadcrumbTitle";N;s:3:"uri";s:13:"registratsiya";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:16;O:8:"stdClass":9:{s:2:"id";s:2:"16";s:5:"title";s:12:"Заказы";s:15:"breadcrumbTitle";N;s:3:"uri";s:7:"zakazyi";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:15;O:8:"stdClass":9:{s:2:"id";s:2:"15";s:5:"title";s:27:"Личный кабинет";s:15:"breadcrumbTitle";N;s:3:"uri";s:16:"lichnyiy-kabinet";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:14;O:8:"stdClass":9:{s:2:"id";s:2:"14";s:5:"title";s:41:"Восстановление пароля";s:15:"breadcrumbTitle";N;s:3:"uri";s:22:"vosstanovlenie-parolya";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:12;O:8:"stdClass":9:{s:2:"id";s:2:"12";s:5:"title";s:8:"Вход";s:15:"breadcrumbTitle";N;s:3:"uri";s:4:"vhod";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:36;O:8:"stdClass":9:{s:2:"id";s:2:"36";s:5:"title";s:19:"Топ продаж";s:15:"breadcrumbTitle";N;s:3:"uri";s:10:"top-prodaj";s:4:"desc";s:0:"";s:3:"img";s:36:"2f43aa3b8ab74138a3e98e77bc2ed933.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:35;r:56;i:34;O:8:"stdClass":9:{s:2:"id";s:2:"34";s:5:"title";s:14:"Новинки";s:15:"breadcrumbTitle";N;s:3:"uri";s:7:"novinki";s:4:"desc";s:0:"";s:3:"img";s:36:"7ccdb1aecefee28bf830f18aad7d4cf5.jpg";s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:24;O:8:"stdClass":9:{s:2:"id";s:2:"24";s:5:"title";s:3:"404";s:15:"breadcrumbTitle";N;s:3:"uri";s:3:"404";s:4:"desc";s:0:"";s:3:"img";N;s:7:"isShown";s:1:"1";s:5:"onTop";s:1:"0";s:8:"onBottom";s:1:"0";}i:23;r:123;i:22;r:133;}}}

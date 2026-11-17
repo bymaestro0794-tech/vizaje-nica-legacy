@@ -10,6 +10,483 @@ body {
 	--vn-theme-logo-filter: none;
 }
 
+/* Black Friday campaign theme. Campaign dates control the timer; this preset controls presentation. */
+body[data-site-theme="black_friday"] {
+	--vn-theme-accent: #FFE600;
+	--vn-theme-accent-strong: #111111;
+	--vn-theme-accent-soft: #fffbe0;
+	--vn-theme-logo-filter: none;
+	--catalog-accent: #FFE600;
+}
+
+body[data-site-theme="black_friday"] .catalog-category-page {
+	--catalog-accent: #FFE600;
+}
+
+body[data-site-theme="black_friday"] .header__announcement {
+	background: #000;
+	color: #fff;
+}
+
+body[data-site-theme="black_friday"] .header__announcement::before {
+	display: none;
+}
+
+body[data-site-theme="black_friday"] .header__announcement-text,
+body[data-site-theme="black_friday"] .header__promo-slide,
+body[data-site-theme="black_friday"] .header__promo-controls button {
+	color: #fff;
+}
+
+body[data-site-theme="black_friday"] .header__promo-discount {
+	background: #FFE600;
+	color: #000;
+}
+
+.black-friday-countdown {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 14px;
+	min-width: 0;
+	color: #fff;
+}
+
+.black-friday-countdown[hidden] {
+	display: none !important;
+}
+
+.black-friday-countdown__copy {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.black-friday-countdown__clock-wrap {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 8px;
+	flex: 0 0 auto;
+}
+
+.black-friday-countdown__label {
+	font-size: 10px;
+	white-space: nowrap;
+}
+
+.black-friday-countdown__clock {
+	color: #FFE600;
+	font-size: 14px;
+	font-variant-numeric: tabular-nums;
+	font-weight: 700;
+	letter-spacing: .035em;
+	white-space: nowrap;
+}
+
+.black-friday-countdown--header {
+	width: 100%;
+	font-size: 11px;
+}
+
+.black-friday-countdown--cart {
+	justify-content: space-between;
+	margin: 12px 0 16px;
+	padding: 12px 14px;
+	border-radius: 6px;
+	background: #111;
+	font-size: 12px;
+}
+
+.black-friday-countdown--cart .black-friday-countdown__copy {
+	white-space: normal;
+}
+
+@media (min-width: 992px) {
+	body[data-site-theme="black_friday"] .header__announcement-container,
+	body[data-site-theme="black_friday"] .black-friday-countdown,
+	body[data-site-theme="black_friday"] .cart,
+	body[data-site-theme="black_friday"] .cart-drawer__panel,
+	body[data-site-theme="black_friday"] .cart-drawer-content {
+		direction: ltr;
+	}
+
+	body[data-site-theme="black_friday"] .black-friday-countdown--header,
+	body[data-site-theme="black_friday"] .black-friday-countdown--cart {
+		flex-direction: row;
+	}
+
+	body[data-site-theme="black_friday"] .black-friday-countdown__copy,
+	body[data-site-theme="black_friday"] .black-friday-countdown__clock-wrap {
+		direction: ltr;
+		unicode-bidi: isolate;
+	}
+}
+
+body[data-site-theme="black_friday"] .cart-drawer-shipping__progress {
+	background: #FFE600;
+}
+
+body[data-site-theme="black_friday"] .cart-drawer-shipping__success {
+	background: #FFE600;
+	color: #000;
+}
+
+body[data-site-theme="black_friday"] .cart-drawer-shipping__labels span:last-child {
+	color: #000;
+}
+
+body[data-site-theme="black_friday"] .delivery-main-order__radio:checked + .delivery-main-order__content,
+body[data-site-theme="black_friday"] .pay-main-order__input:checked + .pay-main-order__content,
+body[data-site-theme="black_friday"] .bonus-main-order__input:checked + .bonus-main-order__content {
+	border-color: #FFE600;
+}
+
+body[data-site-theme="black_friday"] .vn-checkout-option__input:checked + .vn-checkout-option__content,
+body[data-site-theme="black_friday"] .vn-checkout-payment-option__input:checked + .vn-checkout-payment-option__content,
+body[data-site-theme="black_friday"] .vn-checkout-bonus-option__input:checked + .vn-checkout-bonus-option__content,
+body[data-site-theme="black_friday"] .vn-checkout-discount-choice__option.is-selected {
+	border-color: #FFE600;
+	box-shadow: inset 0 0 0 1px #FFE600;
+}
+
+body[data-site-theme="black_friday"] .vn-checkout-option__input:checked + .vn-checkout-option__content::before,
+body[data-site-theme="black_friday"] .vn-checkout-option__input:checked + .vn-checkout-option__content .vn-checkout-option__check,
+body[data-site-theme="black_friday"] .vn-checkout-payment-option__input:checked + .vn-checkout-payment-option__content .vn-checkout-payment-option__check,
+body[data-site-theme="black_friday"] .vn-checkout-check__input:checked + .vn-checkout-check__box {
+	border-color: #FFE600;
+	background: #FFE600;
+	color: #000;
+}
+
+body[data-site-theme="black_friday"] .vn-checkout-check__input:checked + .vn-checkout-check__box::after {
+	border-color: #000;
+}
+
+body[data-site-theme="black_friday"] .vn-checkout-field__input:focus,
+body[data-site-theme="black_friday"] .vn-checkout-field__textarea:focus,
+body[data-site-theme="black_friday"] .vn-checkout-phone__control:focus-within {
+	border-color: #FFE600;
+	box-shadow: 0 0 0 2px rgba(255, 230, 0, .22);
+}
+
+body[data-site-theme="black_friday"] input[type="checkbox"],
+body[data-site-theme="black_friday"] input[type="radio"] {
+	accent-color: #FFE600;
+}
+
+body[data-site-theme="black_friday"] .checkbox__input:checked + .checkbox__text::before {
+	background: #FFE600;
+	border-color: #FFE600;
+}
+
+body[data-site-theme="black_friday"] .checkbox__input:checked + .checkbox__text::after {
+	position: absolute;
+	top: 4px;
+	left: 8px;
+	width: 6px;
+	height: 11px;
+	border: solid #111;
+	border-width: 0 2px 2px 0;
+	content: '';
+	transform: rotate(45deg);
+}
+
+body[data-site-theme="black_friday"] .options__input:checked + .options__text::after {
+	background-color: #FFE600;
+}
+
+body[data-site-theme="black_friday"] .catalog-stock-toggle input:checked + i {
+	background: #FFE600;
+}
+
+body[data-site-theme="black_friday"] .catalog-filter-option input:checked + .catalog-filter-option__check {
+	border-color: #FFE600;
+	background: #FFE600;
+}
+
+body[data-site-theme="black_friday"] .catalog-filter-option input:checked + .catalog-filter-option__check::after {
+	border-color: #111;
+}
+
+body[data-site-theme="black_friday"] .cookie-panel__toggle input:checked + .cookie-panel__toggle-track {
+	background: #FFE600;
+}
+
+body[data-site-theme="black_friday"] .cookie-panel__toggle input:focus-visible + .cookie-panel__toggle-track {
+	outline-color: #FFE600;
+}
+
+/* Checkout v2 is loaded after this theme file; keep its Black Friday active states. */
+body._order-page[data-site-theme="black_friday"] .vn-checkout-option__input:checked + .vn-checkout-option__content,
+body._order-page[data-site-theme="black_friday"] .vn-checkout-payment-option__input:checked + .vn-checkout-payment-option__content,
+body._order-page[data-site-theme="black_friday"] .vn-checkout-bonus-option__input:checked + .vn-checkout-bonus-option__content,
+body._order-page[data-site-theme="black_friday"] .vn-checkout-discount-choice__option.is-selected {
+	border-color: #FFE600;
+	box-shadow: inset 0 0 0 1px #FFE600;
+}
+
+body._order-page[data-site-theme="black_friday"] .vn-checkout-option__input:checked + .vn-checkout-option__content::before,
+body._order-page[data-site-theme="black_friday"] .vn-checkout-option__input:checked + .vn-checkout-option__content .vn-checkout-option__check,
+body._order-page[data-site-theme="black_friday"] .vn-checkout-payment-option__input:checked + .vn-checkout-payment-option__content .vn-checkout-payment-option__check,
+body._order-page[data-site-theme="black_friday"] .vn-checkout-bonus-option__input:checked + .vn-checkout-bonus-option__content .vn-checkout-bonus-option__check,
+body._order-page[data-site-theme="black_friday"] .vn-checkout-check__input:checked + .vn-checkout-check__box {
+	border-color: #FFE600 !important;
+	background: #FFE600 !important;
+	color: #000 !important;
+}
+
+body._order-page[data-site-theme="black_friday"] .vn-checkout-option__input:checked + .vn-checkout-option__content::before {
+	box-shadow: inset 0 0 0 4px #fff !important;
+}
+
+body._order-page[data-site-theme="black_friday"] .vn-checkout-check__input:checked + .vn-checkout-check__box::after {
+	border-color: #000 !important;
+}
+
+body._order-page[data-site-theme="black_friday"] .vn-checkout-option__input:checked + .vn-checkout-option__content,
+body._order-page[data-site-theme="black_friday"] .vn-checkout-payment-option__input:checked + .vn-checkout-payment-option__content,
+body._order-page[data-site-theme="black_friday"] .vn-checkout-bonus-option__input:checked + .vn-checkout-bonus-option__content {
+	background: #111;
+	color: #fff;
+}
+
+body._order-page[data-site-theme="black_friday"] .vn-checkout-option__input:checked + .vn-checkout-option__content .vn-checkout-option__title,
+body._order-page[data-site-theme="black_friday"] .vn-checkout-option__input:checked + .vn-checkout-option__content .vn-checkout-option__price,
+body._order-page[data-site-theme="black_friday"] .vn-checkout-payment-option__input:checked + .vn-checkout-payment-option__content .vn-checkout-payment-option__title,
+body._order-page[data-site-theme="black_friday"] .vn-checkout-bonus-option__input:checked + .vn-checkout-bonus-option__content .vn-checkout-bonus-option__body strong,
+body._order-page[data-site-theme="black_friday"] .vn-checkout-bonus-option__input:checked + .vn-checkout-bonus-option__content .vn-checkout-bonus-option__body b {
+	color: #fff;
+}
+
+body._order-page[data-site-theme="black_friday"] .vn-checkout-option__input:checked + .vn-checkout-option__content .vn-checkout-option__description,
+body._order-page[data-site-theme="black_friday"] .vn-checkout-payment-option__input:checked + .vn-checkout-payment-option__content .vn-checkout-payment-option__description,
+body._order-page[data-site-theme="black_friday"] .vn-checkout-bonus-option__input:checked + .vn-checkout-bonus-option__content .vn-checkout-bonus-option__body > span {
+	color: rgba(255, 255, 255, .68);
+}
+
+body._order-page[data-site-theme="black_friday"] .vn-checkout-summary__submit:not(:disabled) {
+	background: #FFE600;
+	color: #000;
+	box-shadow: 0 8px 24px rgba(255, 230, 0, .22);
+}
+
+body._order-page[data-site-theme="black_friday"] .vn-checkout-summary__submit:not(:disabled):hover {
+	background: #e6cf00;
+	box-shadow: 0 10px 28px rgba(255, 230, 0, .3);
+}
+
+body[data-site-theme="black_friday"] .bf-sticker-surface {
+	position: relative;
+}
+
+body[data-site-theme="black_friday"] .black-friday-stickers {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	overflow: hidden;
+	pointer-events: none;
+	user-select: none;
+}
+
+body[data-site-theme="black_friday"] .black-friday-stickers__image {
+	position: absolute;
+	display: block;
+	width: clamp(58px, 6.4vw, 92px);
+	height: auto;
+	opacity: .94;
+	object-fit: contain;
+	filter: drop-shadow(3px 4px 0 rgba(255, 230, 0, .32));
+}
+
+body[data-site-theme="black_friday"] .black-friday-stickers--home .black-friday-stickers__image--1 {
+	top: 250px;
+	right: 2.4%;
+	transform: rotate(8deg);
+}
+
+body[data-site-theme="black_friday"] .black-friday-stickers--home .black-friday-stickers__image--2 {
+	top: 1080px;
+	left: 2.4%;
+	width: clamp(54px, 5.4vw, 78px);
+	transform: rotate(-9deg);
+}
+
+body[data-site-theme="black_friday"] .black-friday-stickers--catalog .black-friday-stickers__image--1 {
+	top: 280px;
+	right: 2%;
+	transform: rotate(-8deg);
+}
+
+body[data-site-theme="black_friday"] .black-friday-stickers--catalog .black-friday-stickers__image--2 {
+	top: 850px;
+	left: 2.2%;
+	width: clamp(54px, 5.4vw, 78px);
+}
+
+body[data-site-theme="black_friday"] .black-friday-stickers--category .black-friday-stickers__image--1 {
+	top: 265px;
+	left: 1.8%;
+	transform: rotate(-8deg);
+}
+
+body[data-site-theme="black_friday"] .black-friday-stickers--category .black-friday-stickers__image--2 {
+	top: 930px;
+	right: 2%;
+	width: clamp(54px, 5.4vw, 78px);
+	transform: rotate(9deg);
+}
+
+body[data-site-theme="black_friday"] .black-friday-stickers--brand-directory .black-friday-stickers__image--1 {
+	top: 160px;
+	right: 1.8%;
+	width: clamp(52px, 5.6vw, 82px);
+	transform: rotate(8deg);
+}
+
+body[data-site-theme="black_friday"] .black-friday-stickers--brand-directory .black-friday-stickers__image--2 {
+	top: 730px;
+	left: 1.8%;
+	width: clamp(50px, 5.2vw, 74px);
+}
+
+body[data-site-theme="black_friday"] .black-friday-stickers--brand .black-friday-stickers__image--1 {
+	top: 310px;
+	right: 1.8%;
+	transform: rotate(7deg);
+}
+
+body[data-site-theme="black_friday"] .black-friday-stickers--brand .black-friday-stickers__image--2 {
+	top: 980px;
+	left: 1.8%;
+	width: clamp(52px, 5.2vw, 76px);
+}
+
+body[data-site-theme="black_friday"] .black-friday-stickers--product .black-friday-stickers__image--1 {
+	top: 100px;
+	left: 1.8%;
+	transform: rotate(-8deg);
+}
+
+body[data-site-theme="black_friday"] .black-friday-stickers--product .black-friday-stickers__image--2 {
+	top: 590px;
+	right: 1.8%;
+	width: clamp(54px, 5.4vw, 78px);
+	transform: rotate(8deg);
+}
+
+body[data-site-theme="black_friday"] .black-friday-stickers--cart .black-friday-stickers__image--1 {
+	top: 35px;
+	right: 1.8%;
+	width: clamp(52px, 5.2vw, 74px);
+}
+
+body[data-site-theme="black_friday"] .black-friday-stickers--cart .black-friday-stickers__image--2 {
+	top: 510px;
+	left: 1.4%;
+	width: clamp(50px, 5vw, 72px);
+	transform: rotate(-8deg);
+}
+
+body[data-site-theme="black_friday"] .black-friday-stickers--drawer .black-friday-stickers__image--1 {
+	top: 112px;
+	right: 8px;
+	width: 48px;
+}
+
+body[data-site-theme="black_friday"] .black-friday-stickers--checkout .black-friday-stickers__image--1 {
+	top: 120px;
+	right: 1.8%;
+	width: clamp(52px, 5.4vw, 78px);
+	transform: rotate(-9deg);
+}
+
+body[data-site-theme="black_friday"] .black-friday-stickers--checkout .black-friday-stickers__image--2 {
+	top: 690px;
+	left: 1.8%;
+	width: clamp(52px, 5.2vw, 76px);
+	transform: rotate(8deg);
+}
+
+@media (max-width: 560px) {
+	body[data-site-theme="black_friday"] .black-friday-countdown--header {
+		width: 100%;
+		flex-direction: row;
+		flex-wrap: nowrap;
+		justify-content: center;
+		gap: 8px;
+		white-space: nowrap;
+	}
+
+	body[data-site-theme="black_friday"] .black-friday-countdown--header .black-friday-countdown__copy {
+		max-width: 42vw;
+		font-size: 10px;
+	}
+
+	body[data-site-theme="black_friday"] .black-friday-countdown--header .black-friday-countdown__label {
+		display: none !important;
+	}
+
+	body[data-site-theme="black_friday"] .black-friday-countdown--header .black-friday-countdown__clock-wrap {
+		gap: 4px;
+	}
+
+	.black-friday-countdown--header {
+		gap: 7px;
+		font-size: 10px;
+	}
+
+	.black-friday-countdown--header .black-friday-countdown__clock-wrap {
+		gap: 4px;
+	}
+
+	.black-friday-countdown--header .black-friday-countdown__label {
+		display: none;
+	}
+
+	.black-friday-countdown--header .black-friday-countdown__clock {
+		font-size: 12px;
+	}
+
+	.black-friday-countdown--cart {
+		align-items: flex-start;
+		gap: 8px;
+		flex-direction: column;
+	}
+}
+
+@media (max-width: 767px) {
+	body[data-site-theme="black_friday"] .black-friday-stickers__image {
+		width: 40px;
+		opacity: .58;
+	}
+
+	body[data-site-theme="black_friday"] .black-friday-stickers__image--2 {
+		display: none;
+	}
+
+	body[data-site-theme="black_friday"] .black-friday-stickers--home .black-friday-stickers__image--1,
+	body[data-site-theme="black_friday"] .black-friday-stickers--catalog .black-friday-stickers__image--1,
+	body[data-site-theme="black_friday"] .black-friday-stickers--category .black-friday-stickers__image--1,
+	body[data-site-theme="black_friday"] .black-friday-stickers--brand-directory .black-friday-stickers__image--1,
+	body[data-site-theme="black_friday"] .black-friday-stickers--brand .black-friday-stickers__image--1,
+	body[data-site-theme="black_friday"] .black-friday-stickers--product .black-friday-stickers__image--1,
+	body[data-site-theme="black_friday"] .black-friday-stickers--cart .black-friday-stickers__image--1,
+	body[data-site-theme="black_friday"] .black-friday-stickers--checkout .black-friday-stickers__image--1 {
+		top: 75px;
+		right: 12px;
+		left: auto;
+		width: 38px;
+		transform: rotate(7deg);
+	}
+
+	body[data-site-theme="black_friday"] .black-friday-stickers--drawer .black-friday-stickers__image--1 {
+		top: 100px;
+		right: 8px;
+		width: 34px;
+	}
+}
+
 body[data-site-theme="new_year"] {
 	--vn-theme-accent: #536b9b;
 	--vn-theme-accent-strong: #20284e;

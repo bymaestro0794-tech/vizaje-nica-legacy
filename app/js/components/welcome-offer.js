@@ -119,6 +119,7 @@
 		OFFER.classList.remove('is-open')
 		OFFER.setAttribute('aria-hidden', 'true')
 		document.documentElement.classList.remove('welcome-offer-lock')
+		document.body.style.removeProperty('--welcome-offer-lock-top')
 		if (remember) {
 			saveDismissal()
 			dismissed = Date.now() + DISMISS_MS
@@ -131,13 +132,16 @@
 		if (dismissed > Date.now() || cookieUiIsVisible()) return false
 		if (document.querySelector('.auth-drawer.is-open')) return false
 
-		scrollYBeforeOpen = window.scrollY
+		scrollYBeforeOpen = window.scrollY || window.pageYOffset || 0
 		focusBeforeOpen = document.activeElement
+		document.body.style.setProperty(
+			'--welcome-offer-lock-top',
+			`-${scrollYBeforeOpen}px`
+		)
 		OFFER.classList.add('is-open')
 		OFFER.setAttribute('aria-hidden', 'false')
 		document.documentElement.classList.add('welcome-offer-lock')
 		OFFER.querySelector('[data-welcome-offer-register]')?.focus({ preventScroll: true })
-		restoreScrollPosition()
 		return true
 	}
 

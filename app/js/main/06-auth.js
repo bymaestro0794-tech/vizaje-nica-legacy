@@ -1,4 +1,10 @@
 $('body').on('submit', '.register_form', function (e) {
+    // The modern auth drawer owns its own fetch-based submit handler.
+    // Ignore drawer forms here to avoid posting registration twice.
+    if ($(this).closest('.auth-drawer').length) {
+        return;
+    }
+
     e.preventDefault();
     var lang = $('html').attr('lang');
     let data = $(this).serialize();
@@ -38,6 +44,10 @@ $('body').on('submit', '.register_form', function (e) {
 });
 
 $('body').on('submit', '.login_formcode', function (e) {
+    if ($(this).closest('.auth-drawer').length) {
+        return;
+    }
+
     e.preventDefault();
     var lang = $('html').attr('lang');
     let data = $(this).serialize();
@@ -73,6 +83,10 @@ $('body').on('submit', '.login_formcode', function (e) {
 });
 
 $('body').on('submit', '.login_form', function (e) {
+    if ($(this).closest('.auth-drawer').length) {
+        return;
+    }
+
     e.preventDefault();
     var lang = $('html').attr('lang');
     let data = $(this).serialize();
@@ -107,6 +121,10 @@ $('body').on('submit', '.login_form', function (e) {
 });
 
 $('body').on('submit', '.reset_form', function (e) {
+    if ($(this).closest('.auth-drawer').length) {
+        return;
+    }
+
     e.preventDefault();
     var lang = $('html').attr('lang');
     let data = $(this).serialize();

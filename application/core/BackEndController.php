@@ -126,5 +126,8 @@ class BackEndController extends CI_Controller
         $this->data['site_url'] = $this->site_url;
         $this->data['table'] = strtolower($class);
         $this->data['count_order'] = $this->db->select('id')->where('status','new')->get('orders')->result();
+
+        $this->load->model('site_feedback_model');
+        $this->data['new_feedback_count'] = $this->site_feedback_model->count_new_feedback();
     }
 }

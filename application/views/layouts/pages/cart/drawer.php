@@ -20,13 +20,18 @@ $isRomanian = $lclang === 'ro';
     ></div>
 
     <aside
-        class="cart-drawer__panel"
+        class="cart-drawer__panel bf-sticker-surface bf-sticker-surface--drawer"
         role="dialog"
         aria-modal="true"
         aria-labelledby="cartDrawerTitle"
         tabindex="-1"
         data-cart-drawer-panel
     >
+        <?php $this->load->view('layouts/pages/black-friday-stickers', array(
+            'site_theme_key' => $site_theme_key ?? 'default',
+            'black_friday_sticker_area' => 'drawer',
+            'black_friday_stickers' => array('promo-tag'),
+        )); ?>
         <span
             class="cart-drawer__halloween-decoration cart-drawer__halloween-ghost"
             aria-hidden="true"

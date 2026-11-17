@@ -1251,33 +1251,21 @@
 				? document.activeElement
 				: null
 
+		/*
+		 * The drawer position is controlled by CSS for desktop and mobile.
+		 * Clear a previous GSAP transform before toggling the state; otherwise
+		 * an interrupted x/yPercent tween can leave the panel off-screen while
+		 * the overlay is already visible.
+		 */
+		if (window.gsap && panel) {
+			window.gsap.killTweensOf(panel)
+			window.gsap.set(panel, { clearProps: 'transform' })
+		}
+
 		drawer.classList.add('is-open')
 		drawer.setAttribute('aria-hidden', 'false')
 
 		document.body.classList.add('cart-drawer-lock')
-
-		if (window.gsap && panel) {
-			window.gsap.killTweensOf(panel)
-
-			const mobile = window.matchMedia('(max-width: 767px)').matches
-
-			window.gsap.fromTo(
-				panel,
-				mobile
-					? {
-							yPercent: 100
-						}
-					: {
-							xPercent: 100
-						},
-				{
-					xPercent: 0,
-					yPercent: 0,
-					duration: 0.42,
-					ease: 'power3.out'
-				}
-			)
-		}
 
 		if (config.load) {
 			load()
