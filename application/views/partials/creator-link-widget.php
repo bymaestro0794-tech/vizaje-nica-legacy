@@ -37,7 +37,7 @@ if ($creatorCurrentTitle === '') {
         <h2 id="creator-link-title" class="creator-link-widget__title"><?= $lclang === 'ro' ? 'Creează un link' : 'Создать ссылку' ?></h2>
         <p class="creator-link-widget__page-title"><?= htmlspecialchars($creatorCurrentTitle, ENT_QUOTES, 'UTF-8') ?></p>
         <p class="creator-link-widget__partner-state" data-widget-partner-state role="status" aria-live="polite"><?= $creatorWidgetStateLabels[$creatorWidgetState] ?></p>
-        <button class="creator-link-widget__submit" type="button" data-creator-link-start data-start-url="/account/creator-link/start" disabled><?= $lclang === 'ro' ? 'Conectează Vizaje Partners' : 'Подключить Vizaje Partners' ?></button>
+        <button class="creator-link-widget__submit" type="button" data-creator-link-start data-start-url="/account/creator-link/start" disabled><?= $lclang === 'ro' ? 'Conectează Partners' : 'Связать Partners' ?></button>
         <form data-creator-link-form data-create-url="/account/creator-link/create" data-csrf-token="<?= htmlspecialchars((string) ($creator_csrf_token ?? ''), ENT_QUOTES, 'UTF-8') ?>" data-locale="<?= htmlspecialchars($lclang === 'ro' ? 'ro' : 'ru', ENT_QUOTES, 'UTF-8') ?>">
             <label class="creator-link-widget__label" for="creator-widget-link-title"><?= $lclang === 'ro' ? 'Denumire (opțional)' : 'Название (необязательно)' ?></label>
             <input class="creator-link-widget__url" id="creator-widget-link-title" type="text" maxlength="120" data-creator-link-title>

@@ -140,19 +140,16 @@ class Creator_account_linking extends CI_Controller
         if ($status['status'] !== 'active') return $this->json(array('ok' => true, 'state' => 'suspended', 'configured' => true, 'canConnect' => false, 'canCreateLinks' => false, 'canUnlink' => in_array('account:unlink', json_decode((string) ($row['scopes'] ?? ''), true) ?: array(), true), 'creatorId' => $status['creatorId'], 'partnerStatus' => $status['status'], 'linksAvailable' => false, 'analyticsAvailable' => false));
 
         $scopes = json_decode((string) ($row['scopes'] ?? ''), true);
-        $hasAnalytics = is_array($scopes) && in_array('analytics:read', $scopes, true);
         $hasLinks = is_array($scopes) && in_array('links:read', $scopes, true);
         $canCreateLinks = is_array($scopes) && in_array('links:write', $scopes, true);
         $canUnlink = is_array($scopes) && in_array('account:unlink', $scopes, true);
-        $analyticsResult = $hasAnalytics ? $this->clientApi->analytics($grant, $client->id) : array('ok' => false);
         $linkResult = $hasLinks ? $this->clientApi->listLinks($grant, $client->id) : array('ok' => false);
-        $analytics = !empty($analyticsResult['ok']) ? Partners_creator_dashboard_presenter::analytics($analyticsResult['body']) : array('available' => false, 'empty' => false, 'metrics' => array());
         $links = !empty($linkResult['ok']) ? Partners_creator_dashboard_presenter::links($linkResult['body']) : array('available' => false, 'links' => array());
         return $this->json(array(
             'ok' => true, 'state' => 'active', 'configured' => true, 'creatorId' => $status['creatorId'],
             'canConnect' => false, 'canCreateLinks' => $canCreateLinks, 'canUnlink' => $canUnlink,
-            'analyticsAvailable' => !empty($analytics['available']), 'analyticsEmpty' => !empty($analytics['empty']),
-            'metrics' => $analytics['metrics'], 'linksAvailable' => !empty($links['available']), 'links' => $links['links'],
+            'analyticsAvailable' => false,
+            'linksAvailable' => !empty($links['available']), 'links' => $links['links'],
         ));
     }
 

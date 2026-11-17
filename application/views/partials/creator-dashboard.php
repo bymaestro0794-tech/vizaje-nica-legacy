@@ -1,13 +1,4 @@
 <?php
-$creatorMetricLabels = $lclang === 'ro'
-    ? array(
-        'clicks' => 'Accesări linkuri', 'add_to_cart' => 'Adăugări în coș', 'orders' => 'Comenzi',
-        'confirmed_orders' => 'Comenzi confirmate', 'sales_mdl' => 'Vânzări, MDL', 'conversion' => 'Conversie',
-    )
-    : array(
-        'clicks' => 'Переходы по ссылкам', 'add_to_cart' => 'Добавления в корзину', 'orders' => 'Заказы',
-        'confirmed_orders' => 'Подтверждённые заказы', 'sales_mdl' => 'Продажи, MDL', 'conversion' => 'Конверсия',
-    );
 $creatorLinkTypeLabels = array(
     'product' => $lclang === 'ro' ? 'Produs' : 'Товар',
     'category' => $lclang === 'ro' ? 'Categorie' : 'Категория',
@@ -29,13 +20,16 @@ $creatorCurrentUrl = trim((string) ($without_get_url ?? $full_url ?? ''));
             <span class="creator-account__eyebrow">Vizaje Partners</span>
             <h3 class="creator-account__title"><?= $lclang === 'ro' ? 'Panoul creatorului' : 'Кабинет креатора' ?></h3>
         </div>
-        <a class="creator-account__partners-link" href="https://partners.vizaje-nica.com" target="_blank" rel="noopener noreferrer">
+        <a class="creator-account__partners-link" href="https://partners.vizaje-nica.com" target="_blank" rel="noopener noreferrer" data-creator-partners-open hidden>
             <?= $lclang === 'ro' ? 'Deschide Partners' : 'Перейти в Partners' ?> <span aria-hidden="true">↗</span>
         </a>
+        <button type="button" class="creator-account__partners-link" data-creator-link-start data-start-url="/account/creator-link/start" hidden disabled>
+            <?= $lclang === 'ro' ? 'Conectează Partners' : 'Связать Partners' ?>
+        </button>
     </header>
     <p class="creator-account__description"><?= $lclang === 'ro'
-        ? 'Conectează contul Vizaje Partners pentru a vedea statistica și a administra linkurile.'
-        : 'Подключите аккаунт Vizaje Partners, чтобы смотреть статистику и управлять ссылками.' ?></p>
+        ? 'Conectează contul Vizaje Partners pentru a administra linkurile.'
+        : 'Свяжите аккаунт Vizaje Partners, чтобы управлять ссылками.' ?></p>
     <?php if (!empty($creator_partner_notice)) { ?>
         <?php
         $creatorNoticeMessages = array(
@@ -56,29 +50,11 @@ $creatorCurrentUrl = trim((string) ($without_get_url ?? $full_url ?? ''));
         <span data-creator-partner-state-text><?= $lclang === 'ro' ? 'Se verifică legătura…' : 'Проверяем подключение…' ?></span>
     </div>
     <div class="creator-account__connection-actions">
-        <button type="button" class="creator-account__button" data-creator-link-start data-start-url="/account/creator-link/start" disabled>
-            <?= $lclang === 'ro' ? 'Conectează Vizaje Partners' : 'Подключить Vizaje Partners' ?>
-        </button>
         <button type="button" class="creator-account__text-button" data-creator-unlink data-unlink-url="/account/creator-link/unlink" hidden>
             <?= $lclang === 'ro' ? 'Deconectează contul' : 'Отвязать аккаунт' ?>
         </button>
         <span class="creator-account__state creator-account__state--error" data-creator-action-message role="status" aria-live="polite"></span>
     </div>
-
-    <section class="creator-account__section" aria-labelledby="creator-stats-title" data-creator-dashboard data-creator-dashboard-state="loading">
-        <div class="creator-account__section-heading">
-            <h4 id="creator-stats-title"><?= $lclang === 'ro' ? 'Statistici' : 'Статистика' ?></h4>
-            <span data-creator-id></span>
-        </div>
-        <div class="creator-account__metrics" data-creator-metrics hidden>
-            <?php foreach ($creatorMetricLabels as $key => $label) { ?>
-                <div class="creator-account__metric"><span><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span><strong data-creator-metric="<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>">—</strong></div>
-            <?php } ?>
-        </div>
-        <p class="creator-account__state" data-creator-dashboard-pane="loading"><?= $lclang === 'ro' ? 'Se încarcă datele…' : 'Загружаем данные…' ?></p>
-        <p class="creator-account__state" data-creator-dashboard-pane="empty" hidden><?= $lclang === 'ro' ? 'Nu există încă date statistice.' : 'Статистики пока нет.' ?></p>
-        <p class="creator-account__state creator-account__state--error" data-creator-dashboard-pane="error" role="alert" hidden><?= $lclang === 'ro' ? 'Statistica nu este disponibilă momentan.' : 'Статистика сейчас недоступна.' ?></p>
-    </section>
 
     <section class="creator-account__section" id="creator-links" aria-labelledby="creator-links-title">
         <div class="creator-account__section-heading">

@@ -173,6 +173,14 @@
     text-decoration: none;
 }
 
+button.creator-account__partners-link {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    cursor: pointer;
+}
+
 .creator-link-widget__b2c-setting {
     margin: 4px 0 0;
     border-bottom: 0;

@@ -5,25 +5,23 @@
     const copy = locale === 'ro' ? {
         loading: 'Se încarcă…', empty: 'Nu există încă date.', unavailable: 'Datele nu sunt disponibile momentan.',
         notConfigured: 'Conectarea nu este configurată momentan.', checking: 'Se verifică legătura…', linksUnavailable: 'Linkurile nu sunt disponibile momentan.',
-        disconnected: 'Conectează contul Vizaje Partners pentru statistici și linkuri.',
+        disconnected: 'Conectează contul Vizaje Partners pentru a administra linkurile.',
         connected: 'Contul Vizaje Partners este conectat.', suspended: 'Accesul creatorului este suspendat.',
-        connect: 'Conectează Vizaje Partners', active: 'Activ', created: 'Linkul a fost creat.',
+        connect: 'Conectează Partners', active: 'Activ', created: 'Linkul a fost creat.',
         createFailed: 'Linkul nu a putut fi creat.', copied: 'Copiat', open: 'Deschide', copyLink: 'Copiază',
         revoke: 'Revocă', revokeConfirm: 'Revoci acest link?', revoked: 'Link revocat.',
         actionFailed: 'Acțiunea nu a putut fi finalizată.', linked: 'Cont deconectat.', unlinkConfirm: 'Deconectezi contul Vizaje Partners?',
-        metrics: { clicks: 'Accesări linkuri', add_to_cart: 'Adăugări în coș', orders: 'Comenzi', confirmed_orders: 'Comenzi confirmate', sales_mdl: 'Vânzări, MDL', conversion: 'Conversie' },
         types: { product: 'Produs', category: 'Categorie', brand: 'Brand', homepage: 'Pagina principală' },
         statuses: { active: 'Activ', revoked: 'Revocat', inactive: 'Inactiv' },
     } : {
         loading: 'Загружаем…', empty: 'Данных пока нет.', unavailable: 'Данные сейчас недоступны.',
         notConfigured: 'Подключение сейчас не настроено.', checking: 'Проверяем подключение…', linksUnavailable: 'Ссылки сейчас недоступны.',
-        disconnected: 'Подключите Vizaje Partners, чтобы видеть статистику и ссылки.',
+        disconnected: 'Свяжите Vizaje Partners, чтобы управлять ссылками.',
         connected: 'Аккаунт Vizaje Partners подключён.', suspended: 'Доступ креатора приостановлен.',
-        connect: 'Подключить Vizaje Partners', active: 'Активен', created: 'Ссылка создана.',
+        connect: 'Связать Partners', active: 'Активен', created: 'Ссылка создана.',
         createFailed: 'Не удалось создать ссылку.', copied: 'Скопировано', open: 'Открыть', copyLink: 'Копировать',
         revoke: 'Отозвать', revokeConfirm: 'Отозвать эту ссылку?', revoked: 'Ссылка отозвана.',
         actionFailed: 'Не удалось выполнить действие.', linked: 'Аккаунт отключён.', unlinkConfirm: 'Отключить аккаунт Vizaje Partners?',
-        metrics: { clicks: 'Переходы по ссылкам', add_to_cart: 'Добавления в корзину', orders: 'Заказы', confirmed_orders: 'Подтверждённые заказы', sales_mdl: 'Продажи, MDL', conversion: 'Конверсия' },
         types: { product: 'Товар', category: 'Категория', brand: 'Бренд', homepage: 'Главная' },
         statuses: { active: 'Активна', revoked: 'Отозвана', inactive: 'Неактивна' },
     };
@@ -148,24 +146,6 @@
         });
     }
 
-    function renderMetrics(root, metrics) {
-        const box = root.querySelector('[data-creator-metrics]');
-        if (!box || !metrics || typeof metrics !== 'object') return false;
-        const keys = Object.keys(copy.metrics);
-        if (!keys.every((key) => Object.prototype.hasOwnProperty.call(metrics, key)
-            && (typeof metrics[key] === 'number' || typeof metrics[key] === 'string')
-            && String(metrics[key]).length < 64)) return false;
-        keys.forEach((key) => {
-            const target = box.querySelector(`[data-creator-metric="${key}"]`);
-            const number = Number(metrics[key]);
-            if (target) target.textContent = Number.isFinite(number)
-                ? new Intl.NumberFormat(locale, { maximumFractionDigits: key === 'conversion' ? 2 : 0 }).format(number) + (key === 'conversion' ? '%' : '')
-                : '—';
-        });
-        box.hidden = false;
-        return true;
-    }
-
     function updateConnectionUi(root, result) {
         root.setAttribute('data-can-create-links', result.canCreateLinks ? '1' : '0');
         const state = root.querySelector('[data-creator-partner-state]');
@@ -182,6 +162,9 @@
             button.hidden = !result.canConnect;
             button.disabled = !result.canConnect;
             if (result.canConnect) button.textContent = copy.connect;
+        });
+        root.querySelectorAll('[data-creator-partners-open]').forEach((link) => {
+            link.hidden = result.state !== 'active';
         });
         root.querySelectorAll('[data-creator-unlink]').forEach((button) => {
             button.hidden = !result.canUnlink;
@@ -202,15 +185,6 @@
             if (text) text.textContent = copy.checking; else initialState.textContent = copy.checking;
         }
         setLinkPane(root, 'loading');
-        const dashboard = accountRoot && root === accountRoot ? root.querySelector('[data-creator-dashboard]') : null;
-        const linksState = (state) => {
-            if (dashboard) {
-                dashboard.setAttribute('data-creator-dashboard-state', state);
-                dashboard.querySelectorAll('[data-creator-dashboard-pane]').forEach((pane) => {
-                    pane.hidden = pane.getAttribute('data-creator-dashboard-pane') !== state;
-                });
-            }
-        };
         try {
             const response = await fetch(root.getAttribute('data-dashboard-url') || '/account/creator-link/dashboard', {
                 credentials: 'same-origin', headers: { 'Accept': 'application/json' }, cache: 'no-store',
@@ -218,25 +192,6 @@
             const result = await response.json();
             if (!response.ok || !result || result.ok !== true) throw new Error('dashboard_unavailable');
             updateConnectionUi(root, result);
-            const creatorId = root.querySelector('[data-creator-id]');
-            if (creatorId) creatorId.textContent = result.creatorId || '';
-
-            if (dashboard) {
-                if (result.state !== 'active') {
-                    linksState(result.state === 'not_connected' ? 'empty' : 'error');
-                    const metricBox = root.querySelector('[data-creator-metrics]'); if (metricBox) metricBox.hidden = true;
-                } else if (!result.analyticsAvailable) {
-                    linksState('error');
-                } else if (result.analyticsEmpty) {
-                    linksState('empty');
-                } else if (!renderMetrics(root, result.metrics)) {
-                    linksState('error');
-                } else {
-                    linksState('loaded');
-                    dashboard.querySelectorAll('[data-creator-dashboard-pane]').forEach((pane) => { pane.hidden = true; });
-                }
-            }
-
             if (result.linksAvailable && Array.isArray(result.links)) {
                 const rows = root.querySelector('[data-creator-links]');
                 const compact = root.querySelector('[data-widget-links]');
@@ -248,7 +203,6 @@
             }
         } catch (_) {
             updateConnectionUi(root, { state: 'error', canConnect: false, canCreateLinks: false, canUnlink: false });
-            linksState('error');
             setLinkPane(root, 'error');
         } finally {
             root.removeAttribute('data-dashboard-loading');

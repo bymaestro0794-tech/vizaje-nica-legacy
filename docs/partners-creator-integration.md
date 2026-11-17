@@ -58,9 +58,10 @@ keys locally.
    the encrypted grant and identity mapping and synchronizes `clients.is_creator`
    in the same local transaction when that column exists. A clean account URL is
    loaded after the callback.
-5. Dashboard, links, revoke, and unlink requests are made server-to-server with
-   the grant and current `clients.id`; the browser receives only allowlisted
-   presentation data.
+5. Link listing, revoke, and unlink requests are made server-to-server with the
+   grant and current `clients.id`; the browser receives only allowlisted
+   presentation data. Creator analytics are currently disabled in the Legacy
+   cabinet and are not requested from Partners.
 
 Creator status is checked against Partners before dashboard data and each
 mutating link operation. `is_creator` alone does not grant access to Partner
