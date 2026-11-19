@@ -15,7 +15,7 @@
             <span class="analytics-period-toolbar__eyebrow">Период</span>
             <strong data-analytics-range-label><?= html_escape($range_label) ?></strong>
         </div>
-        <div class="analytics-period-buttons" role="group" aria-label="Выбрать период">
+        <form class="analytics-period-buttons" method="get" action="/<?= ADM_CONTROLLER ?>/analytics" aria-label="Выбрать период">
             <?php
             $periodOptions = array(
                 'current_month' => 'Этот месяц',
@@ -26,35 +26,31 @@
             foreach ($periodOptions as $periodKey => $periodTitle):
             ?>
                 <button
-                    type="button"
+                    type="submit"
                     class="analytics-period-button<?= $period === $periodKey ? ' is-active' : '' ?>"
-                    data-analytics-period="<?= html_escape($periodKey) ?>"
-                    aria-pressed="<?= $period === $periodKey ? 'true' : 'false' ?>"
+                    name="period"
+                    value="<?= html_escape($periodKey) ?>"
+                    <?= $period === $periodKey ? 'aria-current="true"' : '' ?>
                 ><?= html_escape($periodTitle) ?></button>
             <?php endforeach; ?>
-        </div>
+        </form>
     </section>
 
-    <div
-        class="analytics-sales-lazy"
-        data-analytics-lazy
-        data-url="<?= html_escape($analytics_data_url) ?>"
-        data-period="<?= html_escape($period) ?>"
-        aria-live="polite"
-    >
-        <div class="analytics-sales-loading" data-analytics-loading>
-            <?php for ($i = 0; $i < 4; $i++): ?>
-                <div class="analytics-sales-loading__card">
-                    <span></span><span></span><span></span><span></span>
-                </div>
-            <?php endfor; ?>
-        </div>
-        <div class="analytics-sales-lazy__error" data-analytics-error hidden>
-            <span>Не удалось загрузить аналитику.</span>
-            <button type="button" data-analytics-retry>Повторить</button>
-        </div>
-        <div data-analytics-content></div>
-    </div>
+    <?php $this->load->view('dashboard/analytics/_sales_data', array(
+        'analytics' => $analytics,
+        'group_by' => $group_by,
+    )); ?>
 </div>
 
-<script src="/app/js/dashboard/analytics-lazy.js?v=<?= filemtime(FCPATH . 'app/js/dashboard/analytics-lazy.js') ?>" defer></script>
+<script>
+(function () {
+    function restorePageScroll() {
+        if (!document.querySelector('.analytics-filter-form.is-filter-open')) {
+            document.body.classList.remove('analytics-filter-scroll-locked');
+        }
+    }
+
+    restorePageScroll();
+    window.addEventListener('pageshow', restorePageScroll);
+}());
+</script>

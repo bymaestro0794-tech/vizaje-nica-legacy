@@ -1,6 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php
 $analytics = isset($analytics) && is_array($analytics) ? $analytics : array();
+$summary = isset($analytics['summary']) && is_array($analytics['summary']) ? $analytics['summary'] : array();
 $topProducts = isset($analytics['top_products']) && is_array($analytics['top_products']) ? $analytics['top_products'] : array();
 $topBrands = isset($analytics['top_brands']) && is_array($analytics['top_brands']) ? $analytics['top_brands'] : array();
 $topCategories = isset($analytics['top_categories']) && is_array($analytics['top_categories']) ? $analytics['top_categories'] : array();
@@ -33,6 +34,26 @@ $periodLabel = static function ($period, $groupBy) {
 ?>
 
 <div class="analytics-sales-results">
+    <section class="analytics-sales-metrics" aria-label="Итоги за выбранный период">
+        <div class="analytics-sales-metric is-primary">
+            <div class="analytics-sales-metric__label">Общая выручка</div>
+            <strong class="analytics-sales-metric__value"><?= $money($summary['order_revenue'] ?? 0) ?></strong>
+            <span class="analytics-sales-metric__change">по завершённым заказам</span>
+        </div>
+        <div class="analytics-sales-metric">
+            <div class="analytics-sales-metric__label">Завершённые заказы</div>
+            <strong class="analytics-sales-metric__value"><?= $number($summary['finished_orders'] ?? 0) ?></strong>
+        </div>
+        <div class="analytics-sales-metric">
+            <div class="analytics-sales-metric__label">Продано товаров</div>
+            <strong class="analytics-sales-metric__value"><?= $number($summary['sold_quantity'] ?? 0) ?></strong>
+        </div>
+        <div class="analytics-sales-metric">
+            <div class="analytics-sales-metric__label">Средний чек</div>
+            <strong class="analytics-sales-metric__value"><?= $money($summary['average_order_value'] ?? 0) ?></strong>
+        </div>
+    </section>
+
     <section class="analytics-sales-card">
         <header class="analytics-sales-card__heading"><i class="icon-basket" aria-hidden="true"></i><h2>Популярные товары</h2></header>
         <div class="table-responsive">

@@ -98,6 +98,7 @@ class Analytics_model extends BaseModel
         $groupBy = $groupBy === 'month' ? 'month' : 'day';
 
         return array(
+            'summary' => $this->get_summary_for_range($fromDateTime, $toDateTime),
             'top_products' => $this->get_top_products(
                 $fromDateTime,
                 $toDateTime,
