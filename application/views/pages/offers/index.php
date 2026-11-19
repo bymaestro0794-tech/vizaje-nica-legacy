@@ -51,8 +51,11 @@
                                 ? $offer->title
                                 : '';
 
-                            $src = !empty($offer->img)
-                                ? newthumbs($offer->img, 'offers')
+                            $offerImage = !empty($offer->imgB)
+                                ? $offer->imgB
+                                : ($offer->img ?? '');
+                            $src = !empty($offerImage)
+                                ? newthumbs($offerImage, 'offers')
                                 : '';
 
                             $offerDescription = '';

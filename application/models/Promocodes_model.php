@@ -608,6 +608,33 @@ public function replaceBrands(
             );
     }
 
+    /**
+     * Count orders that must block the one-time WELCOME18 offer.
+     *
+     * An online order is created before Paynet finishes. It must not block
+     * the offer while payment is pending or failed; only a confirmed online
+     * payment does. Offline orders keep the legacy first-order behaviour.
+     */
+    public function countClientWelcomeOfferBlockingOrders($clientId)
+    {
+        $clientId = (int) $clientId;
+
+        if ($clientId <= 0) {
+            return 0;
+        }
+
+        return (int) $this->db
+            ->where('client_id', $clientId)
+            ->group_start()
+                ->where('payment !=', 2)
+                ->or_group_start()
+                    ->where('payment', 2)
+                    ->where('pay_success', 1)
+                ->group_end()
+            ->group_end()
+            ->count_all_results('orders');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Register usage

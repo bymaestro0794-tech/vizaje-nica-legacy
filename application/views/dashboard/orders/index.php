@@ -106,7 +106,9 @@
                             <? $statuses = [
 	                            'new' => '<span class="label label-sm label-info">'.lang('new').' </span>',
 	                            'progress' => '<span class="label label-sm label-warning"> '.lang('progress').' </span>',
-	                            'finished' => '<span class="label label-sm label-danger"> '.lang('finished').' </span>',
+	                            'courier' => '<span class="label label-sm order-status-label order-status-label--courier"> '.lang('courier').' </span>',
+                                'delivered' => '<span class="label label-sm order-status-label order-status-label--delivered"> '.lang('delivered').' </span>',
+	                            'finished' => '<span class="label label-sm label-default"> '.lang('finished').' </span>',
                                 'canceled' => '<span class="label label-sm label-danger"> '.lang('canceled').' </span>']
 	                             ?>
                             <? $pay = [
@@ -117,6 +119,12 @@
                             ]
                             ?>
                             <?php foreach ($objects as $item): ?>
+                                <?php
+                                $statusKey = strtolower(trim((string) ($item->status ?? '')));
+                                if ($statusKey === '') {
+                                    $statusKey = 'new';
+                                }
+                                ?>
                                 <tr style="height: 51px;">
                                     <td class="align-middle">
                                         <span><?=date('d.m.Y H:i:s', strtotime($item->added))?></span>
@@ -143,7 +151,9 @@
                                     <td class="align-middle"><?php if ($item->payment == 2 && $item->pay_success == 0){?><span class="label label-sm label-danger"> <?=lang('Payment error')?> </span><?php } else {?><?=$pay[$item->payment]?> <?php } ?></td>
                                     <td class="align-middle"><?=$item->name?> <?=$item->surname?></td>
                                     <td class="align-middle"><?=$item->phone?></td>
-                                    <td class="align-middle"><?=$statuses[$item->status]?></td>
+                                    <td class="align-middle"><?= isset($statuses[$statusKey])
+                                            ? $statuses[$statusKey]
+                                            : '<span class="label label-sm label-default">' . html_escape($statusKey) . '</span>' ?></td>
 
                                     <td class="align-middle">
                                         <a href="<?= $e_path . $item->id . '/' ?>"

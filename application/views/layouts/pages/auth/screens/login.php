@@ -181,17 +181,6 @@ defined('BASEPATH') or exit('No direct script access allowed');
 						: 'Зарегистрироваться' ?>
 				</button>
 			</p>
-
-			<a
-				class="auth-drawer__partner-login"
-				href="https://partners.vizaje-nica.com/login"
-				target="_blank"
-				rel="noopener noreferrer"
-			>
-				<?= $isRomanian
-					? 'Deschide cabinetul Vizaje Partners'
-					: 'Открыть кабинет Vizaje Partners' ?>
-			</a>
 		</form>
 	</div>
 </section>

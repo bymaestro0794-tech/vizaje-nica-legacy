@@ -39,7 +39,7 @@ class FrontEndController extends CI_Controller
     }
 
     /**
-     * Читает cookie `cookie_consent` (JSON {functional, analytics, marketing})
+     * Читает cookie `cookie_consent` (JSON {functional, analytics, marketing, referral})
      * и отдаёт категории для PHP-условий, которыми в index.php гейтятся
      * GTM/Clarity/Meta Pixel/Jivo. necessary отдельно не хранится — всегда true.
      */
@@ -51,6 +51,7 @@ class FrontEndController extends CI_Controller
             'functional' => false,
             'analytics' => false,
             'marketing' => false,
+            'referral' => false,
         );
 
         $raw = get_cookie('cookie_consent');
@@ -69,6 +70,7 @@ class FrontEndController extends CI_Controller
         $consent['functional'] = !empty($decoded['functional']);
         $consent['analytics'] = !empty($decoded['analytics']);
         $consent['marketing'] = !empty($decoded['marketing']);
+        $consent['referral'] = !empty($decoded['referral']);
 
         return $consent;
     }
@@ -444,8 +446,50 @@ class FrontEndController extends CI_Controller
         $this->data['ilab_linc'] = $ilab_linc;
     }
 
+    /**
+     * Finish the browser-side checkout cleanup after Paynet's server callback.
+     *
+     * Paynet calls the callback without the customer's PHP session, so the
+     * callback cannot clear this browser's cart. Keep the session intact on
+     * pending/failed payments and clear it only after pay_success=1.
+     */
+    private function _clearConfirmedOnlineCheckoutSession()
+    {
+        $pendingOrderId = !empty($_SESSION['pending_online_order_id'])
+            ? (int) $_SESSION['pending_online_order_id']
+            : 0;
+
+        if ($pendingOrderId <= 0) {
+            return;
+        }
+
+        $order = $this->db
+            ->select('payment, pay_success')
+            ->where('id', $pendingOrderId)
+            ->get('orders')
+            ->row();
+
+        if (empty($order)) {
+            unset($_SESSION['pending_online_order_id']);
+            return;
+        }
+
+        if ((int) $order->payment !== 2 || (int) $order->pay_success !== 1) {
+            return;
+        }
+
+        unset(
+            $_SESSION['cart_promo'],
+            $_SESSION['cart_discount_choice'],
+            $_SESSION['pending_online_order_id']
+        );
+        $this->cart->destroy();
+    }
+
     private function _is_logged_in()
     {
+        $this->_clearConfirmedOnlineCheckoutSession();
+
         $user_id = @$_SESSION['user_id'];
         $user_login = @$_SESSION['user_login'];
         $usr_key = @$_SESSION['usr_key'];
@@ -499,14 +543,32 @@ class FrontEndController extends CI_Controller
         $expiresAt = !empty($client->welcome_offer_expires_at)
             ? strtotime($client->welcome_offer_expires_at)
             : false;
+        $welcomeOfferUsed =
+            $this->promocodes_model->countClientUsages(
+                $welcomePromo->id,
+                $client->id
+            ) > 0;
+
+        if ($welcomeOfferUsed
+            && !empty($_SESSION['cart_promo']['code'])
+            && strtoupper(trim((string) $_SESSION['cart_promo']['code'])) === 'WELCOME18'
+        ) {
+            unset($_SESSION['cart_promo']);
+            if (
+                !empty($_SESSION['cart_discount_choice'])
+                && $_SESSION['cart_discount_choice'] === 'promo'
+            ) {
+                unset($_SESSION['cart_discount_choice']);
+            }
+        }
 
         if (
             !$startedAt
             || !$expiresAt
             || $startedAt > time()
             || $expiresAt <= time()
-            || $this->promocodes_model->countClientUsages($welcomePromo->id, $client->id) > 0
-            || $this->db->where('client_id', (int) $client->id)->count_all_results('orders') > 0
+            || $welcomeOfferUsed
+            || $this->promocodes_model->countClientWelcomeOfferBlockingOrders($client->id) > 0
         ) {
             return;
         }

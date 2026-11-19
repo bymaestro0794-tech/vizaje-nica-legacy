@@ -103,6 +103,18 @@
                                                 </label>
                                             </td>
                                         </tr>
+                                        <?php if (!empty($creator_commission_supported)) { ?>
+                                            <tr>
+                                                <td width="200">Комиссия креатора</td>
+                                                <td>
+                                                    <div class="input-group" style="max-width:320px">
+                                                        <input type="number" name="creator_commission_percent" class="form-control" min="0" max="100" step="0.01" value="<?= html_escape((string) ($item->creator_commission_percent ?? '0.00')) ?>">
+                                                        <span class="input-group-addon">%</span>
+                                                    </div>
+                                                    <span class="help-block">Ставка применяется к новым заказам по ссылке и начисляется после статуса «Завершён».</span>
+                                                </td>
+                                            </tr>
+                                        <?php } ?>
                                     <?php } ?>
                                     <tr>
                                         <td width="200"><?=lang('Address')?></td>

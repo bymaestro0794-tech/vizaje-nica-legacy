@@ -155,6 +155,13 @@ class Cart extends FrontEndController
                 && (int) $order->pay_success === 1
             );
 
+        if ($isOnlinePayment && $isPurchaseConfirmed) {
+            unset($_SESSION['cart_promo']);
+            unset($_SESSION['cart_discount_choice']);
+            unset($_SESSION['pending_online_order_id']);
+            $this->cart->destroy();
+        }
+
         /*
         |--------------------------------------------------------------------------
         | GA4 — purchase
@@ -420,6 +427,21 @@ class Cart extends FrontEndController
 
     public function error()
     {
+        if (!empty($_GET['id'])) {
+            $failedOrder = $this->db
+                ->select('payment, pay_success')
+                ->where('ExternalID', (string) $_GET['id'])
+                ->get('orders')
+                ->row();
+
+            if (!empty($failedOrder)
+                && (int) $failedOrder->payment === 2
+                && (int) $failedOrder->pay_success !== 1
+            ) {
+                unset($_SESSION['pending_online_order_id']);
+            }
+        }
+
         $page = $this->menu_model->get_page_data_by_id($this->clang, 21);
         if (empty($page)) throw_on_404();
 
@@ -1248,6 +1270,8 @@ public function checkout()
                 }
             }
 
+            // Capture eligibility time immediately before persisting the order.
+            $creatorReferralOrderCreatedAtMilliseconds = (int) floor(microtime(true) * 1000);
             $this->db->insert('orders', $data);
             $order_id = $this->db->insert_id();
 
@@ -1473,6 +1497,10 @@ public function checkout()
                     );
                 }
 
+                $creatorReferralOrderRowsComplete = $partnersAnalyticsAllRowsSaved
+                    && $partnersAnalyticsExpectedRows > 0
+                    && $partnersAnalyticsSavedRows === $partnersAnalyticsExpectedRows;
+
                 // Queue order.created only after every immutable item snapshot
                 // was inserted. The worker can reconcile this marker if the
                 // optional outbox write is unavailable at checkout time.
@@ -1486,6 +1514,30 @@ public function checkout()
                         }
                     } catch (Throwable $analyticsException) {
                         // Order creation and payment must remain independent of analytics.
+                    }
+                }
+
+                // Consume the first-party session referral only after every order
+                // item is persisted. It expires after seven days and claims one order.
+                $referralSession = $_SESSION['legacy_creator_referral_attribution'] ?? array();
+                $referralToken = is_array($referralSession) ? (string) ($referralSession['token'] ?? '') : '';
+                $referralExpiresAt = is_array($referralSession) ? (int) ($referralSession['expires_at'] ?? 0) : 0;
+                if ($referralToken === '' || $referralExpiresAt <= time()) {
+                    $referralToken = (string) ($_COOKIE['legacy_creator_referral'] ?? '');
+                }
+                if ($creatorReferralOrderRowsComplete && $referralToken !== '') {
+                    try {
+                        $this->load->model('legacy_creator_attribution_model');
+                        $claimResult = $this->legacy_creator_attribution_model->claimForOrder(
+                            $order_id,
+                            $referralToken,
+                            $creatorReferralOrderCreatedAtMilliseconds
+                        );
+                        if (in_array($claimResult, array('claimed', 'expired', 'invalid'), true)) {
+                            $this->legacy_creator_attribution_model->clearCookie();
+                        }
+                    } catch (Throwable $referralClaimException) {
+                        // Referral storage must not interrupt checkout or payment.
                     }
                 }
 
@@ -1601,11 +1653,9 @@ public function checkout()
 
                 if ((int) $post['pay'] === 2) {
 
-                    if ($rouletteSpinId <= 0) {
-                        unset($_SESSION['cart_promo']);
-                        unset($_SESSION['cart_discount_choice']);
-                        $this->cart->destroy();
-                    }
+                    // Keep the cart and promo in the session until Paynet
+                    // confirms the payment. The order row already exists,
+                    // but a pending/failed online order is not a promo usage.
 
                     /*
                     |--------------------------------------------------------------------------
@@ -2477,9 +2527,11 @@ public function checkout()
             );
             $this->db->where('id', $order['order']['id']);
             $updated = $this->db->update('orders', $data);
-            if (!$updated && $rouletteSpinId > 0) {
-                $this->load->model('roulette_game_model');
-                $this->roulette_game_model->failPaynetReservation($prequest->ExternalID, true);
+            if (!$updated) {
+                if ($rouletteSpinId > 0) {
+                    $this->load->model('roulette_game_model');
+                    $this->roulette_game_model->failPaynetReservation($prequest->ExternalID, true);
+                }
                 $_SESSION['checkout_error'] =
                     $lclang === 'ro'
                         ? 'Nu am putut pregăti plata. Încercați din nou.'
@@ -2488,9 +2540,7 @@ public function checkout()
                 exit;
             }
 
-            unset($_SESSION['cart_promo']);
-            unset($_SESSION['cart_discount_choice']);
-            $this->cart->destroy();
+            $_SESSION['pending_online_order_id'] = (int) $order['order']['id'];
             echo $formObj->Data;
 
 
@@ -2510,6 +2560,13 @@ public function checkout()
             redirect('/' . $lclang . '/' . $this->data['menu']['all'][19]->uri);
             exit;
         }
+
+        $_SESSION['checkout_error'] =
+            $lclang === 'ro'
+                ? 'Nu am putut iniția plata. Încercați din nou.'
+                : 'Не удалось открыть форму оплаты. Попробуйте ещё раз.';
+        redirect('/' . $lclang . '/' . $this->data['menu']['all'][19]->uri);
+        exit;
     }
 
     function server_server($clang)

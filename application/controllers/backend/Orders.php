@@ -115,6 +115,21 @@ class Orders extends BackEndController
                 foreach ($_POST as $index => $post_data) {
                     $post[$index] = $this->input->post($index, TRUE);
                 }
+
+                if (isset($post['status'])) {
+                    $post['status'] = strtolower(trim((string) $post['status']));
+                    if (!in_array($post['status'], array(
+                        'new',
+                        'progress',
+                        'courier',
+                        'delivered',
+                        'finished',
+                        'canceled'
+                    ), true)) {
+                        throw new Exception('Invalid order status');
+                    }
+                }
+
                 $post['updated'] = date('Y-m-d H:i:s', strtotime('+2 hours'));
                 if (isset($post['products'])) {
                     foreach ($post['products'] as $key => $product) {
@@ -167,6 +182,7 @@ class Orders extends BackEndController
         $this->data['parent_url'] = $this->path;
         $this->data['parent_title'] = $this->index_title;
         $this->data['item'] = $item;
+        $this->data['creator_referral'] = $this->orders_model->creatorReferralForOrder($item->id);
         $this->data['stores'] = $this->stores_model->get_stores('RU');
         $this->data['products'] = $this->orders_model->orderProducts($item->id, 'RU');
 

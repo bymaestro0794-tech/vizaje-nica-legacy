@@ -1481,9 +1481,8 @@ class CartCalculator
                 return $this->removeInternalPromo($state);
             }
 
-            $existingOrders = $this->CI->db
-                ->where('client_id', (int) $client->id)
-                ->count_all_results('orders');
+            $existingOrders = $this->CI->promocodes_model
+                ->countClientWelcomeOfferBlockingOrders($client->id);
 
             if ($existingOrders > 0) {
                 $state['reason'] = 'PROMO_ALREADY_USED';

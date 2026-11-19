@@ -60,16 +60,26 @@ $route['404_override'] = 'pages/not_found';
 $route['translate_uri_dashes'] = FALSE;
 $route['sitemapGenerator'] = "pages/sitemapGenerator";
 
+// Public Legacy landing page for the Vizaje Partners program.
+$route['(ro|ru)/(parteneri|partners)'] = 'pages/partners_program/$1';
+
+// Authenticated Legacy creator application flow (no external Partners account).
+$route['ru/partners/apply'] = 'frontend/creator_program/index';
+$route['ro/parteneri/apply'] = 'frontend/creator_program/index';
+$route['ru/partners/apply/submit'] = 'frontend/creator_program/submit';
+$route['ro/parteneri/apply/submit'] = 'frontend/creator_program/submit';
+$route['creator-payouts/request'] = 'frontend/creator_payouts/request';
+
+// Legacy-hosted creator referral links and short-link redirects.
+$route['account/creator-link/dashboard'] = 'creator_referrals/dashboard';
+$route['account/creator-link/create'] = 'creator_referrals/create_link';
+$route['account/creator-link/revoke/(:num)'] = 'creator_referrals/revoke_link/$1';
+$route['r/([A-Za-z0-9_-]{12})'] = 'creator_referrals/go/$1';
+
 // M5.1 internal, HMAC-authenticated catalog resolver.
 $route['internal/v1/referrals/resolve-target'] = 'internal_referrals/resolve_target';
 
-// M5.5 Legacy creator account-linking callback and same-origin dashboard bridge.
-$route['account/creator-link/start'] = 'creator_account_linking/start';
-$route['account/creator-link/callback'] = 'creator_account_linking/callback';
-$route['account/creator-link/dashboard'] = 'creator_account_linking/dashboard';
-$route['account/creator-link/create'] = 'creator_account_linking/create_link';
-$route['account/creator-link/revoke/(:any)'] = 'creator_account_linking/revoke_link/$1';
-$route['account/creator-link/unlink'] = 'creator_account_linking/unlink';
+// Legacy referral links are handled locally; Partners account-linking routes are retired.
 
 $route['api/orders/item'] = 'orders/item';
 $route['api/orders/demo'] = 'orders/demo';

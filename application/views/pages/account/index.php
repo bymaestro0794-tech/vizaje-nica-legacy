@@ -1,6 +1,6 @@
 <?php
 $isCreatorClient = !empty($client_info->is_creator);
-$isCreatorSection = $isCreatorClient && (isset($_GET['creator']) || !empty($creator_partner_notice));
+$isCreatorSection = $isCreatorClient && isset($_GET['creator']);
 $isAccountDashboard = !isset($_GET['bonus'])
     && !isset($_GET['orders'])
     && !isset($_GET['favorite'])
@@ -9,6 +9,20 @@ $isAccountDashboard = !isset($_GET['bonus'])
 $accountUri = '/' . $lclang . '/' . $menu['all'][15]->uri;
 $accountSectionTitle = $page_name;
 $accountWheelEligible = !empty($client_info->id);
+$creatorApplicationForDraft = isset($creator_program_application) && is_array($creator_program_application)
+    ? $creator_program_application
+    : null;
+$clearCreatorApplicationDraft = !empty($creator_application_submitted_notice)
+    || ($creatorApplicationForDraft && in_array($creatorApplicationForDraft['status'] ?? '', array('pending', 'approved'), true));
+
+if ($clearCreatorApplicationDraft && !empty($client_info->id)) {
+    $creatorApplicationDraftKey = 'vizaje.creator-application.draft.v1.' . (int) $client_info->id;
+    ?>
+    <script>
+    try { localStorage.removeItem(<?= json_encode($creatorApplicationDraftKey, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>); } catch (error) {}
+    </script>
+    <?php
+}
 
 if (isset($_GET['orders'])) {
     $accountSectionTitle = $menu['all'][16]->title;
@@ -133,16 +147,26 @@ if (!empty($menu['top'])) {
                                 </span>
                                 <img src="/app/img/icons/arrow-more.svg" alt="" aria-hidden="true">
                         </a>
-                        <?php } else { ?>
-                        <div class="creator-connect-prompt" data-creator-dashboard-root
-                            data-dashboard-url="/account/creator-link/dashboard"
-                            data-start-url="/account/creator-link/start"
-                            data-csrf-token="<?= htmlspecialchars((string) ($creator_csrf_token ?? ''), ENT_QUOTES, 'UTF-8') ?>"
-                            data-locale="<?= htmlspecialchars($lclang === 'ro' ? 'ro' : 'ru', ENT_QUOTES, 'UTF-8') ?>">
-                            <p><?= $lclang === 'ro' ? 'Conectează Vizaje Partners pentru a activa accesul de creator.' : 'Свяжите Vizaje Partners, чтобы получить доступ к кабинету креатора.' ?></p>
-                            <p class="creator-account__partner-state" data-creator-partner-state role="status" aria-live="polite"><span class="creator-account__state-dot" aria-hidden="true"></span><span data-creator-partner-state-text><?= $lclang === 'ro' ? 'Se verifică legătura…' : 'Проверяем подключение…' ?></span></p>
-                            <button type="button" class="creator-account__button" data-creator-link-start data-start-url="/account/creator-link/start" hidden disabled><?= $lclang === 'ro' ? 'Conectează Partners' : 'Связать Partners' ?></button>
-                            <span class="creator-account__state creator-account__state--error" data-creator-action-message role="status" aria-live="polite"></span>
+                            <?php } else { ?>
+                        <?php $creatorApplication = isset($creator_program_application) && is_array($creator_program_application) ? $creator_program_application : null; ?>
+                        <div class="creator-connect-prompt">
+                            <?php if (empty($creator_program_available)) { ?>
+                                <p><?= $lclang === 'ro' ? 'Înscrierea în program nu este momentan disponibilă.' : 'Подача заявок временно недоступна.' ?></p>
+                            <?php } elseif (!empty($creator_application_submitted_notice)) { ?>
+                                <p role="status"><?= $lclang === 'ro' ? 'Cererea a fost trimisă. Vă vom anunța decizia prin email.' : 'Заявка отправлена. Мы сообщим о решении по email.' ?></p>
+                            <?php } elseif ($creatorApplication && $creatorApplication['status'] === 'pending') { ?>
+                                <p role="status"><?= $lclang === 'ro' ? 'Cererea dumneavoastră este în curs de examinare. Decizia va fi trimisă prin email.' : 'Ваша заявка на рассмотрении. Решение придёт на email.' ?></p>
+                            <?php } elseif ($creatorApplication && $creatorApplication['status'] === 'approved') { ?>
+                                <p role="status"><?= $lclang === 'ro' ? 'Cererea este aprobată. Accesul la panoul creatorului se sincronizează; reîncărcați pagina.' : 'Заявка одобрена. Доступ к кабинету креатора обновляется; перезагрузите страницу.' ?></p>
+                            <?php } else { ?>
+                                <p><?= $lclang === 'ro' ? 'Trimiteți o cerere pentru a participa la programul creatorilor.' : 'Подайте заявку, чтобы участвовать в программе креаторов.' ?></p>
+                                <?php if ($creatorApplication && $creatorApplication['status'] === 'rejected') { ?>
+                                    <p><?= $lclang === 'ro' ? 'Puteți trimite o nouă cerere.' : 'Можно подать новую заявку.' ?></p>
+                                <?php } ?>
+                                <a class="creator-account__button" href="/<?= $lclang === 'ro' ? 'ro/parteneri/apply' : 'ru/partners/apply' ?>">
+                                    <?= $lclang === 'ro' ? 'Trimiteți cererea' : 'Подать заявку' ?>
+                                </a>
+                            <?php } ?>
                         </div>
                         <?php } ?>
                         <?php if (!empty($telegram_support['enabled'])) : ?>
@@ -585,4 +609,4 @@ if (!empty($menu['top'])) {
         </div>
     </section>
 </main>
-<?php if (!empty($client_info->id)) { ?><script src="<?= asset_url('app/js/components/creator-link-widget.js') ?>" defer></script><?php } ?>
+<?php if (!empty($client_info->id)) { ?><script src="<?= asset_url('app/js/components/qrcode.min.js') ?>" defer></script><script src="<?= asset_url('app/js/components/creator-link-widget.js') ?>" defer></script><?php } ?>

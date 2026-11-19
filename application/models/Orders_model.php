@@ -10,6 +10,37 @@ class Orders_model extends BaseModel
         parent::__construct();
     }
 
+    public function creatorReferralForOrder($orderId)
+    {
+        $previousDbDebug = $this->db->db_debug;
+        try {
+            $this->db->db_debug = false;
+            if (!$this->db->field_exists('legacy_creator_referral_attribution_id', 'orders')
+                || !$this->db->table_exists('legacy_creator_referral_attributions')
+                || !$this->db->table_exists('legacy_creator_referral_links')) return null;
+
+            $commissionFields = $this->db->field_exists('creator_commission_percent', 'orders')
+                && $this->db->field_exists('creator_commission_amount', 'orders');
+            $commissionSelect = $commissionFields
+                ? ', o.creator_commission_percent, o.creator_commission_amount'
+                : ', 0 AS creator_commission_percent, 0 AS creator_commission_amount';
+            return $this->db->query(
+                'SELECT c.name, c.surname, l.label, l.locale, l.link_type'
+                . $commissionSelect
+                . ' FROM orders o'
+                . ' INNER JOIN legacy_creator_referral_attributions a ON a.id = o.legacy_creator_referral_attribution_id'
+                . ' INNER JOIN legacy_creator_referral_links l ON l.id = a.link_id'
+                . ' INNER JOIN clients c ON c.id = l.client_id'
+                . ' WHERE o.id = ? LIMIT 1',
+                array((int) $orderId)
+            )->row_array();
+        } catch (Throwable $error) {
+            return null;
+        } finally {
+            $this->db->db_debug = $previousDbDebug;
+        }
+    }
+
     public function get_($lang)
     {
         if (empty($lang)) return false;

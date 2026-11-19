@@ -281,6 +281,8 @@ class Analytics_model extends BaseModel
                 COUNT(*) AS total_orders,
                 SUM(status = 'new') AS new_orders,
                 SUM(status = 'progress') AS progress_orders,
+                SUM(status = 'courier') AS courier_orders,
+                SUM(status = 'delivered') AS delivered_orders,
                 SUM(status = 'finished') AS finished_orders,
                 SUM(status = 'canceled') AS canceled_orders
              FROM orders
@@ -292,6 +294,8 @@ class Analytics_model extends BaseModel
             'total_orders' => (int) (isset($summaryRow['total_orders']) ? $summaryRow['total_orders'] : 0),
             'new_orders' => (int) (isset($summaryRow['new_orders']) ? $summaryRow['new_orders'] : 0),
             'progress_orders' => (int) (isset($summaryRow['progress_orders']) ? $summaryRow['progress_orders'] : 0),
+            'courier_orders' => (int) (isset($summaryRow['courier_orders']) ? $summaryRow['courier_orders'] : 0),
+            'delivered_orders' => (int) (isset($summaryRow['delivered_orders']) ? $summaryRow['delivered_orders'] : 0),
             'finished_orders' => (int) (isset($summaryRow['finished_orders']) ? $summaryRow['finished_orders'] : 0),
             'canceled_orders' => (int) (isset($summaryRow['canceled_orders']) ? $summaryRow['canceled_orders'] : 0),
         );
@@ -313,6 +317,8 @@ class Analytics_model extends BaseModel
                 COUNT(*) AS total_orders,
                 SUM(status = 'new') AS new_orders,
                 SUM(status = 'progress') AS progress_orders,
+                SUM(status = 'courier') AS courier_orders,
+                SUM(status = 'delivered') AS delivered_orders,
                 SUM(status = 'finished') AS finished_orders,
                 SUM(status = 'canceled') AS canceled_orders
              FROM orders
@@ -326,6 +332,8 @@ class Analytics_model extends BaseModel
             $period['total_orders'] = (int) $period['total_orders'];
             $period['new_orders'] = (int) $period['new_orders'];
             $period['progress_orders'] = (int) $period['progress_orders'];
+            $period['courier_orders'] = (int) $period['courier_orders'];
+            $period['delivered_orders'] = (int) $period['delivered_orders'];
             $period['finished_orders'] = (int) $period['finished_orders'];
             $period['canceled_orders'] = (int) $period['canceled_orders'];
         }

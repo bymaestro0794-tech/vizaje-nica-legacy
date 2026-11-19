@@ -30,6 +30,9 @@ $cookiePrivacyUrl = '/' . $lclang . '/' . $cookiePrivacyUri;
                 </a>
             </div>
             <p class="cookie-panel__description"><?= COOKIE_PANEL_DESCRIPTION ?></p>
+            <p class="cookie-panel__referral-notice"><?= $lclang === 'ro'
+                ? 'La accesarea unui link de creator, păstrăm în sesiunea acestui site sursa recomandării timp de până la 7 zile sau până la prima comandă. O comandă finalizată poate fi asociată creatorului pentru calcularea comisionului. Contorul agregat al accesărilor linkului este afișat creatorului. Nu folosim aceste date pentru publicitate și nu le transmitem platformelor externe de analiză.'
+                : 'При переходе по ссылке креатора сайт сохраняет источник рекомендации в своей сессии на срок до 7 дней или до первого заказа. Завершённый заказ может быть привязан к креатору для расчёта комиссии. Креатору показывается общий счётчик переходов по ссылке. Эти данные не используются для рекламы и не передаются внешним аналитическим платформам.' ?></p>
 
             <div class="cookie-panel__categories">
                 <div class="cookie-panel__category">
@@ -72,6 +75,7 @@ $cookiePrivacyUrl = '/' . $lclang . '/' . $cookiePrivacyUri;
                     </div>
                     <p class="cookie-panel__category-desc"><?= COOKIE_CAT_MARKETING_DESC ?></p>
                 </div>
+
             </div>
 
             <div class="cookie-panel__actions">

@@ -128,12 +128,22 @@ class Clients extends BackEndController
         $id = (int)$id;
         init_load_img($this->main_page);
         $this->data['creator_flag_supported'] = $this->db->field_exists('is_creator', 'clients');
+        $this->data['creator_commission_supported'] = $this->db->field_exists('creator_commission_percent', 'clients');
         $item = $this->clients_model->find_first($id);
         if (empty($item)) throw_on_404();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
                 foreach ($_POST as $index => $post_data) {
                     $post[$index] = $this->input->post($index);
+                }
+
+                if (!empty($this->data['creator_commission_supported'])) {
+                    $commissionPercent = trim((string) ($post['creator_commission_percent'] ?? '0'));
+                    if (!preg_match('/^[0-9]{1,3}(?:\.[0-9]{1,2})?$/D', $commissionPercent)
+                        || (float) $commissionPercent > 100) {
+                        throw new InvalidArgumentException('Процент комиссии должен быть от 0 до 100.');
+                    }
+                    $post['creator_commission_percent'] = number_format((float) $commissionPercent, 2, '.', '');
                 }
 
                 if (!empty($post['password'])){

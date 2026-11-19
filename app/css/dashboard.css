@@ -5,6 +5,21 @@
     vertical-align: middle!important;
 }
 
+.order-status-label--courier {
+    background-color: #7c3aed !important;
+    color: #fff !important;
+}
+
+.order-status-label--delivered {
+    background-color: #16a34a !important;
+    color: #fff !important;
+}
+
+.page-sidebar-menu .badge-purple {
+    background-color: #8e44ad;
+    color: #fff;
+}
+
 .align-middle .mt-checkbox {
     margin-bottom: 0px;
 }

@@ -1,61 +1,20 @@
 <?php
-$creatorLinkTypeLabels = array(
-    'product' => $lclang === 'ro' ? 'Produs' : 'Товар',
-    'category' => $lclang === 'ro' ? 'Categorie' : 'Категория',
-    'brand' => $lclang === 'ro' ? 'Brand' : 'Бренд',
-    'homepage' => $lclang === 'ro' ? 'Pagina principală' : 'Главная',
-);
 $creatorCurrentUrl = trim((string) ($without_get_url ?? $full_url ?? ''));
 ?>
 <div class="creator-account__card" data-creator-dashboard-root
     data-dashboard-url="/account/creator-link/dashboard"
-    data-start-url="/account/creator-link/start"
     data-create-url="/account/creator-link/create"
-    data-unlink-url="/account/creator-link/unlink"
     data-revoke-prefix="/account/creator-link/revoke/"
     data-csrf-token="<?= htmlspecialchars((string) ($creator_csrf_token ?? ''), ENT_QUOTES, 'UTF-8') ?>"
     data-locale="<?= htmlspecialchars($lclang === 'ro' ? 'ro' : 'ru', ENT_QUOTES, 'UTF-8') ?>">
     <header class="creator-account__header">
         <div>
-            <span class="creator-account__eyebrow">Vizaje Partners</span>
             <h3 class="creator-account__title"><?= $lclang === 'ro' ? 'Panoul creatorului' : 'Кабинет креатора' ?></h3>
         </div>
-        <a class="creator-account__partners-link" href="https://partners.vizaje-nica.com" target="_blank" rel="noopener noreferrer" data-creator-partners-open hidden>
-            <?= $lclang === 'ro' ? 'Deschide Partners' : 'Перейти в Partners' ?> <span aria-hidden="true">↗</span>
-        </a>
-        <button type="button" class="creator-account__partners-link" data-creator-link-start data-start-url="/account/creator-link/start" hidden disabled>
-            <?= $lclang === 'ro' ? 'Conectează Partners' : 'Связать Partners' ?>
-        </button>
     </header>
     <p class="creator-account__description"><?= $lclang === 'ro'
-        ? 'Conectează contul Vizaje Partners pentru a administra linkurile.'
-        : 'Свяжите аккаунт Vizaje Partners, чтобы управлять ссылками.' ?></p>
-    <?php if (!empty($creator_partner_notice)) { ?>
-        <?php
-        $creatorNoticeMessages = array(
-            'connected' => $lclang === 'ro' ? 'Contul Vizaje Partners a fost conectat.' : 'Аккаунт Vizaje Partners подключён.',
-            'inactive' => $lclang === 'ro' ? 'Contul Partners nu este activ. Verifică starea în Partners.' : 'Аккаунт Partners не активен. Проверьте его статус в Partners.',
-            'unavailable' => $lclang === 'ro' ? 'Conectarea nu este disponibilă momentan.' : 'Подключение сейчас недоступно.',
-            'exchange' => $lclang === 'ro' ? 'Nu am putut confirma conectarea. Încearcă din nou.' : 'Не удалось подтвердить подключение. Попробуйте ещё раз.',
-            'storage' => $lclang === 'ro' ? 'Conectarea a reușit, dar nu a putut fi salvată local.' : 'Partners подтвердил связь, но её не удалось сохранить на сайте.',
-            'callback_invalid' => $lclang === 'ro' ? 'Conectarea a expirat sau nu a putut fi verificată.' : 'Подключение истекло или не прошло проверку.',
-        );
-        $creatorNotice = $creatorNoticeMessages[$creator_partner_notice] ?? '';
-        ?>
-        <?php if ($creatorNotice !== '') { ?><p class="creator-account__state" role="status"><?= htmlspecialchars($creatorNotice, ENT_QUOTES, 'UTF-8') ?></p><?php } ?>
-    <?php } ?>
-
-    <div class="creator-account__partner-state" data-creator-partner-state="checking" role="status" aria-live="polite">
-        <span class="creator-account__state-dot" aria-hidden="true"></span>
-        <span data-creator-partner-state-text><?= $lclang === 'ro' ? 'Se verifică legătura…' : 'Проверяем подключение…' ?></span>
-    </div>
-    <div class="creator-account__connection-actions">
-        <button type="button" class="creator-account__text-button" data-creator-unlink data-unlink-url="/account/creator-link/unlink" hidden>
-            <?= $lclang === 'ro' ? 'Deconectează contul' : 'Отвязать аккаунт' ?>
-        </button>
-        <span class="creator-account__state creator-account__state--error" data-creator-action-message role="status" aria-live="polite"></span>
-    </div>
-
+        ? 'Creează și administrează linkurile de recomandare direct aici.'
+        : 'Создавайте и управляйте реферальными ссылками прямо здесь.' ?></p>
     <section class="creator-account__section" id="creator-links" aria-labelledby="creator-links-title">
         <div class="creator-account__section-heading">
             <h4 id="creator-links-title"><?= $lclang === 'ro' ? 'Linkurile mele' : 'Мои ссылки' ?></h4>
@@ -64,36 +23,89 @@ $creatorCurrentUrl = trim((string) ($without_get_url ?? $full_url ?? ''));
         <p class="creator-account__state" data-creator-links-pane="loading"><?= $lclang === 'ro' ? 'Se încarcă linkurile…' : 'Загружаем ссылки…' ?></p>
         <p class="creator-account__state" data-creator-links-pane="empty" hidden><?= $lclang === 'ro' ? 'Nu ai creat încă linkuri.' : 'Вы ещё не создали ссылки.' ?></p>
         <p class="creator-account__state creator-account__state--error" data-creator-links-pane="error" role="alert" hidden><?= $lclang === 'ro' ? 'Linkurile nu sunt disponibile momentan.' : 'Ссылки сейчас недоступны.' ?></p>
-        <div class="creator-account__links-table-wrap" data-creator-links-table hidden>
-            <table class="creator-account__links-table">
-                <thead><tr>
-                    <th><?= $lclang === 'ro' ? 'Tip' : 'Тип' ?></th>
-                    <th><?= $lclang === 'ro' ? 'Denumire' : 'Название' ?></th>
-                    <th><?= $lclang === 'ro' ? 'Link scurt' : 'Короткий адрес' ?></th>
-                    <th><?= $lclang === 'ro' ? 'Creat' : 'Создана' ?></th>
-                    <th><?= $lclang === 'ro' ? 'Statut' : 'Статус' ?></th>
-                    <th><?= $lclang === 'ro' ? 'Acțiuni' : 'Действия' ?></th>
-                </tr></thead>
-                <tbody data-creator-links></tbody>
-            </table>
-        </div>
+        <div class="creator-account__links-list" data-creator-links-table hidden data-creator-links></div>
 
         <form class="creator-account__link-create" id="creator-link-form" data-creator-link-form data-create-url="/account/creator-link/create" data-csrf-token="<?= htmlspecialchars((string) ($creator_csrf_token ?? ''), ENT_QUOTES, 'UTF-8') ?>" data-locale="<?= htmlspecialchars($lclang === 'ro' ? 'ro' : 'ru', ENT_QUOTES, 'UTF-8') ?>">
             <h5><?= $lclang === 'ro' ? 'Link nou' : 'Новая ссылка' ?></h5>
+            <p class="creator-account__state"><?= $lclang === 'ro' ? 'Tipul paginii este detectat automat. Limba paginii nu schimbă atribuirea creatorului.' : 'Тип страницы определяется по адресу автоматически. Язык страницы не меняет идентификатор креатора.' ?></p>
             <div class="creator-account__form-grid">
                 <label><?= $lclang === 'ro' ? 'Denumire (opțional)' : 'Название (необязательно)' ?><input type="text" maxlength="120" data-creator-link-title></label>
                 <label><?= $lclang === 'ro' ? 'Pagina țintă' : 'Целевая страница' ?><input type="url" value="<?= htmlspecialchars($creatorCurrentUrl, ENT_QUOTES, 'UTF-8') ?>" required data-creator-link-target></label>
-                <label><?= $lclang === 'ro' ? 'Tipul paginii' : 'Тип страницы' ?><select required data-creator-link-type>
-                    <?php foreach ($creatorLinkTypeLabels as $type => $typeLabel) { ?><option value="<?= htmlspecialchars($type, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($typeLabel, ENT_QUOTES, 'UTF-8') ?></option><?php } ?>
-                </select></label>
-                <label><?= $lclang === 'ro' ? 'Limba linkului' : 'Язык ссылки' ?><select data-creator-link-locale>
-                    <option value="ru" <?= $lclang === 'ru' ? 'selected' : '' ?>>RU</option>
-                    <option value="ro" <?= $lclang === 'ro' ? 'selected' : '' ?>>RO</option>
-                </select></label>
             </div>
+            <div class="creator-link-widget__preview"><span><?= $lclang === 'ro' ? 'Pagina de destinație' : 'Страница назначения' ?></span><strong data-creator-link-preview><?= htmlspecialchars($creatorCurrentUrl, ENT_QUOTES, 'UTF-8') ?></strong></div>
             <button class="creator-account__button" type="submit" data-creator-link-submit disabled><?= $lclang === 'ro' ? 'Creează link' : 'Создать ссылку' ?></button>
             <p class="creator-account__state" data-creator-create-message role="status" aria-live="polite"></p>
         </form>
+    </section>
+
+    <section class="creator-account__section" id="creator-orders" aria-labelledby="creator-orders-title">
+        <div class="creator-account__section-heading"><h4 id="creator-orders-title"><?= $lclang === 'ro' ? 'Comenzi recomandate' : 'Заказы по ссылкам' ?></h4></div>
+        <p class="creator-account__state"><?= $lclang === 'ro' ? 'Aici apar doar comenzile cu statutul „finished”. Comenzile create, neplătite sau anulate nu sunt incluse.' : 'Здесь отображаются только заказы со статусом «finished». Созданные, неоплаченные и отменённые заказы не учитываются.' ?></p>
+        <?php if (empty($creator_referral_orders_available)) { ?>
+            <p class="creator-account__state"><?= $lclang === 'ro' ? 'Istoricul comenzilor recomandate va fi disponibil după aplicarea patch-ului SQL.' : 'История заказов станет доступна после применения SQL patch.' ?></p>
+        <?php } elseif (empty($creator_referral_orders)) { ?>
+            <p class="creator-account__state"><?= $lclang === 'ro' ? 'Nu există încă comenzi recomandate finalizate.' : 'Завершённых заказов по вашим ссылкам пока нет.' ?></p>
+        <?php } else { ?>
+            <div class="creator-account__links-table-wrap"><table class="creator-account__links-table"><thead><tr><th><?= $lclang === 'ro' ? 'Comandă' : 'Заказ' ?></th><th><?= $lclang === 'ro' ? 'Data finalizării' : 'Дата завершения' ?></th><th><?= $lclang === 'ro' ? 'Suma' : 'Сумма' ?></th><th><?= $lclang === 'ro' ? 'Comision' : 'Комиссия' ?></th><th><?= $lclang === 'ro' ? 'Link' : 'Ссылка' ?></th></tr></thead><tbody>
+            <?php foreach ($creator_referral_orders as $referralOrder) { ?><tr><td>#<?= html_escape((string) $referralOrder['order_id']) ?></td><td><?= html_escape((string) $referralOrder['updated']) ?></td><td><?= number_format((float) $referralOrder['total'], 2, '.', ' ') ?> MDL</td><td><?= number_format((float) $referralOrder['creator_commission_amount'], 2, '.', ' ') ?> MDL <small>(<?= number_format((float) $referralOrder['creator_commission_percent'], 2, '.', ' ') ?>%)</small></td><td><?= html_escape((string) ($referralOrder['label'] ?: strtoupper($referralOrder['locale']))) ?></td></tr><?php } ?>
+            </tbody></table></div>
+        <?php } ?>
+    </section>
+
+    <section class="creator-account__section" id="creator-payouts" aria-labelledby="creator-payouts-title">
+        <div class="creator-account__section-heading"><h4 id="creator-payouts-title"><?= $lclang === 'ro' ? 'Solicitări de plată' : 'Запросы на выплату' ?></h4></div>
+        <?php
+        $payoutMessages = array(
+            'created' => $lclang === 'ro' ? 'Solicitarea a fost trimisă.' : 'Запрос отправлен.',
+            'pending_exists' => $lclang === 'ro' ? 'Aveți deja o solicitare în curs.' : 'У вас уже есть запрос на рассмотрении.',
+            'not_creator' => $lclang === 'ro' ? 'Accesul la programul creatorilor nu este activ.' : 'Доступ к программе креаторов не активен.',
+            'unavailable' => $lclang === 'ro' ? 'Funcția nu este disponibilă momentan.' : 'Функция временно недоступна.',
+            'error' => $lclang === 'ro' ? 'Nu am putut salva solicitarea. Încercați din nou.' : 'Не удалось сохранить запрос. Попробуйте ещё раз.',
+            'invalid' => $lclang === 'ro' ? 'Verificați suma și comentariul.' : 'Проверьте сумму и комментарий.',
+            'insufficient_balance' => $lclang === 'ro' ? 'Suma depășește soldul disponibil.' : 'Сумма превышает доступный баланс комиссии.',
+        );
+        $payoutNotice = $payoutMessages[$creator_payout_notice ?? ''] ?? '';
+        if ($payoutNotice !== '') { ?><p class="creator-account__state" role="status"><?= htmlspecialchars($payoutNotice, ENT_QUOTES, 'UTF-8') ?></p><?php } ?>
+        <?php if (empty($creator_payout_available)) { ?>
+            <p class="creator-account__state"><?= $lclang === 'ro' ? 'Solicitările de plată nu sunt momentan disponibile.' : 'Запросы на выплату пока недоступны.' ?></p>
+        <?php } else { ?>
+            <?php $creatorPayoutBalance = round((float) ($creator_payout_available_balance ?? 0), 2); $creatorPayoutMaximum = number_format($creatorPayoutBalance, 2, '.', ''); ?>
+            <div class="creator-account__payout-summary">
+                <div><span><?= $lclang === 'ro' ? 'Sold disponibil pentru solicitare' : 'Доступно к выплате' ?></span><strong><?= number_format($creatorPayoutBalance, 2, '.', ' ') ?> MDL</strong></div>
+                <p><?= $lclang === 'ro' ? 'Plata se efectuează în data de 15 a lunii următoare solicitării, după procesarea de către contabilitate.' : 'Выплата производится 15-го числа месяца после месяца запроса, после обработки бухгалтерией.' ?></p>
+            </div>
+            <?php $payoutLabels = array('pending' => $lclang === 'ro' ? 'În examinare' : 'На рассмотрении', 'approved' => $lclang === 'ro' ? 'Aprobată' : 'Одобрена', 'rejected' => $lclang === 'ro' ? 'Respinsă' : 'Отклонена', 'paid' => $lclang === 'ro' ? 'Plătită' : 'Выплачено'); ?>
+            <?php $hasPendingPayout = false; foreach (($creator_payout_requests ?? array()) as $payout) { if ($payout['status'] === 'pending') $hasPendingPayout = true; } ?>
+            <?php if (!$hasPendingPayout && (float) ($creator_payout_available_balance ?? 0) <= 0) { ?>
+                <p class="creator-account__state"><?= $lclang === 'ro' ? 'Solicitările pentru plată vor fi disponibile după finalizarea comenzilor recomandate.' : 'Запросить выплату можно будет после завершения заказов по вашим ссылкам.' ?></p>
+            <?php } elseif (!$hasPendingPayout) { ?>
+                <details class="creator-account__payout-disclosure">
+                    <summary><?= $lclang === 'ro' ? 'Solicită plata' : 'Запросить выплату' ?><span aria-hidden="true">+</span></summary>
+                    <form class="creator-account__link-create creator-account__payout-form" method="post" action="/creator-payouts/request" data-payout-form>
+                        <h5><?= $lclang === 'ro' ? 'Solicitare nouă' : 'Новый запрос' ?></h5>
+                        <input type="hidden" name="creator_payout_csrf" value="<?= htmlspecialchars((string) ($creator_payout_csrf ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+                        <div class="creator-account__form-grid creator-account__payout-fields">
+                            <div class="creator-account__payout-amount">
+                                <label><?= $lclang === 'ro' ? 'Tipul sumei' : 'Сумма запроса' ?><select data-payout-mode aria-label="<?= $lclang === 'ro' ? 'Tipul sumei' : 'Способ выбора суммы' ?>"><option value="all"><?= $lclang === 'ro' ? 'Soldul complet' : 'Вся сумма' ?></option><option value="custom"><?= $lclang === 'ro' ? 'Sumă personalizată' : 'Своя сумма' ?></option></select></label>
+                                <label><?= $lclang === 'ro' ? 'Sumă, MDL' : 'Сумма, MDL' ?><input type="number" name="amount_mdl" min="0.01" max="<?= htmlspecialchars($creatorPayoutMaximum, ENT_QUOTES, 'UTF-8') ?>" value="<?= htmlspecialchars($creatorPayoutMaximum, ENT_QUOTES, 'UTF-8') ?>" step="0.01" inputmode="decimal" required readonly data-payout-amount></label>
+                                <div class="creator-account__payout-slider" data-payout-slider hidden><input type="range" min="0.01" max="<?= htmlspecialchars($creatorPayoutMaximum, ENT_QUOTES, 'UTF-8') ?>" value="<?= htmlspecialchars($creatorPayoutMaximum, ENT_QUOTES, 'UTF-8') ?>" step="0.01" aria-label="<?= $lclang === 'ro' ? 'Alege suma plății' : 'Выберите сумму выплаты' ?>" data-payout-range></div>
+                                <small class="creator-account__payout-amount-note" data-payout-amount-note><?= $lclang === 'ro' ? 'Se va solicita soldul disponibil integral.' : 'Будет запрошен весь доступный баланс.' ?></small>
+                            </div>
+                            <label><?= $lclang === 'ro' ? 'Comentariu (opțional)' : 'Комментарий (необязательно)' ?><textarea name="comment" maxlength="1000" rows="3" placeholder="<?= $lclang === 'ro' ? 'Adăugați detalii dacă este necesar' : 'Добавьте детали, если нужно' ?>"></textarea></label>
+                        </div>
+                        <button class="creator-account__button" type="submit"><?= $lclang === 'ro' ? 'Trimite solicitarea' : 'Отправить запрос' ?></button>
+                    </form>
+                </details>
+            <?php } ?>
+            <?php if (!empty($creator_payout_requests)) { ?>
+                <div class="creator-account__payout-history">
+                    <h5><?= $lclang === 'ro' ? 'Istoricul solicitărilor' : 'История запросов' ?></h5>
+                    <div class="creator-account__links-table-wrap"><table class="creator-account__links-table"><thead><tr><th><?= $lclang === 'ro' ? 'Data' : 'Дата' ?></th><th><?= $lclang === 'ro' ? 'Sumă' : 'Сумма' ?></th><th><?= $lclang === 'ro' ? 'Data plății' : 'Дата выплаты' ?></th><th><?= $lclang === 'ro' ? 'Statut' : 'Статус' ?></th><th><?= $lclang === 'ro' ? 'Comentariu' : 'Комментарий' ?></th></tr></thead><tbody>
+                    <?php foreach ($creator_payout_requests as $payout) { $payoutStatusClass = in_array($payout['status'], array('pending', 'approved', 'rejected', 'paid'), true) ? $payout['status'] : 'pending'; ?><tr><td><?= html_escape($payout['created_at']) ?></td><td><strong><?= number_format((float) $payout['amount_mdl'], 2, '.', ' ') ?> MDL</strong></td><td><?= html_escape((string) ($payout['expected_payment_date'] ?? '—')) ?></td><td><span class="creator-account__payout-status creator-account__payout-status--<?= $payoutStatusClass ?>"><?= html_escape($payoutLabels[$payout['status']] ?? $payout['status']) ?></span></td><td><?= nl2br(html_escape((string) ($payout['admin_comment'] ?: $payout['comment'] ?: '—'))) ?></td></tr><?php } ?>
+                    </tbody></table></div>
+                </div>
+            <?php } ?>
+        <?php } ?>
     </section>
 
     <section class="creator-account__section" aria-labelledby="creator-settings-title">

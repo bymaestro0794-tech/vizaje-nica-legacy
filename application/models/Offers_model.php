@@ -234,49 +234,13 @@ class Offers_model extends BaseModel
         }
 
         $today = date('Y-m-d');
-        $discountedProduct = $this->db
-            ->select('p.id')
-            ->from('products p')
-            ->where('p.id', (int) $productId)
-            ->group_start()
-                ->where('(COALESCE(p.discount_price, 0) > 0 AND COALESCE(p.price, 0) > COALESCE(p.discount_price, 0))', null, false)
-                ->or_where('COALESCE(p.sale_percent, 0) > 0', null, false)
-                ->or_where("EXISTS (\n                    SELECT 1\n                    FROM products_variable pv_discount\n                    WHERE pv_discount.product_id = p.id\n                      AND pv_discount.isShown = 1\n                      AND pv_discount.price > 0\n                      AND pv_discount.discount_price > 0\n                      AND pv_discount.discount_price < pv_discount.price\n                )", null, false)
-            ->group_end()
-            ->get()
-            ->row();
-        if (!empty($discountedProduct)) {
-            return null;
-        }
-
-        $activeOfferCountSelect = "(
-            SELECT COUNT(DISTINCT o_conflict.id)
-            FROM offers o_conflict
-            INNER JOIN offers_products op_conflict ON op_conflict.offers_id = o_conflict.id
-            WHERE op_conflict.product_id = p.id
-              AND o_conflict.isShown = 1
-              AND o_conflict.is_online IN (1, 2)
-              AND (
-                    o_conflict.date_from <= '" . $today . "'
-                    OR o_conflict.date_from IS NULL
-                    OR o_conflict.date_from = ''
-                    OR o_conflict.date_from = '0000-00-00'
-              )
-              AND (
-                    o_conflict.date_to >= '" . $today . "'
-                    OR o_conflict.date_to IS NULL
-                    OR o_conflict.date_to = ''
-                    OR o_conflict.date_to = '0000-00-00'
-              )
-        ) AS active_offer_count";
         $this->db->select(
             'o.id, o.date_from, o.date_to, '
             . 'o.title' . $lang . ' AS title, '
             . 'o.uri' . $lang . ' AS uri, '
             . 'o.sale, o.is_online, '
             . $this->progressModeSelect('o') . ', '
-            . $this->remainingStockSelect('p') . ', '
-            . $activeOfferCountSelect
+            . $this->remainingStockSelect('p')
         );
         $this->db->from('offers o');
         $this->db->join('offers_products op', 'op.offers_id = o.id', 'inner');
@@ -312,12 +276,7 @@ class Offers_model extends BaseModel
             ->group_end();
         $this->db->order_by('o.date_to ASC, o.id DESC');
 
-        $offer = $this->db->limit(1)->get()->row();
-        if (!empty($offer) && (int) ($offer->active_offer_count ?? 0) > 1) {
-            return null;
-        }
-
-        return $offer;
+        return $this->db->limit(1)->get()->row();
     }
 
     public function products_offers($lang, $products_id)

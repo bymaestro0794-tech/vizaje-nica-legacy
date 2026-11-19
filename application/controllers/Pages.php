@@ -106,6 +106,52 @@ class Pages extends FrontEndController
         $this->_render();
     }
 
+    /** Public bilingual landing page linking applicants to the Partners application flow. */
+    public function partners_program($language = '')
+    {
+        $language = strtolower((string) $language);
+        if (!in_array($language, array('ro', 'ru'), true)) {
+            $this->_render_not_found_page();
+            return;
+        }
+
+        $this->lclang = $language;
+        $this->clang = strtoupper($language);
+        $uri = $language === 'ro' ? 'parteneri' : 'partners';
+        $title = $language === 'ro'
+            ? 'Programul de parteneriat Vizaje-Nica'
+            : 'Партнёрская программа Vizaje-Nica';
+        $description = $language === 'ro'
+            ? 'Recomandă produsele Vizaje-Nica, creează linkuri personale și primește recompense pentru comenzile confirmate conform regulilor programului.'
+            : 'Рекомендуйте товары Vizaje-Nica, создавайте персональные ссылки и получайте вознаграждение за подтверждённые заказы по правилам программы.';
+
+        $this->data['lang_urls'] = array(
+            'ru' => array('partners'),
+            'ro' => array('parteneri'),
+        );
+        $this->data['page_title'] = $title;
+        $this->data['page_name'] = $title;
+        $this->data['description_for_layout'] = $description;
+        $this->data['keywords_for_layout'] = $language === 'ro'
+            ? 'parteneri Vizaje-Nica, program de afiliere'
+            : 'партнёрская программа Vizaje-Nica, программа для креаторов';
+        $this->data['otitle'] = $title;
+        $this->data['og_img'] = '/app/img/fav_icon.png';
+        $this->data['og_img_width'] = 512;
+        $this->data['og_img_height'] = 512;
+        $this->data['breadcrumbs'] = array($this->_generate_bc_data($title, $uri));
+        $this->data['inner_view'] = 'pages/partners/index';
+        $this->data['body_class'] = 'partners-landing-page';
+        $this->data['partners_apply_url'] = $language === 'ro'
+            ? '/ro/parteneri/apply'
+            : '/ru/partners/apply';
+        $accountUri = $this->data['menu']['all'][15]->uri ?? '';
+        $this->data['partners_login_url'] = $accountUri !== ''
+            ? '/' . $language . '/' . $accountUri . '?creator'
+            : '/' . $language . '/' . ($language === 'ro' ? 'contul-meu' : 'lichnyiy-kabinet') . '?creator';
+        $this->_render();
+    }
+
     public function about()
     {
         $page = $this->menu_model->get_page_data_by_id($this->clang, 4);

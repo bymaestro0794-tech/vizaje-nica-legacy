@@ -124,12 +124,18 @@
 		}
 
 		const completeAuthIntent = () => {
-			if (authIntent === 'checkout' && authIntentUrl) {
+			if ((authIntent === 'checkout' || authIntent === 'return') && authIntentUrl) {
 				const url = authIntentUrl
 
 				clearAuthIntent()
 
-				window.location.href = url
+				const target = new URL(url, window.location.href)
+				if (target.origin !== window.location.origin) {
+					window.location.reload()
+					return true
+				}
+
+				window.location.href = target.href
 
 				return true
 			}
@@ -1369,6 +1375,11 @@
 				event.preventDefault()
 
 				clearAuthIntent()
+				const returnUrl = trigger.getAttribute('data-auth-return-url')
+				if (returnUrl) {
+					authIntent = 'return'
+					authIntentUrl = returnUrl
+				}
 
 				const screenName =
 					trigger.getAttribute('data-auth-trigger') || SCREEN_NAMES.login

@@ -1383,6 +1383,9 @@
 				window.setTimeout(() => {
 					if (isSearchOpen()) {
 						updateSearchTop()
+						searchInput.focus({
+							preventScroll: true
+						})
 					}
 				}, 260)
 
@@ -1981,6 +1984,9 @@
 				if (pointerOpenedSearchButton === searchOpenButton) {
 					pointerOpenedSearchButton = null
 					window.clearTimeout(pointerOpenedSearchTimer)
+					searchInput.focus({
+						preventScroll: true
+					})
 					return
 				}
 

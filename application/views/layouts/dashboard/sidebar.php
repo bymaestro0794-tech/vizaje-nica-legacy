@@ -8,6 +8,8 @@ $new_feedback_count = isset($new_feedback_count) ? (int) $new_feedback_count : 0
 $feedback_count = $new_feedback_count > 0
     ? ' <span class="label label-sm label-danger">' . $new_feedback_count . '</span>'
     : '';
+$creator_program_pending_count = max(0, (int) ($creator_program_pending_count ?? 0));
+$creator_payout_pending_count = max(0, (int) ($creator_payout_pending_count ?? 0));
 
 $sidebar_menu = array(
     'menu' => array('name' => lang("Menu"), 'ico' => '<i class="fa fa-bars"></i>'),
@@ -39,6 +41,25 @@ $sidebar_menu = array(
     ),
     'analytics' => array('name' => "Аналитика", 'ico' => '<i class="fa fa-bar-chart"></i>'),
     'feedback' => array('name' => 'Обратная связь' . $feedback_count, 'ico' => '<i class="fa fa-commenting-o"></i>'),
+    'creator_program' => array(
+        'name' => 'Партнёрская программа',
+        'ico' => '<i class="fa fa-users"></i>',
+        'childs' => array(
+            'creator_program' => array(
+                'name' => 'Заявки креаторов',
+                'ico' => '<i class="fa fa-user-plus"></i>',
+                'badge' => 'purple',
+                'badge_value' => $creator_program_pending_count,
+            ),
+            'creators' => array('name' => 'Креаторы', 'ico' => '<i class="fa fa-users"></i>'),
+            'creator_payouts' => array(
+                'name' => 'Запросы на выплату',
+                'ico' => '<i class="fa fa-credit-card"></i>',
+                'badge' => 'success',
+                'badge_value' => $creator_payout_pending_count,
+            ),
+        ),
+    ),
     /*
      * Управление новой главной страницей.
      */
@@ -171,7 +192,7 @@ $sidebar_menu = array(
                                     <?php if ($k == uri(2)) : ?>
                                         <span class="selected"></span>
                                     <?php endif; ?>
-                                    <?php if (!empty($v['badge']) && isset($v['badge_value'])): ?>
+                                    <?php if (!empty($v['badge']) && !empty($v['badge_value'])): ?>
                                         <span class="badge badge-<?= $v['badge'] ?>"><?= $v['badge_value'] ?></span>
                                     <?php endif; ?>
                                 </a>

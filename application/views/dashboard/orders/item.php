@@ -64,6 +64,25 @@
                                                     <div class="col-md-7 value"> #<?= $item->order_id ?>
                                                     </div>
                                                 </div>
+                                                <?php if (!empty($creator_referral)) { ?>
+                                                    <div class="row static-info">
+                                                        <div class="col-md-5 name">Источник:</div>
+                                                        <div class="col-md-7 value">
+                                                            <span class="label" style="display:inline-block;background:#f6c500;color:#111;font-size:12px;font-weight:700;padding:6px 9px;">
+                                                                <i class="fa fa-gift" aria-hidden="true"></i> ЗАКАЗ ПО ССЫЛКЕ КРЕАТОРА
+                                                            </span>
+                                                            <div style="margin-top:7px;">
+                                                                Креатор: <?= html_escape(trim((string) $creator_referral['name'] . ' ' . (string) $creator_referral['surname'])) ?>
+                                                                <?php if (!empty($creator_referral['label'])) { ?>
+                                                                    <br>Ссылка: <?= html_escape((string) $creator_referral['label']) ?>
+                                                                <?php } ?>
+                                                                <?php if ((float) $creator_referral['creator_commission_percent'] > 0) { ?>
+                                                                    <br>Комиссия: <?= number_format((float) $creator_referral['creator_commission_percent'], 2, '.', '') ?>% (<?= number_format((float) $creator_referral['creator_commission_amount'], 2, '.', '') ?> MDL)
+                                                                <?php } ?>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                <?php } ?>
                                                 <div class="row static-info">
                                                     <div class="col-md-5 name"> <?= lang('Status') ?>:</div>
                                                     <div class="col-md-7 value">
@@ -71,13 +90,19 @@
                                                         $status = [
                                                             'new' => lang('new'),
                                                             'progress' => lang('progress'),
+                                                            'courier' => lang('courier'),
+                                                            'delivered' => lang('delivered'),
                                                             'finished' => lang('finished'),
                                                             'canceled' => lang('canceled')
-                                                        ]
+                                                        ];
+                                                        $currentStatus = strtolower(trim((string) ($item->status ?? '')));
+                                                        if (!isset($status[$currentStatus])) {
+                                                            $currentStatus = 'new';
+                                                        }
                                                         ?>
                                                         <select name="status" id="status" class="form-control">
                                                             <? foreach ($status as $key => $title) { ?>
-                                                                <option value="<?= $key ?>" <?= ($item->status == $key) ? 'selected' : '' ?>><?= $title ?></option>
+                                                                <option value="<?= $key ?>" <?= ($currentStatus == $key) ? 'selected' : '' ?>><?= $title ?></option>
                                                             <? } ?>
                                                         </select>
                                                     </div>

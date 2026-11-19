@@ -48,15 +48,46 @@ class Account extends FrontEndController
             redirect('/' . $this->lclang . '/' . $this->data['menu']['all'][9]->uri);
         }
 
-        // OAuth callback notices are fixed, one-time values; never render arbitrary session text.
-        $this->data['creator_partner_notice'] = '';
-        if (!empty($this->data['client_info']->is_creator) && session_status() === PHP_SESSION_ACTIVE) {
-            $notice = $_SESSION['creator_partner_notice'] ?? '';
-            unset($_SESSION['creator_partner_notice']);
-            $allowedNotices = array('callback_invalid', 'unavailable', 'exchange', 'inactive', 'storage', 'connected');
-            if (is_string($notice) && in_array($notice, $allowedNotices, true)) {
-                $this->data['creator_partner_notice'] = $notice;
+        if (isset($_SESSION['creator_application_return_locale'])) {
+            $returnLocale = $_SESSION['creator_application_return_locale'] === 'ro' ? 'ro' : 'ru';
+            unset($_SESSION['creator_application_return_locale']);
+            redirect($returnLocale === 'ro' ? '/ro/parteneri/apply' : '/ru/partners/apply');
+            return;
+        }
+
+        $this->load->model('creator_program_model');
+        $this->data['creator_program_available'] = $this->creator_program_model->isAvailable()
+            && $this->db->field_exists('is_creator', 'clients');
+        $this->data['creator_program_application'] = $this->creator_program_model->getForClient($this->data['client_info']->id);
+        $this->data['creator_application_submitted_notice'] = (string) $this->input->get('creator-application', true) === 'submitted';
+
+        $this->data['creator_payout_requests'] = array();
+        $this->data['creator_referral_orders'] = array();
+        $this->data['creator_referral_orders_available'] = false;
+        $this->data['creator_payout_available'] = false;
+        $this->data['creator_payout_available_balance'] = 0;
+        $this->data['creator_payout_csrf'] = '';
+        $this->data['creator_payout_notice'] = '';
+        if (!empty($this->data['client_info']->is_creator)) {
+            $this->load->model('legacy_creator_attribution_model');
+            $this->data['creator_referral_orders_available'] = $this->legacy_creator_attribution_model->isAvailable();
+            if ($this->data['creator_referral_orders_available']) {
+                $this->data['creator_referral_orders'] = $this->legacy_creator_attribution_model
+                    ->finishedOrdersForCreator((int) $this->data['client_info']->id, 100);
             }
+            $this->load->model('creator_payouts_model');
+            $this->data['creator_payout_available'] = $this->creator_payouts_model->isAvailable();
+            if ($this->data['creator_payout_available']) {
+                $this->data['creator_payout_requests'] = $this->creator_payouts_model->listForClient($this->data['client_info']->id);
+                $this->data['creator_payout_available_balance'] = $this->creator_payouts_model->balanceForClient((int) $this->data['client_info']->id);
+            }
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                if (empty($_SESSION['creator_payout_csrf'])) $_SESSION['creator_payout_csrf'] = bin2hex(random_bytes(32));
+                $this->data['creator_payout_csrf'] = $_SESSION['creator_payout_csrf'];
+            }
+            $payoutNotice = (string) $this->input->get('payout', true);
+            $allowedPayoutNotices = array('created', 'pending_exists', 'not_creator', 'unavailable', 'error', 'invalid', 'insufficient_balance');
+            if (in_array($payoutNotice, $allowedPayoutNotices, true)) $this->data['creator_payout_notice'] = $payoutNotice;
         }
 
         $orders = $this->orders_model->get_client_orders($this->data['client_info']->id, $this->clang);

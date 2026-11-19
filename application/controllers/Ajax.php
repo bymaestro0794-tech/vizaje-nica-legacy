@@ -2764,7 +2764,7 @@ public function cart_drawer()
             && $startedAt <= time()
             && $expiresAt > time()
             && $this->promocodes_model->countClientUsages($welcomePromo->id, $clientInfo->id) === 0
-            && $this->db->where('client_id', (int) $clientInfo->id)->count_all_results('orders') === 0
+            && $this->promocodes_model->countClientWelcomeOfferBlockingOrders($clientInfo->id) === 0
         ) {
             $welcomeOfferTimer = array(
                 'expires_at' => $expiresAt,

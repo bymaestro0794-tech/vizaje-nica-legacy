@@ -86,6 +86,10 @@ $footerDiscoveryLinks = [
         'title' => $isRomanian ? 'Blog' : 'Блог',
         'url' => '/' . $lclang . '/blog',
     ],
+    [
+        'title' => $isRomanian ? 'Programul de parteneriat' : 'Партнёрская программа',
+        'url' => '/' . $lclang . '/' . ($isRomanian ? 'parteneri' : 'partners'),
+    ],
 ];
 ?>
 

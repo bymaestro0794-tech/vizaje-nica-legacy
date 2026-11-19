@@ -129,5 +129,25 @@ class BackEndController extends CI_Controller
 
         $this->load->model('site_feedback_model');
         $this->data['new_feedback_count'] = $this->site_feedback_model->count_new_feedback();
+
+        // Keep actionable creator-program counts available in the shared admin sidebar.
+        // The tables may not exist yet on older environments, so fail closed to zero.
+        $this->data['creator_program_pending_count'] = 0;
+        if ($this->db->table_exists('creator_program_applications')) {
+            $row = $this->db->select('COUNT(*) AS total', false)
+                ->where('status', 'pending')
+                ->get('creator_program_applications')
+                ->row();
+            $this->data['creator_program_pending_count'] = $row ? (int) $row->total : 0;
+        }
+
+        $this->data['creator_payout_pending_count'] = 0;
+        if ($this->db->table_exists('creator_payout_requests')) {
+            $row = $this->db->select('COUNT(*) AS total', false)
+                ->where('status', 'pending')
+                ->get('creator_payout_requests')
+                ->row();
+            $this->data['creator_payout_pending_count'] = $row ? (int) $row->total : 0;
+        }
     }
 }

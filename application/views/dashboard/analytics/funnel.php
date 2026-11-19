@@ -36,6 +36,8 @@ $totalOrders = (int) (isset($summary['total_orders']) ? $summary['total_orders']
 $statuses = array(
     array('label' => 'Новые', 'key' => 'new_orders'),
     array('label' => 'В обработке', 'key' => 'progress_orders'),
+    array('label' => 'Переданы курьеру', 'key' => 'courier_orders'),
+    array('label' => 'Доставлены покупателю', 'key' => 'delivered_orders'),
     array('label' => 'Завершённые', 'key' => 'finished_orders'),
     array('label' => 'Отменённые', 'key' => 'canceled_orders'),
 );
@@ -153,13 +155,15 @@ $statuses = array(
                     <th>Все заказы</th>
                     <th>Новые</th>
                     <th>В обработке</th>
+                    <th>Курьер</th>
+                    <th>Доставлены</th>
                     <th>Завершённые</th>
                     <th>Отменённые</th>
                 </tr>
             </thead>
             <tbody>
             <?php if (empty($periods)): ?>
-                <tr><td colspan="6" class="text-muted">За выбранный период заказов нет.</td></tr>
+                <tr><td colspan="8" class="text-muted">За выбранный период заказов нет.</td></tr>
             <?php else: ?>
                 <?php foreach ($periods as $period): ?>
                     <tr>
@@ -167,6 +171,8 @@ $statuses = array(
                         <td><?= $number($period['total_orders']) ?></td>
                         <td><?= $number($period['new_orders']) ?></td>
                         <td><?= $number($period['progress_orders']) ?></td>
+                        <td><?= $number($period['courier_orders']) ?></td>
+                        <td><?= $number($period['delivered_orders']) ?></td>
                         <td><?= $number($period['finished_orders']) ?></td>
                         <td><?= $number($period['canceled_orders']) ?></td>
                     </tr>
