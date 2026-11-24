@@ -10,6 +10,7 @@
     $offerLocation = !empty($offer->location)
         ? $offer->location
         : '';
+    $offerIsExpired = !empty($offer->is_expired);
 
     $offerDateTo = !empty($offer->date_to)
         ? transformDate($offer->date_to, $lclang)
@@ -86,6 +87,12 @@
                         : 'Акция Vizaje-Nica' ?>
                 </p>
 
+                <?php if ($offerIsExpired) { ?>
+                    <span class="offer-hero__status offer-hero__status--expired">
+                        <?= $lclang === 'ro' ? 'Promoție expirată' : 'Акция истекла' ?>
+                    </span>
+                <?php } ?>
+
                 <h1 class="offer-hero__title">
                     <?= $offerTitle ?>
                 </h1>
@@ -152,7 +159,9 @@
 
                                 <div>
                                     <span class="offer-hero__meta-label">
-                                        <?= BEFORE ?>
+                                        <?= $offerIsExpired
+                                            ? ($lclang === 'ro' ? 'Promoția s-a încheiat' : 'Акция завершилась')
+                                            : BEFORE ?>
                                     </span>
 
                                     <strong class="offer-hero__meta-value">
@@ -235,6 +244,15 @@
             : 'В этой акции пока нет доступных товаров.';
     ?>
 
+    <?php if ($offerIsExpired) { ?>
+        <section class="offer-catalog offer-catalog--expired" aria-label="<?= $lclang === 'ro' ? 'Promoție expirată' : 'Акция завершена' ?>">
+            <div class="offer-catalog__container _container">
+                <p class="offer-catalog__expired-note"><?= $lclang === 'ro'
+                    ? 'Perioada promoției s-a încheiat. Reducerile și condițiile promoționale nu mai sunt active.'
+                    : 'Срок акции завершён. Скидки и специальные условия больше не действуют.' ?></p>
+            </div>
+        </section>
+    <?php } else { ?>
     <section class="offer-catalog" aria-labelledby="offer-catalog-title">
         <div class="offer-catalog__container _container">
             <header class="offer-catalog__header">
@@ -298,5 +316,6 @@
             <?php } ?>
         </div>
     </section>
+    <?php } ?>
 
 </main>

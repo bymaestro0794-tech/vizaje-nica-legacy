@@ -46,11 +46,13 @@
 	transform: translateX(0);
 }
 
-/* Black Friday keeps the desktop drawer on the physical right side. */
+/* Campaign drawers stay anchored to the physical right edge in RTL layouts. */
 @media (min-width: 768px) {
-	body[data-site-theme="black_friday"] .cart-drawer__panel {
+	body[data-site-theme="black_friday"] .cart-drawer__panel,
+	body[data-site-theme="red_friday"] .cart-drawer__panel {
 		position: absolute;
 		inset: 0 0 0 auto;
+		width: min(720px, 100vw);
 		margin: 0;
 	}
 }

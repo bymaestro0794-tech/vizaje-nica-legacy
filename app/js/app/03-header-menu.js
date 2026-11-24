@@ -33,7 +33,7 @@ function setTabHash(tabItem) {
 	}
 }
 
-window.onload = function () {
+window.addEventListener('load', function () {
 	document.addEventListener('click', documentActions)
 	document.body.style.opacity = '1'
 
@@ -768,6 +768,6 @@ window.onload = function () {
 			})
 		}
 	}
-}
+})
 
 let activeSearchRequest = null

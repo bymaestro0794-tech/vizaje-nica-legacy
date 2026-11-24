@@ -127,4 +127,39 @@ $creatorCurrentUrl = trim((string) ($without_get_url ?? $full_url ?? ''));
                 : 'Пока настройки действуют до выхода из аккаунта. После обновления базы они будут сохраняться в профиле.' ?></p>
         <?php } ?>
     </section>
+
+    <section class="creator-account__section creator-account__feedback" aria-labelledby="creator-feedback-title">
+        <?php
+        $this->load->view('partials/telegram-support', array('class' => 'vn-telegram-support--creator'));
+        $creatorFeedbackNotices = array(
+            'sent' => $lclang === 'ro' ? 'Mesajul a fost trimis. Echipa noastră vă va răspunde.' : 'Сообщение отправлено. Команда поддержки свяжется с вами.',
+            'unavailable' => $lclang === 'ro' ? 'Formularul este temporar indisponibil.' : 'Форма временно недоступна. Сначала примените SQL-патч.',
+            'invalid' => $lclang === 'ro' ? 'Alegeți subiectul și completați mesajul (maximum 4000 de caractere).' : 'Выберите тему и заполните сообщение (до 4000 символов).',
+            'error' => $lclang === 'ro' ? 'Mesajul nu a putut fi trimis. Încercați din nou.' : 'Не удалось отправить сообщение. Попробуйте ещё раз.',
+        );
+        $creatorFeedbackNotice = $creatorFeedbackNotices[$creator_feedback_notice ?? ''] ?? '';
+        ?>
+        <div class="creator-account__section-heading"><h4 id="creator-feedback-title"><?= $lclang === 'ro' ? 'Contactați echipa noastră' : 'Связаться с командой' ?></h4></div>
+        <p class="creator-account__state"><?= $lclang === 'ro' ? 'Aveți o întrebare despre linkuri, comenzi sau comisioane? Scrieți-ne.' : 'Есть вопрос по ссылкам, заказам или комиссии? Напишите нам.' ?></p>
+        <?php if ($creatorFeedbackNotice !== '') { ?><p class="creator-account__state <?= ($creator_feedback_notice ?? '') === 'error' || ($creator_feedback_notice ?? '') === 'invalid' ? 'creator-account__state--error' : '' ?>" role="status"><?= htmlspecialchars($creatorFeedbackNotice, ENT_QUOTES, 'UTF-8') ?></p><?php } ?>
+        <form class="creator-account__link-create creator-account__feedback-form" method="post" action="">
+            <input type="hidden" name="creator_feedback_submit" value="1">
+            <input type="hidden" name="creator_feedback_csrf" value="<?= htmlspecialchars((string) ($creator_feedback_csrf ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+            <div class="creator-account__form-grid">
+                <label><?= $lclang === 'ro' ? 'Subiect' : 'Тема обращения' ?>
+                    <select name="creator_feedback_type" required>
+                        <option value=""><?= $lclang === 'ro' ? 'Alegeți subiectul' : 'Выберите тему' ?></option>
+                        <option value="links"><?= $lclang === 'ro' ? 'Linkuri' : 'Ссылки' ?></option>
+                        <option value="orders"><?= $lclang === 'ro' ? 'Comenzi' : 'Заказы' ?></option>
+                        <option value="commission"><?= $lclang === 'ro' ? 'Comision' : 'Комиссия' ?></option>
+                        <option value="payout"><?= $lclang === 'ro' ? 'Plăți' : 'Выплаты' ?></option>
+                        <option value="account"><?= $lclang === 'ro' ? 'Contul creatorului' : 'Кабинет креатора' ?></option>
+                        <option value="other"><?= $lclang === 'ro' ? 'Altă întrebare' : 'Другой вопрос' ?></option>
+                    </select>
+                </label>
+                <label><?= $lclang === 'ro' ? 'Mesaj' : 'Сообщение' ?><textarea name="creator_feedback_message" rows="4" maxlength="4000" required></textarea></label>
+            </div>
+            <button class="creator-account__button" type="submit"><?= $lclang === 'ro' ? 'Trimite mesajul' : 'Отправить сообщение' ?></button>
+        </form>
+    </section>
 </div>

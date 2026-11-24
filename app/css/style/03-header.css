@@ -1741,6 +1741,12 @@ body:has(.search-actions-main-header.is-open) .header[data-site-header] .header-
 	pointer-events: none !important;
 }
 
+/* Keep the sticky catalog controls below the full-screen search layer. */
+body:has(.search-actions-main-header.is-open) .catalog-category-page .catalog-category__toolbar {
+	visibility: hidden !important;
+	pointer-events: none !important;
+}
+
 .header__announcement,
 .header__desktop,
 .header__mobile {

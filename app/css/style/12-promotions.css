@@ -416,6 +416,31 @@
 	text-wrap: balance;
 }
 
+.offer-hero__status {
+	display: inline-flex;
+	align-items: center;
+	margin: 0 0 16px;
+	padding: 7px 12px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.2;
+}
+
+.offer-hero__status--expired {
+	background: #f1f1f1;
+	color: #696969;
+}
+
+.offer-catalog__expired-note {
+	margin: 0;
+	padding: 20px 24px;
+	border: 1px solid #e7e7e7;
+	border-radius: 8px;
+	color: #666;
+	text-align: center;
+}
+
 /* =========================================================
    Main offer banner
    ========================================================= */

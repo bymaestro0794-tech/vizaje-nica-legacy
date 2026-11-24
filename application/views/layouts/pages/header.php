@@ -3,14 +3,15 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 $isProductDetailPage = trim((string) ($inner_view ?? ''), '/') === 'pages/catalog/item';
 $isHalloweenTheme = ($site_theme_key ?? 'default') === 'halloween';
-$isBlackFridayTheme = ($site_theme_key ?? 'default') === 'black_friday';
+$isNewYearTheme = ($site_theme_key ?? 'default') === 'new_year';
+$isBlackFridayTheme = in_array(($site_theme_key ?? 'default'), array('black_friday', 'red_friday'), true);
 $blackFridayCampaign = !empty($black_friday_campaign) && is_array($black_friday_campaign)
 	? $black_friday_campaign
 	: null;
 $blackFridayCampaignActive = $isBlackFridayTheme && !empty($blackFridayCampaign);
 $headerLogoImage = $isHalloweenTheme
 	? '/app/img/hellowen-logo.png'
-	: '/app/img/logo_v.png';
+	: ($isNewYearTheme ? '/app/img/themes/new-year/logo-wordmark.png' : '/app/img/logo_v.png');
 
 $currentHeaderView = trim((string) ($inner_view ?? ''), '/');
 $isHomeTabActive = $currentHeaderView === 'pages/main/index';
@@ -439,11 +440,11 @@ $headerRouletteStateUrl = $headerWheelEligible
 
             <a
                 href="/<?= htmlspecialchars($lclang, ENT_QUOTES, 'UTF-8') ?>"
-                class="header__logo<?= $isHalloweenTheme ? ' header__logo--halloween' : '' ?>"
+                class="header__logo<?= $isHalloweenTheme ? ' header__logo--halloween' : ($isNewYearTheme ? ' header__logo--new-year' : '') ?>"
                 aria-label="Vizaje-Nica"
             >
                 <picture>
-                    <?php if (!$isHalloweenTheme) : ?>
+                    <?php if (!$isHalloweenTheme && !$isNewYearTheme) : ?>
                         <source srcset="/app/img/logo_v.webp" type="image/webp">
                     <?php endif; ?>
                     <img
@@ -1417,11 +1418,11 @@ $wishlistUrl = $isRomanian
 
             <a
                 href="/<?= htmlspecialchars($lclang, ENT_QUOTES, 'UTF-8') ?>"
-                class="mobile-navigation__logo"
+                class="mobile-navigation__logo<?= $isNewYearTheme ? ' mobile-navigation__logo--new-year' : '' ?>"
                 aria-label="Vizaje-Nica"
                 data-mobile-root-logo
             >
-                <img src="/app/img/mini-logo.svg" alt="Vizaje-Nica" width="34" height="32">
+                <img src="<?= $isNewYearTheme ? '/app/img/themes/new-year/logo-mark.png' : '/app/img/mini-logo.svg' ?>" alt="Vizaje-Nica" width="34" height="32">
             </a>
 
             <p class="mobile-navigation__level-title" data-mobile-level-title hidden></p>

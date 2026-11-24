@@ -152,16 +152,105 @@ class Products_model extends BaseModel
         )", null, false);
     }
 
-    private function getHomeBrandPriorityExpression()
+    /** True for products published in the last 7 days or among the 20 newest eligible catalogue products. */
+    private function getNewArrivalCondition($productAlias = 'products')
     {
-        return "CASE
-            WHEN LOWER(COALESCE((SELECT brands.title FROM brands WHERE brands.id = products.brand_id LIMIT 1), '')) LIKE '%clarins%' THEN 500
-            WHEN LOWER(COALESCE((SELECT brands.title FROM brands WHERE brands.id = products.brand_id LIMIT 1), '')) LIKE '%pupa%' THEN 400
-            WHEN LOWER(COALESCE((SELECT brands.title FROM brands WHERE brands.id = products.brand_id LIMIT 1), '')) LIKE '%artdeco%' THEN 300
-            WHEN LOWER(COALESCE((SELECT brands.title FROM brands WHERE brands.id = products.brand_id LIMIT 1), '')) LIKE '%mac%' THEN 200
-            WHEN LOWER(COALESCE((SELECT brands.title FROM brands WHERE brands.id = products.brand_id LIMIT 1), '')) LIKE '%naj oleari%' THEN 100
-            ELSE 0
-        END";
+        if (!$this->db->field_exists('catalog_published_at', $this->tblname)) {
+            return $productAlias . '.is_new = 1';
+        }
+
+        $giftCondition = $this->db->field_exists('isGift', $this->tblname)
+            ? 'AND p_rank.isGift = 0'
+            : '';
+
+        if (client_uses_wholesale_prices()) {
+            $availabilityCondition = "(
+                (p_rank.priceWH > 0 AND p_rank.on_stockWH > 0)
+                OR EXISTS (
+                    SELECT 1 FROM products_variable pv_rank
+                    WHERE pv_rank.product_id = p_rank.id
+                      AND pv_rank.isShown = 1
+                      AND pv_rank.priceWH > 0
+                      AND pv_rank.qtyWH > 0
+                )
+            )";
+        } else {
+            $availabilityCondition = "(
+                (p_rank.price > 0 AND p_rank.on_stock > 0)
+                OR EXISTS (
+                    SELECT 1 FROM products_variable pv_rank
+                    WHERE pv_rank.product_id = p_rank.id
+                      AND pv_rank.isShown = 1
+                      AND pv_rank.price > 0
+                      AND pv_rank.qty > 0
+                )
+            )";
+        }
+
+        return "(
+            {$productAlias}.catalog_published_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+            OR {$productAlias}.id IN (
+                SELECT latest_arrivals.product_id
+                FROM (
+                    SELECT p_rank.id AS product_id
+                    FROM products p_rank
+                    WHERE p_rank.isShown = 1
+                      {$giftCondition}
+                      AND EXISTS (
+                          SELECT 1 FROM products_img pi_rank
+                          WHERE pi_rank.product_id = p_rank.id
+                      )
+                      AND {$availabilityCondition}
+                    ORDER BY p_rank.catalog_published_at DESC, p_rank.id DESC
+                    LIMIT 20
+                ) latest_arrivals
+            )
+        )";
+    }
+
+    /** Interleave brand buckets; cap each brand at three when enough brands are available. */
+    private function interleaveProductsByBrand(array $products, $limit, $perBrandCap = 3)
+    {
+        $limit = max(1, (int) $limit);
+        $byBrand = array();
+        foreach ($products as $product) {
+            $brandKey = !empty($product->brand_id)
+                ? 'brand_' . (int) $product->brand_id
+                : 'product_' . (int) ($product->id ?? count($byBrand));
+            $byBrand[$brandKey][] = $product;
+        }
+
+        if (empty($byBrand)) {
+            return array();
+        }
+
+        $cap = count($byBrand) >= (int) ceil($limit / max(1, (int) $perBrandCap))
+            ? max(1, (int) $perBrandCap)
+            : $limit;
+        $selected = array();
+        $selectedPerBrand = array();
+        $round = 0;
+
+        while (count($selected) < $limit) {
+            $addedInRound = false;
+            foreach ($byBrand as $brandKey => $brandProducts) {
+                if (!isset($brandProducts[$round]) || ($selectedPerBrand[$brandKey] ?? 0) >= $cap) {
+                    continue;
+                }
+                $selected[] = $brandProducts[$round];
+                $selectedPerBrand[$brandKey] = ($selectedPerBrand[$brandKey] ?? 0) + 1;
+                $addedInRound = true;
+                if (count($selected) >= $limit) {
+                    break;
+                }
+            }
+            if (!$addedInRound) {
+                break;
+            }
+            $round++;
+        }
+
+        return $selected;
     }
 
     /**
@@ -2053,6 +2142,7 @@ if (client_uses_wholesale_prices()) {
             return false;
         }
         $effectiveFields = $this->getEffectiveProductFields();
+        $newArrivalCondition = $this->getNewArrivalCondition($this->tblname);
 
         $this->db->select("
             $this->tblname.id, 
@@ -2069,7 +2159,7 @@ if (client_uses_wholesale_prices()) {
             $this->tblname.on_stockWH,  
             $this->tblname.volume, 
             $this->tblname.stock, 
-            $this->tblname.is_new,    
+            CASE WHEN {$newArrivalCondition} THEN 1 ELSE 0 END AS is_new,
              {$effectiveFields},
              (SELECT products_img.img FROM products_img WHERE products_img.product_id=$this->tblname.id ORDER BY sorder ASC, id DESC LIMIT 1) as img,
              (SELECT brands.title FROM brands WHERE brands.id=$this->tblname.brand_id) as brand_title,
@@ -2079,16 +2169,18 @@ if (client_uses_wholesale_prices()) {
         ");
         $this->db->join('products_img', 'products_img.product_id = products.id');
         $this->db->where("$this->tblname.isShown", 1);
-        $this->db->where('products.is_new', 1);
-        $this->db->select($this->getHomeBrandPriorityExpression() . ' AS home_brand_priority', false);
+        $this->db->where($newArrivalCondition, null, false);
         $this->applySellableCondition();
         $this->applyAvailableStockCondition();
 
         $this->db->offset(0);
         $this->db->limit(max(1, min(20, (int) $limit)));
 
-        $this->db->order_by('home_brand_priority', 'DESC');
-        $this->db->order_by("products.stock DESC, products.sorder ASC, products.id DESC");
+        if ($this->db->field_exists('catalog_published_at', $this->tblname)) {
+            $this->db->order_by('products.catalog_published_at DESC, products.id DESC');
+        } else {
+            $this->db->order_by('products.stock DESC, products.sorder ASC');
+        }
         $this->db->group_by("products.id");
         $products = $this->db->get($this->tblname)->result();
 
@@ -2127,15 +2219,14 @@ if (client_uses_wholesale_prices()) {
         ");
         $this->db->join('products_img', 'products_img.product_id = products.id');
         $this->db->where("$this->tblname.isShown", 1);
-        $this->db->select($this->getHomeBrandPriorityExpression() . ' AS home_brand_priority', false);
         $this->applySellableCondition();
         $this->applyAvailableStockCondition();
 
         $this->db->where('products.discount_price >', 1);
         $this->db->offset(0);
-        $this->db->limit(max(1, min(20, (int) $limit)));
+        $limit = max(1, min(20, (int) $limit));
+        $this->db->limit(min(120, max(60, $limit * 6)));
 
-        $this->db->order_by('home_brand_priority', 'DESC');
         $this->db->order_by(
             'RAND(' . $this->getTwoDayRotationSeed($lang, 'home-sale') . ')',
             '',
@@ -2145,7 +2236,7 @@ if (client_uses_wholesale_prices()) {
         $this->db->group_by("products.id");
         $products = $this->db->get($this->tblname)->result();
 
-        return $products;
+        return $this->interleaveProductsByBrand($products, $limit, 3);
     }
 
     /**
@@ -2161,17 +2252,7 @@ if (client_uses_wholesale_prices()) {
         }
 
         $limit = max(1, min(120, (int) $limit));
-        $poolLimit = max($limit * 3, 36);
-        $popularBrandPriority = "CASE
-            WHEN LOWER(COALESCE(brands.title, '')) LIKE '%clarins%' THEN 700
-            WHEN LOWER(COALESCE(brands.title, '')) LIKE '%mac%' THEN 600
-            WHEN LOWER(COALESCE(brands.title, '')) LIKE '%pupa%' THEN 500
-            WHEN LOWER(COALESCE(brands.title, '')) LIKE '%artdeco%' THEN 400
-            WHEN LOWER(COALESCE(brands.title, '')) LIKE '%abh%' THEN 300
-            WHEN LOWER(COALESCE(brands.title, '')) LIKE '%bourjois%' THEN 200
-            WHEN LOWER(COALESCE(brands.title, '')) LIKE '%l%oreal%' THEN 100
-            ELSE 0
-        END";
+        $poolLimit = min(240, max($limit * 8, 120));
         $parentDiscount = "(
             products.price > 0
             AND products.discount_price > 0
@@ -2214,10 +2295,7 @@ if (client_uses_wholesale_prices()) {
         $this->db->from('products');
         $this->db->join('categories', 'categories.id = products.category_id', 'inner');
         $this->db->join('brands', 'brands.id = products.brand_id', 'left');
-        $this->db->select(
-            "products.brand_id, brands.title AS brand_title, {$popularBrandPriority} AS brand_priority",
-            false
-        );
+        $this->db->select('products.brand_id, brands.title AS brand_title', false);
         $this->db->where('products.isShown', 1);
         $this->applyPublicProductCondition();
         $this->db->where('products.discount_price >', 0);
@@ -2241,66 +2319,15 @@ if (client_uses_wholesale_prices()) {
             )
         )", null, false);
         $this->db->order_by(
-            'brand_priority DESC, discount_percent DESC, products.stock DESC, products.sorder ASC, products.id DESC',
+            'RAND(' . $this->getTwoDayRotationSeed($lang, 'header-sale-pool') . '), discount_percent DESC, products.stock DESC, products.sorder ASC, products.id DESC',
             '',
             false
         );
         $this->db->limit($poolLimit);
 
         $pool = $this->db->get()->result();
-        /*
-         * Не отдаём подряд все товары одного бренда. Внутри каждого бренда
-         * сохраняется приоритет скидки, а сами бренды проходят по очереди.
-         */
-        $byBrand = array();
-        foreach ($pool as $product) {
-            $brandKey = !empty($product->brand_id)
-                ? 'brand_' . (int) $product->brand_id
-                : 'product_' . (int) $product->id;
-
-            if (!isset($byBrand[$brandKey])) {
-                $byBrand[$brandKey] = array();
-            }
-
-            $byBrand[$brandKey][] = $product;
-        }
-
-        $brandKeys = array_keys($byBrand);
-        usort($brandKeys, static function ($left, $right) use ($byBrand) {
-            $leftPriority = (int) ($byBrand[$left][0]->brand_priority ?? 0);
-            $rightPriority = (int) ($byBrand[$right][0]->brand_priority ?? 0);
-
-            if ($leftPriority === $rightPriority) {
-                return strcmp($left, $right);
-            }
-
-            return $rightPriority <=> $leftPriority;
-        });
-
-        $rotatedPool = array();
-        $round = 0;
-        while (count($rotatedPool) < min($limit, count($pool))) {
-            $addedInRound = false;
-
-            foreach ($brandKeys as $brandKey) {
-                if (!isset($byBrand[$brandKey][$round])) {
-                    continue;
-                }
-
-                $rotatedPool[] = $byBrand[$brandKey][$round];
-                $addedInRound = true;
-
-                if (count($rotatedPool) >= $limit) {
-                    break;
-                }
-            }
-
-            if (!$addedInRound) {
-                break;
-            }
-
-            $round++;
-        }
+        /* Brand round-robin with a max of three products from a brand when possible. */
+        $rotatedPool = $this->interleaveProductsByBrand($pool, $limit, 3);
 
         /* Меняем стартовую позицию один раз в 48 часов, а не на каждый запрос. */
         $rotationCount = count($rotatedPool);
@@ -2727,11 +2754,13 @@ if (client_uses_wholesale_prices()) {
 
     public function get_all_products_new_products()
     {
+        $newArrivalCondition = $this->getNewArrivalCondition($this->tblname);
         $this->db->select("products.id");
         $this->db->join('products_img', 'products_img.product_id = products.id');
         $this->db->where("$this->tblname.isShown", 1);
-        $this->db->where('products.is_new', 1);
+        $this->db->where($newArrivalCondition, null, false);
         $this->applySellableCondition();
+        $this->applyAvailableStockCondition();
 
         $this->db->group_by("products.id");
         return $this->db->get($this->tblname)->result();
@@ -2743,6 +2772,7 @@ if (client_uses_wholesale_prices()) {
             return false;
         }
         $effectiveFields = $this->getEffectiveProductFields();
+        $newArrivalCondition = $this->getNewArrivalCondition($this->tblname);
 
         $this->db->select("
             $this->tblname.id, 
@@ -2759,7 +2789,7 @@ if (client_uses_wholesale_prices()) {
             $this->tblname.on_stockWH,  
             $this->tblname.volume, 
             $this->tblname.stock, 
-            $this->tblname.is_new,    
+            CASE WHEN {$newArrivalCondition} THEN 1 ELSE 0 END AS is_new,
              {$effectiveFields},
              (SELECT products_img.img FROM products_img WHERE products_img.product_id=$this->tblname.id ORDER BY sorder ASC, id DESC LIMIT 1) as img,
              (SELECT brands.title FROM brands WHERE brands.id=$this->tblname.brand_id) as brand_title,
@@ -2768,13 +2798,18 @@ if (client_uses_wholesale_prices()) {
         ");
         $this->db->join('products_img', 'products_img.product_id = products.id');
         $this->db->where("$this->tblname.isShown", 1);
-        $this->db->where('products.is_new', 1);
+        $this->db->where($newArrivalCondition, null, false);
        $this->applySellableCondition();
+        $this->applyAvailableStockCondition();
 
         $this->db->offset($offset);
         $this->db->limit($limit);
 
-        $this->db->order_by("products.stock DESC, products.sorder ASC, products.id DESC");
+        if ($this->db->field_exists('catalog_published_at', $this->tblname)) {
+            $this->db->order_by('products.catalog_published_at DESC, products.id DESC');
+        } else {
+            $this->db->order_by("products.stock DESC, products.sorder ASC, products.id DESC");
+        }
         $this->db->group_by("products.id");
         $products = $this->db->get($this->tblname)->result();
 

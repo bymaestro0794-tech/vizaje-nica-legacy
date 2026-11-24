@@ -35,16 +35,16 @@ class Site_themes extends BackEndController
 			}
 
 			$blackFridaySettings = array();
-			if ($themeKey === 'black_friday') {
+			if (in_array($themeKey, array('black_friday', 'red_friday'), true)) {
 				if (!$this->site_themes_model->isBlackFridaySettingsInstalled()) {
-					throw new Exception('Для темы Black Friday сначала примените database/patches/2026-11-16-black-friday-theme-settings.sql.');
+					throw new Exception('Для тем Black Friday и Red Friday сначала примените database/patches/2026-11-16-black-friday-theme-settings.sql.');
 				}
 
 				$timezone = new DateTimeZone('Europe/Bucharest');
 				$startsAt = $this->parseCampaignDateTime($this->input->post('black_friday_starts_at', true), $timezone);
 				$endsAt = $this->parseCampaignDateTime($this->input->post('black_friday_ends_at', true), $timezone);
 				if ($startsAt === null || $endsAt === null || $endsAt <= $startsAt) {
-					throw new Exception('Укажите корректные даты начала и окончания Black Friday. Окончание должно быть позже начала.');
+					throw new Exception('Укажите корректные даты начала и окончания акции. Окончание должно быть позже начала.');
 				}
 
 				$textRu = trim((string) $this->input->post('black_friday_text_ru', true));
@@ -70,8 +70,8 @@ class Site_themes extends BackEndController
 				throw new Exception('Выберите одну из подготовленных тем.');
 			}
 
-			$_SESSION['success'] = $themeKey === 'black_friday'
-				? 'Тема Black Friday и даты таймера сохранены.'
+			$_SESSION['success'] = in_array($themeKey, array('black_friday', 'red_friday'), true)
+				? 'Тема и настройки таймера сохранены.'
 				: 'Атмосфера сайта сохранена.';
 		} catch (Exception $e) {
 			log_message('error', 'Site theme save error: ' . $e->getMessage());

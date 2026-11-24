@@ -3,7 +3,7 @@
 
 	const drawer = document.querySelector('[data-cart-drawer]')
 
-	if (!drawer || !$) {
+	if (!drawer) {
 		return
 	}
 

@@ -163,6 +163,12 @@ class Products extends BackEndController
             if ($post['isGift'] === 1) {
                 $post['isShown'] = 0;
             }
+            if (
+                $this->db->field_exists('catalog_published_at', 'products')
+                && !empty($post['isShown'])
+            ) {
+                $post['catalog_published_at'] = date('Y-m-d H:i:s');
+            }
 
             if (array_key_exists('youtube_video_url', $post)) {
                 $youtubeUrl = trim((string) $post['youtube_video_url']);
@@ -325,6 +331,13 @@ class Products extends BackEndController
                 $post['isGift'] = !empty($post['isGift']) ? 1 : 0;
                 if ($post['isGift'] === 1) {
                     $post['isShown'] = 0;
+                }
+                if (
+                    $this->db->field_exists('catalog_published_at', 'products')
+                    && !empty($post['isShown'])
+                    && empty($item->catalog_published_at)
+                ) {
+                    $post['catalog_published_at'] = date('Y-m-d H:i:s');
                 }
 
                 if (array_key_exists('youtube_video_url', $post)) {

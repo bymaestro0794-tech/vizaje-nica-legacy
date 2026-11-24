@@ -572,7 +572,7 @@ if (strpos($currentView, 'pages/offers/') === 0) {
     }
 }
 
-if (!empty($is_privacy_policy_page)) {
+if (!empty($is_legal_document_page)) {
     $pageCss[] = 'app/css/style/36-privacy-policy.css';
 }
 
@@ -772,7 +772,7 @@ if (!empty($is_privacy_policy_page)) {
         <!-- App Loader -->
     <div class="app-loader" id="appLoader">
         <div class="app-loader__logo">
-            <img class="app-loader__img" src="<?= ($site_theme_key ?? 'default') === 'halloween' ? '/app/img/hollow.svg' : '/app/img/icons-2/logo-2.svg' ?>" alt="Vizaje-Nica">
+            <img class="app-loader__img" src="<?= ($site_theme_key ?? 'default') === 'halloween' ? '/app/img/hollow.svg' : ((($site_theme_key ?? 'default') === 'new_year') ? '/app/img/themes/new-year/logo-mark.png' : '/app/img/icons-2/logo-2.svg') ?>" alt="Vizaje-Nica">
         </div>
 
         <div class="app-loader__line"></div>

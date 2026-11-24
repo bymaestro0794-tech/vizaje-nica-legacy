@@ -86,12 +86,6 @@ class Offers_model extends BaseModel
             ->or_where('date_from', '')
             ->or_where('date_from', '0000-00-00')
             ->group_end();
-        $this->db->group_start()
-            ->where('date_to >=', $today)
-            ->or_where('date_to IS NULL', null, false)
-            ->or_where('date_to', '')
-            ->or_where('date_to', '0000-00-00')
-            ->group_end();
         return $this->db->get($this->tblname)->row();
     }
 

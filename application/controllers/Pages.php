@@ -373,8 +373,29 @@ class Pages extends FrontEndController
             && strpos($privacyPageUri, 'cookie') !== false
         ) || strpos($privacyPageTitle, 'конфиденциаль') !== false
             || strpos($privacyPageTitle, 'confiden') !== false;
+        $this->data['is_legal_document_page'] = $this->data['is_privacy_policy_page']
+            || in_array((int) $page->id, [10, 22], true)
+            || strpos($privacyPageUri, 'informatsiya-dlya-potrebiteley') !== false
+            || strpos($privacyPageUri, 'informatii-pentru-consumatori') !== false
+            || strpos($privacyPageUri, 'usloviya-i-polojeniya') !== false
+            || strpos($privacyPageUri, 'termeni-si-conditii') !== false;
+        if ($this->data['is_legal_document_page']) {
+            $this->data['body_class'] = trim(
+                trim((string) ($this->data['body_class'] ?? '')) . ' page-legal-document'
+            );
+        }
     
-        if (
+        if (in_array($privacyPageUri, array(
+            'informatsiya-dlya-potrebiteley',
+            'informatii-pentru-consumatori',
+        ), true)) {
+            $this->data['inner_view'] = 'pages/legal/consumer-information';
+        } elseif (in_array($privacyPageUri, array(
+            'usloviya-i-polojeniya',
+            'termeni-si-conditii',
+        ), true)) {
+            $this->data['inner_view'] = 'pages/legal/terms-and-conditions';
+        } elseif (
             $page->uri === 'pravila-primeneniya-promokoda'
             || $page->uri === 'reguli-aplicare-promocod'
         ) {

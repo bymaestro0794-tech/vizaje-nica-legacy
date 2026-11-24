@@ -69,6 +69,9 @@ $route['ro/parteneri/apply'] = 'frontend/creator_program/index';
 $route['ru/partners/apply/submit'] = 'frontend/creator_program/submit';
 $route['ro/parteneri/apply/submit'] = 'frontend/creator_program/submit';
 $route['creator-payouts/request'] = 'frontend/creator_payouts/request';
+$route[ADM_CONTROLLER . '/creator_feedback'] = 'backend/creator_feedback/index';
+$route[ADM_CONTROLLER . '/creator_feedback/view/(:num)'] = 'backend/creator_feedback/view/$1';
+$route[ADM_CONTROLLER . '/creator_feedback/update/(:num)'] = 'backend/creator_feedback/update/$1';
 
 // Legacy-hosted creator referral links and short-link redirects.
 $route['account/creator-link/dashboard'] = 'creator_referrals/dashboard';

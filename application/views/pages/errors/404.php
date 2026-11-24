@@ -3,6 +3,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 $isRomanian = $lclang === 'ro';
 $isHalloweenTheme = ($site_theme_key ?? 'default') === 'halloween';
+$isNewYearTheme = ($site_theme_key ?? 'default') === 'new_year';
 
 $homeUrl = '/' . $lclang;
 
@@ -13,10 +14,10 @@ $catalogUrl = '/' . $lclang . '/' . (
 );
 
 $errorImage = $isHalloweenTheme
-    ? '/app/img/not-found/hellowen-not-found.png'
-    : '/app/img/404.png';
-$errorImageWidth = $isHalloweenTheme ? 1953 : 4200;
-$errorImageHeight = $isHalloweenTheme ? 805 : 1800;
+	? '/app/img/not-found/hellowen-not-found.png'
+	: ($isNewYearTheme ? '/app/img/not-found/new-year-404.png' : '/app/img/404.png');
+$errorImageWidth = $isHalloweenTheme ? 1953 : ($isNewYearTheme ? 2170 : 4200);
+$errorImageHeight = $isHalloweenTheme ? 805 : ($isNewYearTheme ? 725 : 1800);
 
 /*
  * Фирменный знак Vizaje-Nica между разделительными линиями.

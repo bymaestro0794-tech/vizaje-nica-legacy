@@ -327,6 +327,19 @@ class FrontEndController extends CI_Controller
     protected function _render()
     {
         $currentView = trim((string) ($this->data['inner_view'] ?? ''), '/');
+        $this->data['has_blog_articles'] = false;
+        try {
+            if (!isset($this->articles_model)) {
+                $this->load->model('articles_model');
+            }
+            $this->data['has_blog_articles'] = $this->articles_model->get_blog_article_count() > 0;
+        } catch (Throwable $exception) {
+            // An unavailable blog must never prevent the storefront shell from rendering.
+            if (function_exists('log_message')) {
+                log_message('error', 'Frontend footer blog availability check failed.');
+            }
+        }
+
         $headerPromoExcludedViews = array(
             'pages/cart/checkout',
             'pages/cart/success',
@@ -341,7 +354,7 @@ class FrontEndController extends CI_Controller
             && !in_array($currentView, $headerPromoExcludedViews, true)
         ) {
             $this->load->model('products_model');
-            $cacheKey = 'header_discount_' . strtolower($this->clang)
+            $cacheKey = 'header_discount_v2_' . strtolower($this->clang)
                 . (client_uses_wholesale_prices() ? '_wholesale' : '_retail');
 
             $this->data['header_discount_products'] = $this->_frontend_cached(

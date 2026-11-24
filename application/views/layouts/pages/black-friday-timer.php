@@ -5,6 +5,7 @@ $campaign = !empty($black_friday_campaign) && is_array($black_friday_campaign)
 	? $black_friday_campaign
 	: array();
 $isRomanian = strtolower(trim((string) ($lclang ?? 'ru'))) === 'ro';
+$campaignName = ($site_theme_key ?? '') === 'red_friday' ? 'Red Friday' : 'Black Friday';
 $campaignText = trim((string) ($campaign[$isRomanian ? 'text_ro' : 'text_ru'] ?? ''));
 $endsAt = (int) ($campaign['ends_at'] ?? 0);
 $variant = !empty($black_friday_timer_variant) && $black_friday_timer_variant === 'header'
@@ -20,7 +21,7 @@ if ($campaignText === '' || $endsAt <= 0) {
 	data-black-friday-timer
 	data-ends-at="<?= $endsAt ?>"
 	data-day-label="<?= $isRomanian ? 'z' : 'д' ?>"
-	aria-label="<?= $isRomanian ? 'Promoția Black Friday se încheie în' : 'До окончания акции Black Friday' ?>"
+	aria-label="<?= htmlspecialchars($isRomanian ? 'Promoția ' . $campaignName . ' se încheie în' : 'До окончания акции ' . $campaignName, ENT_QUOTES, 'UTF-8') ?>"
 >
 	<?php if ($variant === 'header') : ?>
 		<span class="black-friday-countdown__header-line">

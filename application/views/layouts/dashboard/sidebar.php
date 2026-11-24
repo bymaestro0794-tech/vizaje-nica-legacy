@@ -10,6 +10,7 @@ $feedback_count = $new_feedback_count > 0
     : '';
 $creator_program_pending_count = max(0, (int) ($creator_program_pending_count ?? 0));
 $creator_payout_pending_count = max(0, (int) ($creator_payout_pending_count ?? 0));
+$creator_feedback_pending_count = max(0, (int) ($creator_feedback_pending_count ?? 0));
 
 $sidebar_menu = array(
     'menu' => array('name' => lang("Menu"), 'ico' => '<i class="fa fa-bars"></i>'),
@@ -57,6 +58,12 @@ $sidebar_menu = array(
                 'ico' => '<i class="fa fa-credit-card"></i>',
                 'badge' => 'success',
                 'badge_value' => $creator_payout_pending_count,
+            ),
+            'creator_feedback' => array(
+                'name' => 'Обращения креаторов',
+                'ico' => '<i class="fa fa-comments-o"></i>',
+                'badge' => 'warning',
+                'badge_value' => $creator_feedback_pending_count,
             ),
         ),
     ),

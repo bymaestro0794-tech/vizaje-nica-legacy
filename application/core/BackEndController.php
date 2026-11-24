@@ -149,5 +149,14 @@ class BackEndController extends CI_Controller
                 ->row();
             $this->data['creator_payout_pending_count'] = $row ? (int) $row->total : 0;
         }
+
+        $this->data['creator_feedback_pending_count'] = 0;
+        if ($this->db->table_exists('creator_feedback_messages')) {
+            $row = $this->db->select('COUNT(*) AS total', false)
+                ->where('status', 'new')
+                ->get('creator_feedback_messages')
+                ->row();
+            $this->data['creator_feedback_pending_count'] = $row ? (int) $row->total : 0;
+        }
     }
 }

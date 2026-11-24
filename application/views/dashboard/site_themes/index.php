@@ -58,6 +58,7 @@
     }
     .site-theme-swatch--halloween { background: linear-gradient(90deg, #f97316 0 50%, #21130d 50%); }
     .site-theme-swatch--black_friday { background: linear-gradient(90deg, #000 0 50%, #FFE600 50%); }
+    .site-theme-swatch--red_friday { background: linear-gradient(90deg, #000 0 50%, #D7193F 50%); }
     .site-theme-swatch--easter { background: linear-gradient(90deg, #a78bfa 0 50%, #78a878 50%); }
     .site-theme-swatch--valentine { background: linear-gradient(90deg, #e85d75 0 50%, #8e2338 50%); }
     .site-theme-swatch--new_year {
@@ -214,9 +215,9 @@
             <section
                 class="black-friday-settings"
                 data-black-friday-settings
-                <?= $active_theme_key === 'black_friday' ? '' : 'hidden' ?>
+                <?= in_array($active_theme_key, array('black_friday', 'red_friday'), true) ? '' : 'hidden' ?>
             >
-                <h3>Объявление и таймер Black Friday</h3>
+                <h3 data-campaign-settings-title><?= $active_theme_key === 'red_friday' ? 'Объявление и таймер Red Friday' : 'Объявление и таймер Black Friday' ?></h3>
                 <?php if (!$blackFridaySettingsInstalled) : ?>
                     <div class="alert alert-warning">
                         Для сохранения этих настроек сначала примените SQL-патч
@@ -304,10 +305,13 @@
 
     const updateBlackFridayFields = () => {
         const selected = choices.find(choice => choice.checked)
-        const isBlackFriday = selected?.value === 'black_friday'
-        settings.hidden = !isBlackFriday
+        const isCampaignTheme = ['black_friday', 'red_friday'].includes(selected?.value)
+        settings.hidden = !isCampaignTheme
+        settings.querySelector('[data-campaign-settings-title]').textContent = selected?.value === 'red_friday'
+            ? 'Объявление и таймер Red Friday'
+            : 'Объявление и таймер Black Friday'
         fields.forEach(field => {
-            field.required = Boolean(isBlackFriday && hasBlackFridaySettings)
+            field.required = Boolean(isCampaignTheme && hasBlackFridaySettings)
         })
     }
 

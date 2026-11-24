@@ -25,15 +25,23 @@ $footerMenuFirst = [
 ];
 
 $footerMenuSecond = [
-    $menu['bottom'][29] ?? null,
     $menu['bottom'][9] ?? null,
     $menu['bottom'][30] ?? null,
 ];
 
+$consumerInfoFooterLink = $menu['bottom'][10] ?? (object) [
+    'uri' => $isRomanian ? 'informatie-pentru-consumatori' : 'informatsiya-dlya-potrebiteley',
+    'title' => $isRomanian ? 'Informaţie pentru Consumatori' : 'Информация для потребителей',
+];
+$termsFooterLink = $menu['bottom'][22] ?? (object) [
+    'uri' => $isRomanian ? 'termeni-si-conditii' : 'usloviya-i-polojeniya',
+    'title' => $isRomanian ? 'Termeni și condiții' : 'Условия и положения',
+];
+
 $footerMenuThird = [
+    $consumerInfoFooterLink,
+    $termsFooterLink,
     $menu['bottom'][11] ?? null,
-    $menu['bottom'][10] ?? null,
-    $menu['bottom'][22] ?? null,
     $menu['bottom'][23] ?? null,
 ];
 
@@ -69,6 +77,7 @@ $offersFooterUri = !empty($menu['all'][9]->uri)
 $newsFooterUri = !empty($menu['all'][37]->uri)
     ? trim((string) $menu['all'][37]->uri, '/')
     : ($isRomanian ? 'noutati' : 'novosti');
+$hasBlogArticles = !empty($has_blog_articles);
 $footerDiscoveryLinks = [
     [
         'title' => $isRomanian ? 'Promoții' : 'Акции',
@@ -83,14 +92,16 @@ $footerDiscoveryLinks = [
         'url' => '/' . $lclang . '/' . $newsFooterUri,
     ],
     [
-        'title' => $isRomanian ? 'Blog' : 'Блог',
-        'url' => '/' . $lclang . '/blog',
-    ],
-    [
         'title' => $isRomanian ? 'Programul de parteneriat' : 'Партнёрская программа',
         'url' => '/' . $lclang . '/' . ($isRomanian ? 'parteneri' : 'partners'),
     ],
 ];
+if ($hasBlogArticles) {
+    array_splice($footerDiscoveryLinks, 3, 0, [[
+        'title' => $isRomanian ? 'Blog' : 'Блог',
+        'url' => '/' . $lclang . '/blog',
+    ]]);
+}
 ?>
 
 <footer class="footer footer--storefront">
@@ -175,9 +186,6 @@ $footerDiscoveryLinks = [
                             >
                                 <?= $certificatesTitle ?>
                             </a>
-                        </li>
-                        <li class="main-footer__item">
-                            <?php $this->load->view('partials/site-feedback'); ?>
                         </li>
                     </ul>
                 </div>

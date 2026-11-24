@@ -1,4 +1,10 @@
-<?php $isHalloweenTheme = ($site_theme_key ?? 'default') === 'halloween'; ?>
+<?php
+$isHalloweenTheme = ($site_theme_key ?? 'default') === 'halloween';
+$isNewYearTheme = ($site_theme_key ?? 'default') === 'new_year';
+$checkoutHeaderLogo = $isHalloweenTheme
+    ? '/app/img/hellowen-logo.png'
+    : ($isNewYearTheme ? '/app/img/themes/new-year/logo-wordmark.png' : '/app/img/logo_v.png');
+?>
 <div class="mini-header">
     <div class="mini-header__container _container-mini">
         <div class="mini-header__column _left">
@@ -8,15 +14,17 @@
                     <img src="/app/img/icons/back.svg" alt="Back"></picture>
             </a>
         </div>
-        <a href="/<?= $lclang ?>" class="mini-header__logo<?= $isHalloweenTheme ? ' mini-header__logo--halloween' : '' ?>">
+        <a href="/<?= $lclang ?>" class="mini-header__logo<?= $isHalloweenTheme ? ' mini-header__logo--halloween' : ($isNewYearTheme ? ' mini-header__logo--new-year' : '') ?>">
             <picture>
-                <?php if (!$isHalloweenTheme) : ?>
+                <?php if (!$isHalloweenTheme && !$isNewYearTheme) : ?>
                     <source srcset="/app/img/logo_v.webp" type="image/webp">
                 <?php endif; ?>
-                <img src="<?= $isHalloweenTheme ? '/app/img/hellowen-logo.png' : '/app/img/logo_v.png' ?>" alt="Vizaje-Nica" class="mini-header__logo_pc"></picture>
+                <img src="<?= $checkoutHeaderLogo ?>" alt="Vizaje-Nica" class="mini-header__logo_pc"></picture>
             <picture>
-                <source srcset="/app/img/mini-logo.svg" type="image/webp">
-                <img src="/app/img/mini-logo.svg" alt="Logo" class="mini-header__logo_mob"></picture>
+                <?php if (!$isNewYearTheme) : ?>
+                    <source srcset="/app/img/mini-logo.svg" type="image/webp">
+                <?php endif; ?>
+                <img src="<?= $isNewYearTheme ? '/app/img/themes/new-year/logo-mark.png' : '/app/img/mini-logo.svg' ?>" alt="Logo" class="mini-header__logo_mob"></picture>
         </a>
         <div class="mini-header__column _right">
             <div class="mini-header__language language-main-header">

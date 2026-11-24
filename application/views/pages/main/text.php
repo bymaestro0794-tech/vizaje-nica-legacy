@@ -1,6 +1,8 @@
 <?php
 $isPrivacyPolicyPage = !empty($is_privacy_policy_page);
+$isLegalDocumentPage = !empty($is_legal_document_page);
 $privacyPolicyText = (string) $page->text;
+$legalDocumentText = '';
 $privacyTocItems = [];
 
 if ($isPrivacyPolicyPage) {
@@ -9,6 +11,35 @@ if ($isPrivacyPolicyPage) {
             ? $page->desc
             : $page->text
     );
+
+    // Replace the legacy garbled creator-attribution block by its localized copy.
+    $attributionMarker = '<!--creator-attribution-privacy-cookie-' . ($lclang === 'ro' ? 'ro' : 'ru') . '-v1-->';
+    $markerPosition = strpos($privacyPolicyText, $attributionMarker);
+    if ($markerPosition !== false) {
+        $sectionStart = strripos(substr($privacyPolicyText, 0, $markerPosition), '<section');
+        if ($sectionStart !== false) {
+            if ($lclang === 'ro') {
+                $replacementSection = '<section><h2>Atribuirea comenzilor prin linkurile creatorilor</h2>'
+                    . '<p>Dacă accesați site-ul prin linkul personal al unui creator, păstrăm identificatorul linkului în sesiunea serverului. Astfel, cel mult o comandă ulterioară poate fi asociată creatorului respectiv în termen de 7 zile de la accesare. Asocierea este folosită pentru calcularea comisionului creatorului după finalizarea comenzii cu statutul „Închis”.</p>'
+                    . '<p>Perioada de atribuire se încheie după prima comandă sau după 7 zile. Alegerea setărilor pentru cookie-urile de analiză și publicitate nu schimbă această atribuire. Dacă sesiunea site-ului se încheie sau cookie-urile site-ului sunt dezactivate ori șterse, accesarea poate să nu fie păstrată.</p>'
+                    . '<p>Fiecare accesare a linkului scurt mărește contorul total afișat în cabinetul creatorului; acesta nu reprezintă numărul persoanelor unice. Identificatorul linkului nu este transmis platformelor externe de publicitate sau analiză. Înregistrarea atribuirii nu stochează adresa IP sau user-agent-ul. După asocierea cu o comandă, legătura cu creatorul se păstrează împreună cu datele comenzii conform termenelor de păstrare pentru comenzi și decontări.</p>'
+                    . '<h3>Informații despre sesiune și cookie-uri</h3>'
+                    . '<p>Pentru menținerea sesiunii, site-ul folosește propriul identificator tehnic de sesiune. Identificatorul linkului și perioada de atribuire sunt păstrate pe server; pentru atribuire nu se utilizează un cookie separat de publicitate sau analiză. Setările cookie-urilor de analiză și marketing nu dezactivează această funcție.</p></section>';
+            } else {
+                $replacementSection = '<section><h2>Атрибуция заказов по ссылкам креаторов</h2>'
+                    . '<p>Если вы переходите на сайт по персональной ссылке креатора, мы сохраняем идентификатор ссылки в серверной сессии сайта. Это позволяет связать не более одного последующего заказа с соответствующим креатором в течение 7 дней после перехода. Связь используется для расчёта вознаграждения креатора после завершения заказа со статусом «Закрыт».</p>'
+                    . '<p>Срок атрибуции истекает после первого заказа или через 7 дней. Выбор настроек аналитических и рекламных cookies не меняет эту атрибуцию. Если сессия сайта завершится или cookies сайта будут отключены либо удалены, переход может не сохраниться.</p>'
+                    . '<p>Каждый переход по короткой ссылке увеличивает её общий счётчик в кабинете креатора; он не является подсчётом уникальных людей. Идентификатор ссылки не передаётся внешним рекламным или аналитическим платформам. В записи атрибуции не сохраняются IP-адрес и user-agent. После привязки к заказу связь с креатором хранится вместе с данными заказа в соответствии со сроками хранения заказов и расчётов.</p>'
+                    . '<h3>Сведения о сессии и cookies</h3>'
+                    . '<p>Для сохранения сессии сайт использует собственный технический идентификатор сессии. Идентификатор ссылки и срок её действия хранятся на сервере; отдельная рекламная или аналитическая cookie для атрибуции не используется. Настройки аналитических и маркетинговых cookies не отключают эту функцию.</p></section>';
+            }
+            $sectionEnd = strpos($privacyPolicyText, '</section>', $markerPosition);
+            $sectionEnd = $sectionEnd === false ? $markerPosition : $sectionEnd + strlen('</section>');
+            $privacyPolicyText = substr($privacyPolicyText, 0, $sectionStart)
+                . $replacementSection
+                . substr($privacyPolicyText, $sectionEnd + strlen($attributionMarker));
+        }
+    }
 
     // The policy content contains its own title and update date. They are
     // rendered in the dedicated page header below, so avoid showing them twice.
@@ -92,8 +123,18 @@ if ($isPrivacyPolicyPage) {
         ];
     }
 }
+
+if ($isLegalDocumentPage && !$isPrivacyPolicyPage) {
+    $legalDocumentText = trim((string) $page->desc . "\n" . (string) $page->text);
+    $legalDocumentText = preg_replace(
+        '/<(h1|h2|p)\b[^>]*>\s*' . preg_quote(trim((string) $page_name), '/') . '\s*<\/\1>/iu',
+        '',
+        $legalDocumentText,
+        1
+    );
+}
 ?>
-<main class="page<?= $isPrivacyPolicyPage ? ' page--privacy-policy' : '' ?>">
+<main class="page<?= $isPrivacyPolicyPage ? ' page--privacy-policy' : ($isLegalDocumentPage ? ' page--legal-document' : '') ?>">
     <?php if (!$isPrivacyPolicyPage) : ?>
         <section class="breacrums">
             <div class="breacrums__container _container">
@@ -108,8 +149,8 @@ if ($isPrivacyPolicyPage) {
             </div>
         </section>
     <?php endif; ?>
-    <section class="catalog<?= $isPrivacyPolicyPage ? ' privacy-policy-page' : '' ?>">
-        <div class="catalog__container _container<?= $isPrivacyPolicyPage ? ' privacy-policy__container' : '' ?>">
+    <section class="catalog<?= $isPrivacyPolicyPage ? ' privacy-policy-page' : ($isLegalDocumentPage ? ' legal-document-page' : '') ?>">
+        <div class="catalog__container _container<?= $isPrivacyPolicyPage ? ' privacy-policy__container' : ($isLegalDocumentPage ? ' legal-document__container' : '') ?>">
             <?php if ($isPrivacyPolicyPage) : ?>
                 <header class="privacy-policy__header">
                     <h1 class="privacy-policy__title"><?= htmlspecialchars($page_name, ENT_QUOTES, 'UTF-8') ?></h1>
@@ -152,6 +193,13 @@ if ($isPrivacyPolicyPage) {
                         <?= $privacyPolicyText ?>
                     </article>
                 </div>
+            <?php elseif ($isLegalDocumentPage) : ?>
+                <header class="legal-document__header">
+                    <h1 class="legal-document__title"><?= htmlspecialchars($page_name, ENT_QUOTES, 'UTF-8') ?></h1>
+                </header>
+                <article class="legal-document__body">
+                    <?= $legalDocumentText ?>
+                </article>
             <?php else : ?>
                 <div class="catalog__head head-catalog">
                     <h2 class="head-catalog__title"><?= $page_name ?></h2>

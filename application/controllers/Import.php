@@ -318,6 +318,9 @@ class Import extends CI_Controller
                     'uriEN' => transliteration($value->ID_nom),
                     'isShown' => 1,
                 );
+                if ($this->db->field_exists('catalog_published_at', 'products')) {
+                    $data['catalog_published_at'] = date('Y-m-d H:i:s');
+                }
                 $data = $this->addSeoFieldsFromFeed($data, $value);
                 $this->db->insert('products', $data);
                 $id_prod =$this->db->insert_id();

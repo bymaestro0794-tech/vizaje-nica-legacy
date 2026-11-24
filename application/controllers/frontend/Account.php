@@ -68,6 +68,8 @@ class Account extends FrontEndController
         $this->data['creator_payout_available_balance'] = 0;
         $this->data['creator_payout_csrf'] = '';
         $this->data['creator_payout_notice'] = '';
+        $this->data['creator_feedback_csrf'] = '';
+        $this->data['creator_feedback_notice'] = '';
         if (!empty($this->data['client_info']->is_creator)) {
             $this->load->model('legacy_creator_attribution_model');
             $this->data['creator_referral_orders_available'] = $this->legacy_creator_attribution_model->isAvailable();
@@ -84,10 +86,15 @@ class Account extends FrontEndController
             if (session_status() === PHP_SESSION_ACTIVE) {
                 if (empty($_SESSION['creator_payout_csrf'])) $_SESSION['creator_payout_csrf'] = bin2hex(random_bytes(32));
                 $this->data['creator_payout_csrf'] = $_SESSION['creator_payout_csrf'];
+                if (empty($_SESSION['creator_feedback_csrf'])) $_SESSION['creator_feedback_csrf'] = bin2hex(random_bytes(32));
+                $this->data['creator_feedback_csrf'] = $_SESSION['creator_feedback_csrf'];
             }
             $payoutNotice = (string) $this->input->get('payout', true);
             $allowedPayoutNotices = array('created', 'pending_exists', 'not_creator', 'unavailable', 'error', 'invalid', 'insufficient_balance');
             if (in_array($payoutNotice, $allowedPayoutNotices, true)) $this->data['creator_payout_notice'] = $payoutNotice;
+            $feedbackNotice = (string) $this->input->get('creator_feedback', true);
+            $allowedFeedbackNotices = array('sent', 'unavailable', 'invalid', 'error');
+            if (in_array($feedbackNotice, $allowedFeedbackNotices, true)) $this->data['creator_feedback_notice'] = $feedbackNotice;
         }
 
         $orders = $this->orders_model->get_client_orders($this->data['client_info']->id, $this->clang);
@@ -102,7 +109,29 @@ class Account extends FrontEndController
                 $post[$index] = $this->input->post($index);
             }
 
-            if (!empty($post['personal_data_request'])) {
+            if (!empty($post['creator_feedback_submit'])) {
+                $feedbackType = trim((string) ($post['creator_feedback_type'] ?? ''));
+                $feedbackMessage = trim((string) ($post['creator_feedback_message'] ?? ''));
+                $expectedCsrf = (string) ($_SESSION['creator_feedback_csrf'] ?? '');
+                $actualCsrf = (string) $this->input->post('creator_feedback_csrf', false);
+                $validFeedbackTypes = array('links', 'orders', 'commission', 'payout', 'account', 'other');
+                if (empty($this->data['client_info']->is_creator)
+                    || $expectedCsrf === '' || $actualCsrf === '' || !hash_equals($expectedCsrf, $actualCsrf)) {
+                    show_error('Invalid request token', 403);
+                } elseif (!in_array($feedbackType, $validFeedbackTypes, true)
+                    || $feedbackMessage === '' || mb_strlen($feedbackMessage, 'UTF-8') > 4000) {
+                    $this->data['creator_feedback_notice'] = 'invalid';
+                } else {
+                    $this->load->model('creator_feedback_model');
+                    $feedbackResult = $this->creator_feedback_model->submit($this->data['client_info'], $feedbackType, $feedbackMessage, $this->lclang);
+                    $this->data['creator_feedback_notice'] = $feedbackResult === 'created'
+                        ? 'sent'
+                        : ($feedbackResult === 'unavailable' ? 'unavailable' : 'error');
+                }
+                $accountUri = $this->data['menu']['all'][15]->uri ?? ($this->lclang === 'ro' ? 'contul-meu' : 'lichnyiy-kabinet');
+                redirect('/' . $this->lclang . '/' . $accountUri . '?creator&creator_feedback=' . rawurlencode($this->data['creator_feedback_notice'] ?: 'error'));
+                return;
+            } elseif (!empty($post['personal_data_request'])) {
                 $requestType = trim((string) ($post['request_type'] ?? ''));
                 $requestDetails = trim((string) ($post['request_details'] ?? ''));
                 $allowedRequestTypes = array('access', 'correction', 'erasure', 'restriction', 'objection');

@@ -20,40 +20,20 @@ class Analytics extends BackEndController
         $this->data['period'] = $period;
         $this->data['period_label'] = $this->period_label($period);
         $this->data['range_label'] = $range['date_from'] . ' — ' . $range['date_to'];
-        $this->data['analytics_data_url'] = '/' . ADM_CONTROLLER . '/analytics/data?period=' . rawurlencode($period);
-
-        $this->data['inner_view'] = $this->index_view;
-        $this->load->vars($this->data);
-        $this->load->view($this->main_layout);
-    }
-
-    /** Load sales tables separately so the admin shell can render first. */
-    public function data()
-    {
-        $period = $this->normalize_period($this->input->get('period', true));
-        $range = $this->period_range($period);
         $from = new DateTime($range['date_from']);
         $to = new DateTime($range['date_to']);
         $groupBy = (int) $from->diff($to)->days <= 90 ? 'day' : 'month';
 
-        $analytics = $this->analytics_model->get_popular_sales_dashboard(
+        $this->data['group_by'] = $groupBy;
+        $this->data['analytics'] = $this->analytics_model->get_popular_sales_dashboard(
             $range['from_datetime'],
             $range['to_datetime'],
             $groupBy
         );
 
-        $html = $this->load->view('dashboard/analytics/_sales_data', array(
-            'analytics' => $analytics,
-            'group_by' => $groupBy,
-        ), true);
-
-        $this->output
-            ->set_content_type('application/json', 'utf-8')
-            ->set_output(json_encode(array(
-                'ok' => true,
-                'html' => $html,
-                'range_label' => $range['date_from'] . ' — ' . $range['date_to'],
-            ), JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
+        $this->data['inner_view'] = $this->index_view;
+        $this->load->vars($this->data);
+        $this->load->view($this->main_layout);
     }
 
     public function funnel()

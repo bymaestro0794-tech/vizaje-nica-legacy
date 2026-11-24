@@ -78,6 +78,9 @@ class Offers extends FrontEndController
 
         $offer = $this->offers_model->get_offers_data_by_uri($this->clang, $this->uri3);
         if (empty($offer)) throw_on_404();
+        $offer->is_expired = !empty($offer->date_to)
+            && $offer->date_to !== '0000-00-00'
+            && $offer->date_to < date('Y-m-d');
 
         $this->breadcrumbs[] = $this->_generate_bc_data($page->title, $page->uri);
 
@@ -91,8 +94,10 @@ class Offers extends FrontEndController
         if (empty($pagination_nr) || $pagination_nr < 1) $pagination_nr = 1;
         $start = ($pagination_nr - 1) * $this->per_page;
 
-        $product_all = $this->products_model->get_all_products_offers($offer->id);
-        $products = $this->products_model->get_products_offers_pag($this->clang, $start, $this->per_page, $offer->id);
+        $product_all = $offer->is_expired ? array() : $this->products_model->get_all_products_offers($offer->id);
+        $products = $offer->is_expired
+            ? array()
+            : $this->products_model->get_products_offers_pag($this->clang, $start, $this->per_page, $offer->id);
         $count = count($product_all);
 
         $uri_parts = explode('?', $_SERVER['REQUEST_URI'], 2);

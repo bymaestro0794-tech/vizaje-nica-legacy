@@ -13,8 +13,8 @@ class Site_themes_model extends CI_Model
 			),
 			'new_year' => array(
 				'name' => 'Новый год',
-				'description' => 'Зимний сине-фиолетовый градиент и праздничный акцент.',
-				'preview' => 'Ледяной синий + ночной индиго',
+				'description' => 'Ночное зимнее небо, мягкий снег и ледяные акценты.',
+				'preview' => 'Ночной синий + лёд и шампань',
 			),
 			'halloween' => array(
 				'name' => 'Хэллоуин',
@@ -25,6 +25,11 @@ class Site_themes_model extends CI_Model
 				'name' => 'Black Friday',
 				'description' => 'Чёрная верхняя плашка, жёлтые акценты и таймер акции.',
 				'preview' => 'Чёрный + #FFE600',
+			),
+			'red_friday' => array(
+				'name' => 'Red Friday',
+				'description' => 'Оформление Black Friday с насыщенными красными акцентами.',
+				'preview' => 'Чёрный + красный',
 			),
 		);
 	}
@@ -105,7 +110,7 @@ class Site_themes_model extends CI_Model
 	public function getActiveBlackFridayCampaign(array $settings = null)
 	{
 		$settings = $settings === null ? $this->getThemeSettings() : $settings;
-		if (($settings['theme_key'] ?? '') !== 'black_friday') {
+		if (!in_array(($settings['theme_key'] ?? ''), array('black_friday', 'red_friday'), true)) {
 			return null;
 		}
 		if (!$this->isBlackFridaySettingsInstalled()) {
@@ -177,7 +182,7 @@ class Site_themes_model extends CI_Model
 			'updated_at' => gmdate('Y-m-d H:i:s'),
 		);
 
-		if ($themeKey === 'black_friday') {
+		if (in_array($themeKey, array('black_friday', 'red_friday'), true)) {
 			if (!$this->isBlackFridaySettingsInstalled()) {
 				return false;
 			}
