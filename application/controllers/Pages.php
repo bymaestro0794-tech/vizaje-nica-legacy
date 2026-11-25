@@ -374,11 +374,12 @@ class Pages extends FrontEndController
         ) || strpos($privacyPageTitle, 'конфиденциаль') !== false
             || strpos($privacyPageTitle, 'confiden') !== false;
         $this->data['is_legal_document_page'] = $this->data['is_privacy_policy_page']
-            || in_array((int) $page->id, [10, 22], true)
+            || in_array((int) $page->id, [10, 22, 32], true)
             || strpos($privacyPageUri, 'informatsiya-dlya-potrebiteley') !== false
             || strpos($privacyPageUri, 'informatii-pentru-consumatori') !== false
             || strpos($privacyPageUri, 'usloviya-i-polojeniya') !== false
-            || strpos($privacyPageUri, 'termeni-si-conditii') !== false;
+            || strpos($privacyPageUri, 'termeni-si-conditii') !== false
+            || in_array($privacyPageUri, ['sertifikatyi', 'certificate'], true);
         if ($this->data['is_legal_document_page']) {
             $this->data['body_class'] = trim(
                 trim((string) ($this->data['body_class'] ?? '')) . ' page-legal-document'

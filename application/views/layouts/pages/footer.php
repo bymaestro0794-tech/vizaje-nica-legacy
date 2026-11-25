@@ -163,11 +163,9 @@ if ($hasBlogArticles) {
 
                             <li class="main-footer__item">
                                 <a
-                                    href="/<?= $lclang ?>/<?= htmlspecialchars(
-                                        $menuItem->uri,
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>"
+                                    href="<?= (int) ($menuItem->id ?? 0) === 31
+                                        ? ($isRomanian ? '/ro/catalog/certificate' : '/ru/katalog/sertifikatyi')
+                                        : '/' . $lclang . '/' . htmlspecialchars($menuItem->uri, ENT_QUOTES, 'UTF-8') ?>"
                                     class="main-footer__link"
                                 >
                                     <?= htmlspecialchars(

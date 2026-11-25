@@ -106,6 +106,20 @@ class Products_model extends BaseModel
         }
     }
 
+    /** Exclude brands whose pages/products are no longer part of sale placements. */
+    private function applyExcludedSaleBrandCondition()
+    {
+        $this->db->where("products.brand_id NOT IN (
+            SELECT excluded_sale_brands.id
+            FROM brands excluded_sale_brands
+            WHERE LOWER(TRIM(excluded_sale_brands.title)) IN (
+                'makeup revolution',
+                'nouba',
+                'vera'
+            )
+        )", null, false);
+    }
+
     private function applySellableCondition($includeGiftProducts = false)
     {
         if (!$includeGiftProducts) {
@@ -2223,6 +2237,7 @@ if (client_uses_wholesale_prices()) {
         $this->applyAvailableStockCondition();
 
         $this->db->where('products.discount_price >', 1);
+        $this->applyExcludedSaleBrandCondition();
         $this->db->offset(0);
         $limit = max(1, min(20, (int) $limit));
         $this->db->limit(min(120, max(60, $limit * 6)));
@@ -2301,6 +2316,7 @@ if (client_uses_wholesale_prices()) {
         $this->db->where('products.discount_price >', 0);
         $this->db->where("products.discount_price < products.price", null, false);
         $this->db->where('products.price >', 0);
+        $this->applyExcludedSaleBrandCondition();
         $this->db->where("categories.uri{$lang} != ''", null, false);
         $this->db->where("products.uri{$lang} != ''", null, false);
         $this->db->where("EXISTS (
@@ -3419,6 +3435,7 @@ if (client_uses_wholesale_prices()) {
 
         if (!empty($_GET['discounted'])) {
             $this->db->where('products.discount_price >', 0);
+            $this->applyExcludedSaleBrandCondition();
         }
 
         if (!empty($_GET['feature']) && is_array($_GET['feature'])) {
