@@ -7,6 +7,7 @@ class Products_model extends BaseModel
     protected $shop_type = 'shop_type';
     protected $shop_feature = 'shop_feature';
     protected $feature_items = 'shop_feature_values';
+    private $nonOrderableBrandNames = array('makeup revolution', 'nouba', 'vera');
     private $productCardOptionsCache = array();
     private $productCardCategoryTypeCache = array();
 
@@ -109,15 +110,45 @@ class Products_model extends BaseModel
     /** Exclude brands whose pages/products are no longer part of sale placements. */
     private function applyExcludedSaleBrandCondition()
     {
-        $this->db->where("products.brand_id NOT IN (
-            SELECT excluded_sale_brands.id
-            FROM brands excluded_sale_brands
-            WHERE LOWER(TRIM(excluded_sale_brands.title)) IN (
-                'makeup revolution',
-                'nouba',
-                'vera'
-            )
-        )", null, false);
+        $this->db->where('NOT ' . $this->getNonOrderableBrandCondition(), null, false);
+    }
+
+    private function getNonOrderableBrandCondition($productAlias = 'products')
+    {
+        $brandNames = array_map(array($this->db, 'escape'), $this->nonOrderableBrandNames);
+
+        return "EXISTS (
+            SELECT 1
+            FROM brands blocked_order_brand
+            WHERE blocked_order_brand.id = {$productAlias}.brand_id
+              AND LOWER(TRIM(blocked_order_brand.title)) IN (" . implode(', ', $brandNames) . ")
+        )";
+    }
+
+    public function isNonOrderableBrand($brandTitle)
+    {
+        $brandTitle = function_exists('mb_strtolower')
+            ? mb_strtolower(trim((string) $brandTitle), 'UTF-8')
+            : strtolower(trim((string) $brandTitle));
+
+        return in_array($brandTitle, $this->nonOrderableBrandNames, true);
+    }
+
+    private function isNonOrderableProduct($productId)
+    {
+        return (bool) $this->db
+            ->select('products.id')
+            ->from('products')
+            ->where('products.id', (int) $productId)
+            ->where($this->getNonOrderableBrandCondition(), null, false)
+            ->limit(1)
+            ->get()
+            ->row();
+    }
+
+    public function isNonOrderableProductId($productId)
+    {
+        return $this->isNonOrderableProduct($productId);
     }
 
     private function applySellableCondition($includeGiftProducts = false)
@@ -138,6 +169,7 @@ class Products_model extends BaseModel
     private function applyAvailableStockCondition()
     {
         $this->applyPublicProductCondition();
+        $this->db->where('NOT ' . $this->getNonOrderableBrandCondition(), null, false);
 
         if (client_uses_wholesale_prices()) {
             $this->db->where("(
@@ -701,7 +733,13 @@ public function get_product_by_id_for_quick_view(
     {
         $id = (int)$id;
 
-        $item = $this->db->where('id', $id)->get($this->tblname)->row();
+        $item = $this->db
+            ->select("products.*, brands.title AS brand_title, CASE WHEN " . $this->getNonOrderableBrandCondition() . " THEN 1 ELSE 0 END AS is_order_blocked", false)
+            ->from('products')
+            ->join('brands', 'brands.id = products.brand_id', 'left')
+            ->where('products.id', $id)
+            ->get()
+            ->row();
         if (!empty($item)) {
             return $item;
         } else {
@@ -735,8 +773,9 @@ public function get_product_by_id_for_quick_view(
             $this->tblname.priceWH,
             $this->tblname.discount_price,
             $this->tblname.sale_percent,
-            $this->tblname.on_stock,
-            $this->tblname.on_stockWH,
+            CASE WHEN " . $this->getNonOrderableBrandCondition() . " THEN 0 ELSE $this->tblname.on_stock END AS on_stock,
+            CASE WHEN " . $this->getNonOrderableBrandCondition() . " THEN 0 ELSE $this->tblname.on_stockWH END AS on_stockWH,
+            CASE WHEN " . $this->getNonOrderableBrandCondition() . " THEN 1 ELSE 0 END AS is_order_blocked,
             $this->tblname.volume,
             $this->tblname.stock,
             $this->tblname.is_new,
@@ -824,6 +863,11 @@ public function get_product_variable(
         return array();
     }
 
+    $brandBlockedFromOrdering = $this->isNonOrderableProduct($id);
+    if ($brandBlockedFromOrdering) {
+        $includeOutOfStock = true;
+    }
+
     $this->db->select("
         id,
         SKU,
@@ -903,6 +947,11 @@ public function get_product_variable(
                     ? $value->color_data
                     : null
             );
+
+        if ($brandBlockedFromOrdering) {
+            $value->qty = 0;
+            $value->qtyWH = 0;
+        }
 
         $images =
             $this->db
@@ -992,6 +1041,11 @@ public function get_product_variable(
                 ? $productVariable->color_data
                 : null
         );
+
+    if ($this->isNonOrderableProduct($product_id)) {
+        $productVariable->qty = 0;
+        $productVariable->qtyWH = 0;
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -2874,6 +2928,7 @@ if (client_uses_wholesale_prices()) {
         }
 
         $this->db->where('products.discount_price >', 0);
+        $this->applyExcludedSaleBrandCondition();
 
         $this->db->where(
             'EXISTS (
@@ -2967,6 +3022,7 @@ if (client_uses_wholesale_prices()) {
 
         $this->db->where("$this->tblname.isShown", 1);
         $this->db->where("$this->tblname.discount_price >", 0);
+        $this->applyExcludedSaleBrandCondition();
 
         /*
  * Exclude produsele care nu au imagini.
@@ -4574,16 +4630,18 @@ if (client_uses_wholesale_prices()) {
      */
     private function getEffectiveProductFields()
     {
+        $blockedBrandCondition = $this->getNonOrderableBrandCondition();
         $retailPrice = "\n            CASE\n                WHEN products.price > 0 THEN products.price\n                ELSE (\n                    SELECT MIN(pv.price)\n                    FROM products_variable pv\n                    WHERE pv.product_id = products.id\n                      AND pv.price > 0\n                      AND pv.qty > 0\n                )\n            END\n        ";
 
-        $retailStock = "\n            CASE\n                WHEN products.on_stock > 0 THEN products.on_stock\n                ELSE (\n                    SELECT COALESCE(SUM(pv.qty), 0)\n                    FROM products_variable pv\n                    WHERE pv.product_id = products.id\n                      AND pv.price > 0\n                      AND pv.qty > 0\n                )\n            END\n        ";
+        $retailStock = "\n            CASE\n                WHEN {$blockedBrandCondition} THEN 0\n                WHEN products.on_stock > 0 THEN products.on_stock\n                ELSE (\n                    SELECT COALESCE(SUM(pv.qty), 0)\n                    FROM products_variable pv\n                    WHERE pv.product_id = products.id\n                      AND pv.price > 0\n                      AND pv.qty > 0\n                )\n            END\n        ";
 
         $wholesalePrice = "\n            CASE\n                WHEN products.priceWH > 0 THEN products.priceWH\n                ELSE (\n                    SELECT MIN(pv.priceWH)\n                    FROM products_variable pv\n                    WHERE pv.product_id = products.id\n                      AND pv.priceWH > 0\n                      AND pv.qtyWH > 0\n                )\n            END\n        ";
 
-        $wholesaleStock = "\n            CASE\n                WHEN products.on_stockWH > 0 THEN products.on_stockWH\n                ELSE (\n                    SELECT COALESCE(SUM(pv.qtyWH), 0)\n                    FROM products_variable pv\n                    WHERE pv.product_id = products.id\n                      AND pv.priceWH > 0\n                      AND pv.qtyWH > 0\n                )\n            END\n        ";
+        $wholesaleStock = "\n            CASE\n                WHEN {$blockedBrandCondition} THEN 0\n                WHEN products.on_stockWH > 0 THEN products.on_stockWH\n                ELSE (\n                    SELECT COALESCE(SUM(pv.qtyWH), 0)\n                    FROM products_variable pv\n                    WHERE pv.product_id = products.id\n                      AND pv.priceWH > 0\n                      AND pv.qtyWH > 0\n                )\n            END\n        ";
 
         $retailHasAvailableStock = "
             CASE
+                WHEN {$blockedBrandCondition} THEN 0
                 WHEN products.on_stock > 0 THEN 1
                 WHEN EXISTS (
                     SELECT 1
@@ -4599,6 +4657,7 @@ if (client_uses_wholesale_prices()) {
 
         $wholesaleHasAvailableStock = "
             CASE
+                WHEN {$blockedBrandCondition} THEN 0
                 WHEN products.on_stockWH > 0 THEN 1
                 WHEN EXISTS (
                     SELECT 1

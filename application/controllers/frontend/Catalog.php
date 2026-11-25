@@ -2289,6 +2289,10 @@ public function variable()
         ? (int) $info->qtyWH
         : (int) $info->qty;
 
+    if ($this->products_model->isNonOrderableProductId($productId)) {
+        $availableQuantity = 0;
+    }
+
     $variantTitle = '';
 
     if ($this->clang === 'ro' && !empty($info->colorRO)) {

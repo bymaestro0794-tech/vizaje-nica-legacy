@@ -483,6 +483,23 @@ public function checkout()
             redirect('/' . $this->lclang . '/' . $this->data['menu']['all'][3]->uri);
         }
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            foreach ($this->cart->contents() as $cartItem) {
+                $cartProduct = $this->products_model->findFirstCart($cartItem['id']);
+                if (!empty($cartProduct->is_order_blocked)) {
+                    $this->cart->update(array(
+                        'rowid' => $cartItem['rowid'],
+                        'qty' => 0,
+                    ));
+
+                    $_SESSION['checkout_error'] = $this->lclang === 'ro'
+                        ? 'Un produs nu mai este disponibil și a fost eliminat din coș.'
+                        : 'Товар больше недоступен и был удалён из корзины.';
+
+                    redirect('/' . $this->lclang . '/' . $page->uri);
+                    return;
+                }
+            }
+
             foreach ($_POST as $index => $item) {
                 $post[$index] = $this->input->post($index, true);
             }

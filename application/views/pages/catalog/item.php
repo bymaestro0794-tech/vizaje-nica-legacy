@@ -535,9 +535,11 @@ if (
 |--------------------------------------------------------------------------
 */
 
-$productInStock = $isB2B
-	? !empty($product->on_stockWH)
-	: !empty($product->on_stock);
+$productInStock = isset($product->has_available_stock)
+	? !empty($product->has_available_stock)
+	: ($isB2B
+		? !empty($product->on_stockWH)
+		: !empty($product->on_stock));
 
 if (!empty($firstAvailableVariation)) {
 	$productInStock = true;

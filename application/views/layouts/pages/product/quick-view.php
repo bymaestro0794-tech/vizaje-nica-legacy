@@ -436,10 +436,10 @@ if (!empty($variations)) {
 	$productAvailable =
 		$isB2B
 			? !empty(
-				$product->on_stockWH
+				$product->has_available_stock ?? $product->on_stockWH
 			)
 			: !empty(
-				$product->on_stock
+				$product->has_available_stock ?? $product->on_stock
 			);
 }
 

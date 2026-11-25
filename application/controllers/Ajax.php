@@ -241,6 +241,17 @@ class Ajax extends CI_Controller
         );
     }
 
+    if (!empty($product->is_order_blocked)) {
+        $response['code'] = 'OUT_OF_STOCK';
+        $response['message'] = 'Товар временно недоступен для заказа.';
+
+        return $this->cartAddResponse(
+            $response,
+            $add_item,
+            409
+        );
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Вариант
@@ -1063,6 +1074,21 @@ private function _cart_ui_state(
                     JSON_UNESCAPED_UNICODE
                 )
             );
+    }
+
+    if (!empty($product->is_order_blocked)) {
+        $this->cart->update(array(
+            'rowid' => $rowId,
+            'qty' => 0,
+        ));
+
+        $response['code'] = 'OUT_OF_STOCK';
+        $response['message'] = 'Товар временно недоступен для заказа и удалён из корзины.';
+
+        return $this->output
+            ->set_status_header(409)
+            ->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($response, JSON_UNESCAPED_UNICODE));
     }
 
     /*
