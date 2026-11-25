@@ -160,7 +160,7 @@ class Meilisearch_client
         return $this->request(
             'POST',
             '/indexes/' . rawurlencode((string) $index) . '/documents/delete-batch',
-            array('ids' => $documentIds),
+            $documentIds,
             true
         );
     }
