@@ -19,6 +19,7 @@ class Admins_model extends BaseModel
             $_SESSION['admin_id'] = $check_user->id;
             $_SESSION['login'] = $check_user->login;
             $_SESSION['admin_key'] = hash('sha512', $check_user->login.$check_user->password);
+            $_SESSION['admin_role'] = isset($check_user->role) ? $check_user->role : 'admin';
             return true;
         } else {
             return false;

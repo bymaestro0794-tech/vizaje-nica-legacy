@@ -70,6 +70,16 @@
                                                 </td>
                                             </tr>
                                             <tr>
+                                                <td width="200">Роль *</td>
+                                                <td>
+                                                    <select name="role" class="form-control" required>
+                                                        <option value="operator">Оператор — заказы и обратная связь</option>
+                                                        <option value="accountant">Бухгалтер — партнёрская программа</option>
+                                                        <option value="admin">Администратор — полный доступ</option>
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                            <tr>
                                                 <td width="200"><?=lang('Password')?> *</td>
                                                 <td>
                                                     <input type="password" name="password" class="form-control"
@@ -113,6 +123,7 @@
                         <thead>
                         <tr>
                             <th> Login</th>
+                            <th>Роль</th>
                             <th width="260"> <?=lang('Action')?></th>
                         </tr>
                         </thead>
@@ -122,6 +133,7 @@
                                 <td>
                                     <?= $admin->login ?>
                                 </td>
+                                <td><?= htmlspecialchars($admin->role_label, ENT_QUOTES, 'UTF-8') ?></td>
                                 <td>
                                     <?php if ($admin->admin_type != 1): ?>
                                         <a href="<?= $del_path . $admin->id . '/' ?>"

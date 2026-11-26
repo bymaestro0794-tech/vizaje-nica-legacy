@@ -18,10 +18,15 @@ class Auth extends BackEndController
 
             if (!empty($login) && !empty($password)) {
                 if ($this->admins_model->try_login($login, $password)) {
+                    $role_home = array(
+                        'operator' => '/cp/orders/',
+                        'accountant' => '/cp/creator_program/',
+                    );
+                    $destination = $role_home[$_SESSION['admin_role'] ?? 'admin'] ?? '/cp/menu/';
                     if (session_status() === PHP_SESSION_ACTIVE) {
                         session_write_close();
                     }
-                    redirect('/cp/menu');
+                    redirect($destination);
                 } else {
                     $_SESSION['error_message'] = 'Неправильное сочитание логина/пароля';
                     if (session_status() === PHP_SESSION_ACTIVE) {

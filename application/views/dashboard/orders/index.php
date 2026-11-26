@@ -4,7 +4,7 @@
     <ul class="page-breadcrumb">
         <li>
             <i class="fa fa-home"></i>
-            <a href="/<?= ADM_CONTROLLER ?>/menu/">Home</a>
+            <a href="<?= ($admin_role ?? 'admin') === 'operator' ? '/cp/orders/' : '/' . ADM_CONTROLLER . '/menu/' ?>">Home</a>
             <i class="fa fa-circle"></i>
         </li>
         <li>
@@ -38,6 +38,29 @@
     <?php unset($_SESSION['error']); ?>
 <?php endif; ?>
 
+<?php if (($admin_role ?? 'admin') === 'operator'): ?>
+    <?php
+    $orderFilterParams = array();
+    if (!empty($_GET['query'])) $orderFilterParams['query'] = (string) $_GET['query'];
+    if (isset($_GET['isb2b']) && in_array((string) $_GET['isb2b'], array('1', '2'), true)) {
+        $orderFilterParams['isb2b'] = (string) $_GET['isb2b'];
+    }
+    $myOrdersUrl = '/cp/orders/?' . http_build_query(array_merge($orderFilterParams, array('view' => 'my')));
+    $allOrdersUrl = '/cp/orders/?' . http_build_query(array_merge($orderFilterParams, array('view' => 'all')));
+    ?>
+    <div class="row">
+        <div class="col-md-12" style="margin-bottom:15px;">
+            <div class="btn-group" role="group" aria-label="Фильтр заказов">
+                <a class="btn <?= ($orders_view ?? 'my') === 'my' ? 'btn-primary' : 'btn-default' ?>" href="<?= html_escape($myOrdersUrl) ?>">Мои заказы</a>
+                <a class="btn <?= ($orders_view ?? 'my') === 'all' ? 'btn-primary' : 'btn-default' ?>" href="<?= html_escape($allOrdersUrl) ?>">Все заказы</a>
+            </div>
+            <?php if (($orders_view ?? 'my') === 'my'): ?>
+                <span class="text-muted" style="margin-left:10px;">Мои заказы и новые, ещё не назначенные операторам</span>
+            <?php endif; ?>
+        </div>
+    </div>
+<?php endif; ?>
+
 
     <div class="row">
         <div class="portlet light">
@@ -61,7 +84,10 @@
                         <div class="margin-bottom-5" style="text-align: left;">
                             <div>
                                 <?= lang('Search') ?>
-                                <input type="text" style="width: 240px; padding-top: 1px; display: inline-block;" class="form-control form-filter input-sm" value="<?= !empty($_GET['query']) ? $_GET['query'] : '' ?>" name="query" value="">
+                                <input type="text" style="width: 240px; padding-top: 1px; display: inline-block;" class="form-control form-filter input-sm" value="<?= html_escape((string) ($_GET['query'] ?? '')) ?>" name="query">
+                                <?php if (($admin_role ?? 'admin') === 'operator'): ?>
+                                    <input type="hidden" name="view" value="<?= ($orders_view ?? 'my') === 'all' ? 'all' : 'my' ?>">
+                                <?php endif; ?>
     
                                 <button class="btn btn-sm btn-success filter-submit margin-bottom">
                                     <i class="fa fa-search"></i> <?= lang('Search') ?>
@@ -75,7 +101,7 @@
                                 </div>
                                 <div style="flex:4;">
                                     <select name="isb2b" class="form-control select2" data-live-search="true" tabindex="-98">
-                                        <option value="0">Тип заказа</option>
+                                        <option value="0" <?= empty($_GET['isb2b']) || $_GET['isb2b'] == 0 ? 'selected' : '' ?>>Тип заказа</option>
                                         <option value="1" <?= isset($_GET['isb2b']) ? ($_GET['isb2b'] == 1 ? 'selected' : '') : '' ?>>Оптовый заказ</option>
                                         <option value="2" <?= isset($_GET['isb2b']) ? ($_GET['isb2b'] == 2 ? 'selected' : '') : '' ?>>Не оптовый заказ</option>
     
@@ -99,6 +125,7 @@
                                 <th width="60"> <?=lang('Client')?></th>
                                 <th width="60"> <?=lang('Number')?></th>
                                 <th width="80"> <?=lang('Status')?></th>
+                                <th width="150">Оператор</th>
                                 <th width="120"> <?=lang('Action')?></th>
                             </tr>
                             </thead>
@@ -154,6 +181,13 @@
                                     <td class="align-middle"><?= isset($statuses[$statusKey])
                                             ? $statuses[$statusKey]
                                             : '<span class="label label-sm label-default">' . html_escape($statusKey) . '</span>' ?></td>
+                                    <td class="align-middle">
+                                        <?php if (!empty($item->operator_login)): ?>
+                                            <span class="label label-sm label-info"><?= html_escape($item->operator_login) ?></span>
+                                        <?php else: ?>
+                                            <span class="text-muted">Не назначен</span>
+                                        <?php endif; ?>
+                                    </td>
 
                                     <td class="align-middle">
                                         <a href="<?= $e_path . $item->id . '/' ?>"
@@ -179,11 +213,12 @@
     $('select[name="isb2b"]').on('change', function(e) {
         let value = $(e.target).val();
         let query = $('input[name="query"]').val();
-        if (query) {
-            window.location.href = '/cp/orders/?isb2b=' + value + '&query=' + query;
-        } else {
-            window.location.href = '/cp/orders/?isb2b=' + value;
-        }
+        let params = new URLSearchParams();
+        if (value && value !== '0') params.set('isb2b', value);
+        if (query) params.set('query', query);
+        let view = $('input[name="view"]').val();
+        if (view) params.set('view', view);
+        window.location.href = '/cp/orders/?' + params.toString();
 
     })
 </script>

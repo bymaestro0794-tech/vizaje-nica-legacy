@@ -15,11 +15,15 @@ foreach ((array) $site_dialogs as $siteDialog) :
 		<?php endif; ?>
 		<div class="site-dialog__content">
 			<h2 id="site-dialog-title-<?= $dialogId ?>"><?= $escapeSiteDialog($siteDialog['title'] ?? '') ?></h2>
-			<p><?= nl2br($escapeSiteDialog($siteDialog['text'] ?? '')) ?></p>
-			<?php if (!empty($siteDialog['button_text']) && !empty($siteDialog['target_url'])) : ?>
-				<a class="site-dialog__action" href="<?= $escapeSiteDialog($siteDialog['target_url']) ?>" data-site-dialog-action><?= $escapeSiteDialog($siteDialog['button_text']) ?></a>
-			<?php endif; ?>
-			<button type="button" class="site-dialog__later" data-site-dialog-close><?= $lclang === 'ro' ? 'Mai târziu' : 'Позже' ?></button>
+			<div class="site-dialog__body">
+				<p><?= nl2br($escapeSiteDialog($siteDialog['text'] ?? '')) ?></p>
+			</div>
+			<div class="site-dialog__actions">
+				<?php if (!empty($siteDialog['button_text']) && !empty($siteDialog['target_url'])) : ?>
+					<a class="site-dialog__action" href="<?= $escapeSiteDialog($siteDialog['target_url']) ?>" data-site-dialog-action><?= $escapeSiteDialog($siteDialog['button_text']) ?></a>
+				<?php endif; ?>
+				<button type="button" class="site-dialog__later" data-site-dialog-close><?= $lclang === 'ro' ? 'Mai târziu' : 'Позже' ?></button>
+			</div>
 		</div>
 	</section>
 </div>

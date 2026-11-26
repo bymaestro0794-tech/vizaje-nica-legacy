@@ -14,6 +14,11 @@ class Admins extends BackEndController
     private $index_title;
     private $success_add;
     private $success_delete;
+    private $role_labels = array(
+        'admin' => 'Администратор',
+        'operator' => 'Оператор',
+        'accountant' => 'Бухгалтер',
+    );
 
     public function __construct()
     {
@@ -39,7 +44,7 @@ class Admins extends BackEndController
         $chp_path = $this->path . 'change_password';
 
         if (!empty($_SESSION['inserted_data'])) {
-            $login_value = 'value="' . $_SESSION['inserted_data']['login'] . '"';
+            $login_value = 'value="' . htmlspecialchars((string) $_SESSION['inserted_data']['login'], ENT_QUOTES, 'UTF-8') . '"';
             $accordion_status = 'in';
             $i_icon = 'fa-minus';
             $aria_expanded = 'true';
@@ -52,6 +57,11 @@ class Admins extends BackEndController
         }
 
         $admins = $this->admins_model->find('id asc');
+
+        foreach ($admins as $admin) {
+            $role = isset($admin->role) ? $admin->role : 'admin';
+            $admin->role_label = isset($this->role_labels[$role]) ? $this->role_labels[$role] : $this->role_labels['admin'];
+        }
 
         $this->data['inner_view'] = $this->index_view;
         $this->data['admins'] = $admins;
@@ -70,19 +80,26 @@ class Admins extends BackEndController
         check_if_POST();
 
         $data = array();
+        $post = array();
 
         try {
-            foreach ($_POST as $index => $item) {
-                $post[$index] = $this->input->post($index, TRUE);
+            $data['login'] = trim((string) $this->input->post('login', TRUE));
+            $role = (string) $this->input->post('role', TRUE);
+            $password = (string) $this->input->post('password', TRUE);
+            $password_check = (string) $this->input->post('passwordCheck', TRUE);
+            if (!isset($this->role_labels[$role])) {
+                throw new Exception('Выберите корректную роль пользователя.');
             }
 
-            if ($post['password'] != $post['passwordCheck']) {
+            if ($password !== $password_check) {
                 throw new Exception(lang('Passwords do not match!'));
             }
 
-            unset($post['passwordCheck']);
-
-            $post['password'] = hash('sha256', $post['password']);
+            $post = array(
+                'login' => $data['login'],
+                'role' => $role,
+                'password' => hash('sha256', $password),
+            );
 
             if (!$this->admins_model->check_login($post['login'])) {
                 throw new Exception(lang('This login is already taken!'));
@@ -97,7 +114,7 @@ class Admins extends BackEndController
             log_message('error', $e->getMessage());
             $errors[] = lang('Exception thrown') . $e->getMessage();
             $_SESSION['error'] = $errors;
-            $_SESSION['inserted_data']['login'] = $data['login'];
+            $_SESSION['inserted_data']['login'] = $data['login'] ?? '';
         }
 
         redirect($this->path);

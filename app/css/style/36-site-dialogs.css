@@ -42,8 +42,8 @@ html.site-dialog-lock body {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 	width: min(100%, 780px);
-	max-height: min(560px, calc(100dvh - 48px));
-	min-height: 300px;
+	height: min(560px, calc(100dvh - 48px));
+	grid-template-rows: minmax(0, 1fr);
 	border-radius: 14px;
 	background: #fff;
 	color: #151515;
@@ -56,24 +56,28 @@ html.site-dialog-lock body {
 }
 
 .site-dialog.is-open .site-dialog__panel { opacity: 1; transform: translateY(0); }
-.site-dialog__image { min-width: 0; min-height: 0; background: #f4f4f4; }
+.site-dialog__image { min-width: 0; min-height: 0; overflow: hidden; background: #f4f4f4; }
 .site-dialog__image img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .site-dialog__panel--text-only { grid-template-columns: minmax(0, 1fr); width: min(100%, 560px); }
-.site-dialog__content { display: flex; min-width: 0; flex-direction: column; justify-content: center; padding: 48px 40px 34px; }
+.site-dialog__content { display: flex; min-width: 0; min-height: 0; flex-direction: column; overflow: hidden; padding: 48px 40px 24px; }
 .site-dialog__content h2 { margin: 0; color: inherit; font-size: clamp(24px, 3vw, 34px); font-weight: 500; line-height: 1.15; }
-.site-dialog__content p { margin: 16px 0 0; color: #666; font-size: 15px; line-height: 1.6; white-space: normal; }
-.site-dialog__action { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; margin-top: 24px; padding: 0 20px; background: #111; color: #fff; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-decoration: none; }
+.site-dialog__body { min-height: 0; flex: 1 1 auto; margin-top: 16px; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.site-dialog__content p { margin: 0; color: #666; font-size: 15px; line-height: 1.6; white-space: normal; }
+.site-dialog__actions { position: relative; z-index: 1; flex: 0 0 auto; padding-top: 16px; background: #fff; }
+.site-dialog__action { display: inline-flex; width: 100%; min-height: 48px; align-items: center; justify-content: center; padding: 0 20px; background: #111; color: #fff; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-decoration: none; }
 .site-dialog__action:hover { color: #fff; background: #333; }
-.site-dialog__later { align-self: center; margin-top: 16px; padding: 8px 12px; border: 0; background: transparent; color: #777; font-size: 13px; cursor: pointer; }
+.site-dialog__later { display: block; margin: 8px auto 0; padding: 8px 12px; border: 0; background: transparent; color: #777; font-size: 13px; cursor: pointer; }
 .site-dialog__close { position: absolute; z-index: 2; top: 12px; right: 12px; display: grid; width: 36px; height: 36px; place-items: center; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .9); color: #333; font-size: 28px; font-weight: 300; line-height: 1; cursor: pointer; }
 
 @media (max-width: 640px) {
 	.site-dialog { padding: 16px; }
-	.site-dialog__panel { display: flex; width: min(100%, 440px); max-height: calc(100dvh - 32px); min-height: 0; flex-direction: column; overflow-y: auto; }
-	.site-dialog__image { height: min(42vh, 300px); flex: 0 0 auto; }
-	.site-dialog__content { padding: 28px 24px 20px; }
+	.site-dialog__panel { display: flex; width: min(100%, 440px); height: min(760px, calc(100dvh - 32px)); flex-direction: column; overflow: hidden; }
+	.site-dialog__image { height: min(38dvh, 300px); flex: 0 0 auto; }
+	.site-dialog__content { min-height: 0; flex: 1 1 auto; padding: 28px 24px 16px; }
 	.site-dialog__content h2 { font-size: 25px; }
 	.site-dialog__content p { font-size: 14px; }
+	.site-dialog__body { margin-top: 12px; }
+	.site-dialog__actions { padding-top: 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

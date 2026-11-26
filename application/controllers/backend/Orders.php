@@ -31,20 +31,22 @@ class Orders extends BackEndController
     public function index()
     {
         init_load_img($this->main_page);
-        $search_get = $this->input->post_get('query');
-        $get = $this->input->get(null, true);
-        if (!empty($search_get) && !empty($get)) {
-            $objects = $this->orders_model->search_get_orders_admin($search_get, $get);
-        } else if (!empty($get)) {
-            $objects = $this->orders_model->search_get_orders_admin(array(), $get);
-        } else if (!empty($search_get)) {
-            $objects = $this->orders_model->search_get_orders_admin($search_get);
-        } else {
-            $objects = $this->orders_model->find();
-        }
+        $filters = $this->input->get(null, true) ?: array();
+        $search = trim((string) ($filters['query'] ?? ''));
+        $view = $this->admin_role === 'operator'
+            ? ((($filters['view'] ?? 'my') === 'all') ? 'all' : 'my')
+            : 'all';
+        $objects = $this->orders_model->listAdminOrders(
+            $search,
+            $filters,
+            $this->admin_role,
+            (int) ($_SESSION['admin_id'] ?? 0),
+            $view
+        );
 
         $this->data['inner_view'] = $this->index_view;
         $this->data['objects'] = $objects;
+        $this->data['orders_view'] = $view;
         $this->load->vars($this->data);
         $this->load->view($this->main_layout);
     }
@@ -106,15 +108,24 @@ class Orders extends BackEndController
 
         init_load_img($this->main_page);
 
-        $item = $this->orders_model->find_first($id);
+        $item = $this->orders_model->findAdminOrder($id);
         if (empty($item)) throw_on_404();
         $statusBeforeUpdate = (string) $item->status;
+        $currentAdminId = (int) ($_SESSION['admin_id'] ?? 0);
+        $isAssignedToOtherOperator = $this->admin_role === 'operator'
+            && !empty($item->operator_admin_id)
+            && (int) $item->operator_admin_id !== $currentAdminId;
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
+                if ($isAssignedToOtherOperator) {
+                    throw new Exception('Заказ уже назначен другому оператору.');
+                }
+
                 foreach ($_POST as $index => $post_data) {
                     $post[$index] = $this->input->post($index, TRUE);
                 }
+                unset($post['operator_admin_id']);
 
                 if (isset($post['status'])) {
                     $post['status'] = strtolower(trim((string) $post['status']));
@@ -131,24 +142,39 @@ class Orders extends BackEndController
                 }
 
                 $post['updated'] = date('Y-m-d H:i:s', strtotime('+2 hours'));
+                $products = array();
+                $deleteProductIds = array();
                 if (isset($post['products'])) {
                     foreach ($post['products'] as $key => $product) {
                         if ($product['price'] == 0)
-                            $this->db->where('id', $key)->delete('orders_products');
+                            $deleteProductIds[] = (int) $key;
                         else
                             $products[] = ['id' => $key, 'qty' => $product['qty'], 'total' => $product['qty'] * $product['price']];
                     }
 
-                    $this->db->update_batch('orders_products', $products, 'id');
-                    $this->db->where('id', $id)->update('orders', ['updated' => date('Y-m-d H:i:s')]);
                 }
 
                 unset($post['products']);
 
-                if (!empty($post))
-                    if (!$this->orders_model->update($post, $id)) {
-                        throw new Exception(lang('Error writing data to table') . $this->main_page);
-                    }
+                $saveResult = $this->orders_model->saveAdminOrder(
+                    $id,
+                    $post,
+                    $currentAdminId,
+                    $this->admin_role === 'operator'
+                );
+                if ($saveResult === 'assigned_to_other') {
+                    throw new Exception('Другой оператор уже взял этот заказ в обработку.');
+                }
+                if ($saveResult !== true) {
+                    throw new Exception(lang('Error writing data to table') . $this->main_page);
+                }
+
+                if (!empty($products)) {
+                    $this->db->update_batch('orders_products', $products, 'id');
+                }
+                if (!empty($deleteProductIds)) {
+                    $this->db->where_in('id', $deleteProductIds)->delete('orders_products');
+                }
 
                 $_SESSION['success'] = $this->success_edit;
             } catch (Exception $e) {
@@ -157,7 +183,10 @@ class Orders extends BackEndController
                 $_SESSION['error'] = $errors;
             }
 
-            $item = $this->orders_model->find_first($id);
+            $item = $this->orders_model->findAdminOrder($id);
+            $isAssignedToOtherOperator = $this->admin_role === 'operator'
+                && !empty($item->operator_admin_id)
+                && (int) $item->operator_admin_id !== $currentAdminId;
 
             if (!empty($item) && (string) $item->status !== $statusBeforeUpdate) {
                 try {
@@ -182,6 +211,7 @@ class Orders extends BackEndController
         $this->data['parent_url'] = $this->path;
         $this->data['parent_title'] = $this->index_title;
         $this->data['item'] = $item;
+        $this->data['is_assigned_to_other_operator'] = $isAssignedToOtherOperator;
         $this->data['creator_referral'] = $this->orders_model->creatorReferralForOrder($item->id);
         $this->data['stores'] = $this->stores_model->get_stores('RU');
         $this->data['products'] = $this->orders_model->orderProducts($item->id, 'RU');

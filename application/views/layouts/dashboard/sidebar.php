@@ -138,6 +138,14 @@ $sidebar_menu = array(
     
     'constants' => array('name' => lang("Constants"), 'ico' => '<i class="fa fa-globe"></i>')
 );
+
+if (($admin_role ?? 'admin') === 'operator') {
+    $sidebar_menu = array_intersect_key($sidebar_menu, array_flip(array('orders', 'feedback')));
+} elseif (($admin_role ?? 'admin') === 'accountant') {
+    $sidebar_menu = array_intersect_key($sidebar_menu, array_flip(array('creator_program')));
+} elseif (($admin_role ?? 'admin') !== 'admin') {
+    $sidebar_menu = array();
+}
 ?>
 <!-- BEGIN SIDEBAR MENU -->
 <!-- DOC: Apply "page-sidebar-menu-light" class right after "page-sidebar-menu" to enable light sidebar menu style(without borders) -->

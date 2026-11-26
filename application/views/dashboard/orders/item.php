@@ -4,7 +4,7 @@
     <ul class="page-breadcrumb">
         <li>
             <i class="fa fa-home"></i>
-            <a href="/<?= ADM_CONTROLLER ?>/menu/">Home</a>
+            <a href="<?= ($admin_role ?? 'admin') === 'operator' ? '/cp/orders/' : '/' . ADM_CONTROLLER . '/menu/' ?>">Home</a>
             <i class="fa fa-circle"></i>
         </li>
         <li>
@@ -42,6 +42,13 @@
     <?php unset($_SESSION['error']); ?>
 <?php endif; ?>
 
+<?php if (!empty($is_assigned_to_other_operator)): ?>
+    <div class="alert alert-warning" style="margin:15px;">
+        Этот заказ уже взял оператор <strong><?= html_escape((string) $item->operator_login) ?></strong>.
+        Вы можете просмотреть заказ, но изменять его может только назначенный оператор или администратор.
+    </div>
+<?php endif; ?>
+
 <div class="row">
     <div class="portlet light">
         <div class="portlet-body">
@@ -62,6 +69,12 @@
                                                 <div class="row static-info">
                                                     <div class="col-md-5 name"> <?= lang('Order') ?>:</div>
                                                     <div class="col-md-7 value"> #<?= $item->order_id ?>
+                                                    </div>
+                                                </div>
+                                                <div class="row static-info">
+                                                    <div class="col-md-5 name">Оператор:</div>
+                                                    <div class="col-md-7 value">
+                                                        <?= !empty($item->operator_login) ? html_escape((string) $item->operator_login) : 'Не назначен' ?>
                                                     </div>
                                                 </div>
                                                 <?php if (!empty($creator_referral)) { ?>
@@ -100,7 +113,7 @@
                                                             $currentStatus = 'new';
                                                         }
                                                         ?>
-                                                        <select name="status" id="status" class="form-control">
+                                                        <select name="status" id="status" class="form-control" <?= !empty($is_assigned_to_other_operator) ? 'disabled' : '' ?>>
                                                             <? foreach ($status as $key => $title) { ?>
                                                                 <option value="<?= $key ?>" <?= ($currentStatus == $key) ? 'selected' : '' ?>><?= $title ?></option>
                                                             <? } ?>
@@ -376,7 +389,7 @@
                                 </div>
                             </div>
                             <div style="text-align: center;">
-                                <button class="btn btn-primary"><?= lang('Save') ?></button>
+                                <button class="btn btn-primary" <?= !empty($is_assigned_to_other_operator) ? 'disabled' : '' ?>><?= lang('Save') ?></button>
                             </div>
                         </form>
                     </div>

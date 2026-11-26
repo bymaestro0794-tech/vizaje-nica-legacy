@@ -69,6 +69,84 @@ class Orders_model extends BaseModel
         return $products;
     }
 
+    public function listAdminOrders($search = '', $filters = array(), $role = 'admin', $adminId = 0, $view = 'all')
+    {
+        $this->db->select('o.*, assigned.login AS operator_login');
+        $this->db->from('orders o');
+        $this->db->join('admins assigned', 'assigned.id = o.operator_admin_id', 'left');
+
+        if ($search !== '') {
+            $this->db->group_start();
+            $this->db->like('o.postcode', $search);
+            $this->db->or_like('o.order_id', $search);
+            $this->db->group_end();
+        }
+
+        if (isset($filters['isb2b']) && $filters['isb2b'] !== '' && $filters['isb2b'] !== '0') {
+            $this->db->where('o.isb2b', $filters['isb2b'] === '1' ? 1 : 0);
+        }
+
+        if ($role === 'operator' && $view !== 'all') {
+            $this->db->group_start();
+            $this->db->where('o.operator_admin_id', (int) $adminId);
+            $this->db->or_group_start();
+            $this->db->where('o.operator_admin_id', null);
+            $this->db->where('o.status', 'new');
+            $this->db->group_end();
+            $this->db->group_end();
+        }
+
+        return $this->db->order_by('o.sorder ASC, o.id DESC', '', false)->get()->result();
+    }
+
+    public function findAdminOrder($id)
+    {
+        return $this->db
+            ->select('o.*, assigned.login AS operator_login')
+            ->from('orders o')
+            ->join('admins assigned', 'assigned.id = o.operator_admin_id', 'left')
+            ->where('o.id', (int) $id)
+            ->get()
+            ->row();
+    }
+
+    /**
+     * Updates an order while locking assignment changes so two operators
+     * cannot claim the same unassigned order at the same time.
+     */
+    public function saveAdminOrder($id, $data, $adminId, $isOperator)
+    {
+        $this->db->trans_begin();
+        $current = $this->db->query(
+            'SELECT `operator_admin_id` FROM `orders` WHERE `id` = ? FOR UPDATE',
+            array((int) $id)
+        )->row();
+
+        if (empty($current)) {
+            $this->db->trans_rollback();
+            return 'missing';
+        }
+
+        $assignedAdminId = $current->operator_admin_id === null ? 0 : (int) $current->operator_admin_id;
+        if ($isOperator && $assignedAdminId !== 0 && $assignedAdminId !== (int) $adminId) {
+            $this->db->trans_rollback();
+            return 'assigned_to_other';
+        }
+
+        if ($isOperator && $assignedAdminId === 0 && isset($data['status']) && $data['status'] === 'progress') {
+            $data['operator_admin_id'] = (int) $adminId;
+        }
+
+        $updated = $this->db->where('id', (int) $id)->update('orders', $data);
+        if (!$updated || $this->db->trans_status() === false) {
+            $this->db->trans_rollback();
+            return false;
+        }
+
+        $this->db->trans_commit();
+        return true;
+    }
+
     public function orderProducts($id, $lang)
     {
 

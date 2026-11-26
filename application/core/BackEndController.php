@@ -15,6 +15,26 @@ class BackEndController extends CI_Controller
     protected $o_path;
     protected $del_path;
     protected $data;
+    protected $admin_role = 'admin';
+
+    private function _enforce_admin_role()
+    {
+        if ($this->admin_role === 'admin' || empty($_SESSION['admin_id'])) {
+            return;
+        }
+
+        $controller = (string) uri(2);
+        $operator_controllers = array('orders', 'feedback');
+        $accountant_controllers = array('creator_program', 'creators', 'creator_payouts', 'creator_feedback');
+
+        $allowed = $this->admin_role === 'operator'
+            ? $operator_controllers
+            : ($this->admin_role === 'accountant' ? $accountant_controllers : array());
+
+        if (!in_array($controller, $allowed, true)) {
+            show_error('У вас нет доступа к этому разделу админки.', 403, 'Доступ запрещён');
+        }
+    }
 
     private function _is_logged_in()
     {
@@ -56,6 +76,12 @@ class BackEndController extends CI_Controller
                     throw new Exception('Admin ERROR');
                 }
 
+                // Until the role patch is applied, existing admins retain full access.
+                $this->admin_role = isset($admin->role) ? (string) $admin->role : 'admin';
+                if (!in_array($this->admin_role, array('admin', 'operator', 'accountant'), true)) {
+                    $this->admin_role = 'restricted';
+                }
+
                 if ($login != $admin->login) {
                     throw new Exception('Login ERROR');
                 }
@@ -95,6 +121,7 @@ class BackEndController extends CI_Controller
         $this->_is_logged_in();
 
         $this->_admin_is_valid();
+        $this->_enforce_admin_role();
 
         $this->output->set_header('X-XSS-Protection: 1; mode=block');
 
@@ -125,6 +152,7 @@ class BackEndController extends CI_Controller
         $this->data['del_path'] = $this->del_path;
         $this->data['site_url'] = $this->site_url;
         $this->data['table'] = strtolower($class);
+        $this->data['admin_role'] = $this->admin_role;
         $this->data['count_order'] = $this->db->select('id')->where('status','new')->get('orders')->result();
 
         $this->load->model('site_feedback_model');
